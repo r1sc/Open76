@@ -152,9 +152,9 @@ namespace Assets
             return new PartStream(_br.BaseStream, file.Offset, file.Length);
         }
 
-        //public static Texture2D LoadMapTexture(string filename)
-        //{
-
-        //}
+        public IEnumerable<string> FindAllWithExtension(string extension)
+        {
+            return _files.Keys.Where(key => key.EndsWith(extension));
+        }
     }
 }

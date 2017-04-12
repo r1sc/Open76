@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Assets.Fileparsers
 {
-    class ActPaletteParser
+    public class ActPaletteParser
     {
         public static Color32[] ReadActPalette(string filename)
         {

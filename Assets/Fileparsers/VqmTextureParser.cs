@@ -9,7 +9,7 @@ namespace Assets.Fileparsers
 {
     class VqmTextureParser
     {
-        public static Texture2D ReadVqmTexture(string filename, Color32[] palette)
+        public static Texture2D ReadVqmTexture(string filename, Color32[] palette, string lumaFile)
         {
             using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
             {
@@ -21,6 +21,8 @@ namespace Assets.Fileparsers
                 var unk1 = br.ReadUInt32();
                 using (var cbkBr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(cbkFile)))
                 {
+                    //using (var lumaBr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(lumaFile)))
+                    //{
                     var x = 0;
                     var y = 0;
                     while (br.BaseStream.Position < br.BaseStream.Length)
@@ -28,15 +30,24 @@ namespace Assets.Fileparsers
                         var index = br.ReadUInt16();
                         if ((index & 0x8000) == 0)
                         {
-                            cbkBr.BaseStream.Position = 4 + index*16;
+                            cbkBr.BaseStream.Position = 4 + index * 16;
+                            //lumaBr.BaseStream.Position = 4 + index * 16;
                             for (int sy = 0; sy < 4; sy++)
                             {
                                 for (int sx = 0; sx < 4; sx++)
                                 {
                                     var paletteIndex = cbkBr.ReadByte();
+                                    //var luma = lumaBr.ReadByte();
                                     if (x + sx < width && y - sy > 0)
                                     {
-                                        texture.SetPixel(x + sx, y + sy, palette[paletteIndex]);
+                                        var color = palette[paletteIndex];
+                                        //if (luma != 0)
+                                        //{
+                                        //    color.r /= luma;
+                                        //    color.g /= luma;
+                                        //    color.b /= luma;
+                                        //}
+                                        texture.SetPixel(x + sx, y + sy, color);
                                     }
                                 }
                             }
@@ -65,8 +76,10 @@ namespace Assets.Fileparsers
                         {
                             break;
                         }
+                        //}
                     }
                 }
+
                 texture.Apply(true);
                 return texture;
             }

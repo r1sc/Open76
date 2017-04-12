@@ -24,7 +24,7 @@ namespace Assets
                 if (geoFace.TextureName != null)
                 {
                     if(VirtualFilesystem.Instance.FileExists(geoFace.TextureName + ".vqm"))
-                        material.mainTexture = VqmTextureParser.ReadVqmTexture(geoFace.TextureName + ".vqm", Palette);
+                        material.mainTexture = VqmTextureParser.ReadVqmTexture(geoFace.TextureName + ".vqm", Palette, "t05.lum");
                     else if(VirtualFilesystem.Instance.FileExists(geoFace.TextureName + ".map"))
                         material.mainTexture = MapTextureParser.ReadMapTexture(geoFace.TextureName + ".map", Palette);
                     else
@@ -104,12 +104,13 @@ namespace Assets
             return obj;
         }
 
-        public void ImportSdf(string filename)
+        public void ImportSdf(string filename, string label, Transform parent, Vector3 localPosition, Quaternion localRotation)
         {
             var sdf = SdfObjectParser.LoadSdf(filename);
             var partDict = new Dictionary<string, GameObject>();
 
-            var root = new GameObject(sdf.Name);
+            var root = new GameObject(label ?? sdf.Name);
+            root.transform.parent = parent;
             partDict.Add("WORLD", root);
 
             foreach (var sdfPart in sdf.Parts)
@@ -119,6 +120,9 @@ namespace Assets
                 partObj.transform.localPosition = sdfPart.Position;
                 partDict.Add(sdfPart.Name, partObj);
             }
+
+            root.transform.localPosition = localPosition;
+            root.transform.localRotation = localRotation;
         }
     }
 }

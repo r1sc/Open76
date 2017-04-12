@@ -61,5 +61,15 @@ namespace Assets.Fileparsers
                 Current = Current.Next;
             }
         }
+
+        public void Next()
+        {
+            Current = Current.Next;
+            if (Current == null)
+            {
+                throw new Exception("EOF");
+            }
+            BaseStream.Position = Current.DataPosition;
+        }
     }
 }

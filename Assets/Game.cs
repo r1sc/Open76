@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Assets;
 using Assets.Fileparsers;
@@ -7,21 +8,21 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
+    public Material TextureMaterialPrefab;
+
     public string GamePath;
-    public string Path;
-    public string PalettePath;
-    public Texture2D[] Textures;
     public Texture2D SurfaceTexture;
     public Material TerrainMaterial;
     public Material SkyMaterial;
-    public Material TextureMaterialPrefab;
 
+    public Texture2D[] HeightmapTextures;
     public Terrain[,] TerrainPatches;
     public Vector2 RealTerrainGrid;
-    
+
     public Color32[] Palette;
 
     public string SdfToLoad;
+    public string MapToLoad;
 
     void Awake()
     {
@@ -33,17 +34,33 @@ public class Game : MonoBehaviour
     {
         VirtualFilesystem.Instance.Init(GamePath);
 
-        Palette = ActPaletteParser.ReadActPalette("t01.act");
+        Palette = ActPaletteParser.ReadActPalette("t11.ACT");
+
+        //var path = @"e:\i76\extracted\map";
+        //Directory.CreateDirectory(path);
+        //foreach (var mapFile in VirtualFilesystem.Instance.FindAllWithExtension(".map"))
+        //{
+        //    File.WriteAllBytes(Path.Combine(path, mapFile), MapTextureParser.ReadMapTexture(mapFile, Palette).EncodeToPNG());
+        //}
+        //path = @"e:\i76\extracted\vqm";
+        //Directory.CreateDirectory(path);
+        //foreach (var mapFile in VirtualFilesystem.Instance.FindAllWithExtension(".vqm"))
+        //{
+        //    File.WriteAllBytes(Path.Combine(path, mapFile), VqmTextureParser.ReadVqmTexture(mapFile, Palette).EncodeToPNG());
+        //}
+
         var levelManager = new LevelManager();
         levelManager.TextureMaterialPrefab = TextureMaterialPrefab;
         levelManager.Palette = Palette;
 
-        levelManager.ImportSdf(SdfToLoad);
-        
+        levelManager.ImportSdf(SdfToLoad, null, null, Vector3.zero, Quaternion.identity);
+
+        if (!string.IsNullOrEmpty(MapToLoad))
+            GetComponent<GUITexture>().texture = MapTextureParser.ReadMapTexture(MapToLoad, Palette);
 
         TerrainPatches = new Terrain[80, 80];
         var textures = new List<Texture2D>();
-        var mdef = MsnMissionParser.ReadMsnMission("T01.msn");
+        var mdef = MsnMissionParser.ReadMsnMission("T05.msn");
 
         var palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
         SurfaceTexture = MapTextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, palette);
@@ -67,19 +84,27 @@ public class Game : MonoBehaviour
             {
                 if (mdef.TerrainPatches[x, z] == null)
                     continue;
-                var terrainGo = new GameObject("Ter " + x + ", " + z);
-                terrainGo.SetActive(false);
-                var terrain = terrainGo.AddComponent<Terrain>();
-                //terrainGo.transform.parent = transform;
-                //terrain.enabled = false;
-                terrain.terrainData = mdef.TerrainPatches[x, z];
+
+                var patchGameObject = new GameObject("Ter " + x + ", " + z);
+                patchGameObject.transform.position = new Vector3(x * 640, 0, z * 640);
+                patchGameObject.SetActive(false);
+
+                var terrain = patchGameObject.AddComponent<Terrain>();
+                terrain.terrainData = mdef.TerrainPatches[x, z].TerrainData;
                 terrain.terrainData.splatPrototypes = splatPrototypes;
                 terrain.materialTemplate = TerrainMaterial;
                 terrain.materialType = Terrain.MaterialType.Custom;
 
-                terrainGo.transform.position = new Vector3(x * 640, 0, z * 640);
-                var terrainCo = terrainGo.AddComponent<TerrainCollider>();
-                terrainCo.terrainData = terrain.terrainData;
+                var terrainCollider = patchGameObject.AddComponent<TerrainCollider>();
+                terrainCollider.terrainData = terrain.terrainData;
+
+                foreach (var odef in mdef.TerrainPatches[x, z].Objects)
+                {
+                    //Debug.Log("Load " + odef.Label + " id: " + odef.Id);
+                    if(odef.ClassId == 4)
+                        levelManager.ImportSdf(odef.Label + ".sdf", odef.Label, patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
+                }
+
 
                 var texture = new Texture2D(128, 128, TextureFormat.ARGB32, false);
                 for (int iz = 0; iz < 128; iz++)
@@ -94,9 +119,10 @@ public class Game : MonoBehaviour
                 textures.Add(texture);
 
                 TerrainPatches[x, z] = terrain;
+                RealTerrainGrid = new Vector2(x, z);
             }
         }
-        Textures = textures.ToArray();
+        HeightmapTextures = textures.ToArray();
 
         RepositionCurrentTerrainPatch(RealTerrainGrid);
     }

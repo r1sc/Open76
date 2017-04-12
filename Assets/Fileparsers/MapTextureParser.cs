@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Assets.Fileparsers
 {
-    class MapTextureParser
+    public class MapTextureParser
     {
         public static Texture2D ReadMapTexture(string filename, Color32[] palette)
         {
