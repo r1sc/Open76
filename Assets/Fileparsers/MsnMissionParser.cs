@@ -14,13 +14,24 @@ namespace Assets.Fileparsers
         //    public void SetHeights(int x, int y, float[,] heights) { }
         //}
 
+        public enum ClassId : uint
+        {
+            Car = 1,
+            Struct1 = 2,
+            Struct2 = 3,
+            Sign = 4,
+            Special = 9,
+            Ramp = 11,
+            Intersection = 80
+        }
+
         public class Odef
         {
             public string Label { get; set; }
             public int Id { get; set; }
             public Vector3 LocalPosition { get; set; }
-            public uint ClassId { get; set; }
-            public uint TeamId { get; set; }
+            public ClassId ClassId { get; set; }
+            public ushort ExtraData { get; set; }
             public Quaternion LocalRotation { get; set; }
         }
 
@@ -39,7 +50,7 @@ namespace Assets.Fileparsers
         public class MissonDefinition
         {
             public TerrainPatch[,] TerrainPatches { get; private set; }
-            
+
             public string PaletteFilePath { get; set; }
             public string LumaTableFilePath { get; set; }
             public string XlucencyTableFilePath { get; set; }
@@ -87,30 +98,28 @@ namespace Assets.Fileparsers
                     var unk = tdef.ReadByte();
                     var terrainFilePath = new string(tdef.ReadChars(13)).Replace("\0", "");
 
-                    var terrainDatas = new List<TerrainData>();
+                    var heights = new List<float[,]>();
                     using (var terr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(terrainFilePath)))
                     {
-                        while (terr.BaseStream.Position < terr.BaseStream.Length)
+                        for(var i = 0; i < numUniqueTerrainPatches; i++)
                         {
-                            var heights = new float[129, 129];
+                            var h = new float[129, 129];
                             for (int z = 0; z < 128; z++)
                             {
                                 for (int x = 0; x < 128; x++)
                                 {
                                     var tpoint = terr.ReadUInt16();
                                     var height = (tpoint & 0x0FFF) / 4095.0f;
-                                    heights[z, x] = height;
+                                    h[z, x] = height;
                                 }
                             }
 
-                            var tdata = CreateTerrainData();
-                            tdata.size = new Vector3(640, 407, 640);
-                            tdata.SetHeights(0, 0, heights);
-                            terrainDatas.Add(tdata);
+                            heights.Add(h);
                         }
                     }
-
-                    var defaultTerrainData = CreateTerrainData();
+                    
+                    
+                    var defaultHeights = new float[129, 129];
                     for (int z = 0; z < 80; z++)
                     {
                         for (int x = 0; x < 80; x++)
@@ -122,7 +131,32 @@ namespace Assets.Fileparsers
                             }
                             else
                             {
-                                mdef.TerrainPatches[x, z] = new TerrainPatch(terrainDatas[patchIdx]);
+                                var h = heights[patchIdx];
+                                var rightPatchIdx = x == 79 ? 0xFF : patchConfig[z*80 + x + 1];
+                                var rightHeights = rightPatchIdx == 0xFF ? defaultHeights : heights[rightPatchIdx];
+                                for (int xx = 0; xx < 129; xx++)
+                                {
+                                    h[xx, 128] = rightHeights[xx, 0];
+                                }
+
+                                var bottomPatchIdx = z == 79 ? 0xFF : patchConfig[(z+1) * 80 + x];
+                                var bottomHeights = bottomPatchIdx == 0xFF ? defaultHeights : heights[bottomPatchIdx];
+                                for (int zz = 0; zz < 129; zz++)
+                                {
+                                    h[128, zz] = bottomHeights[0, zz];
+                                }
+
+                                var bottomRightPatchIdx = z == 79 || x == 79 ? 0xFF : patchConfig[(z + 1)*80 + x + 1];
+                                var bottomRightHeights = bottomRightPatchIdx == 0xFF
+                                    ? defaultHeights
+                                    : heights[bottomRightPatchIdx];
+                                h[128, 128] = bottomRightHeights[0, 0];
+
+                                var tdata = CreateTerrainData();
+                                tdata.size = new Vector3(640, 407, 640);
+                                tdata.SetHeights(0, 0, h);
+                                mdef.TerrainPatches[x, z] = new TerrainPatch(tdata);
+                                
                             }
                         }
                     }
@@ -147,7 +181,7 @@ namespace Assets.Fileparsers
                             {
                                 labelhigh = (labelhigh << 1) & 0xfe;
                             }
-                            v = (byte) (v & 0x7f);
+                            v = (byte)(v & 0x7f);
                             if (v != 0)
                                 labelBuilder.Append((char)v);
                         }
@@ -158,18 +192,19 @@ namespace Assets.Fileparsers
                         var pos = new Vector3(odef.ReadSingle(), odef.ReadSingle(), odef.ReadSingle());
                         odef.BaseStream.Position += 36;
                         var classId = odef.ReadUInt32();
-                        var teamId = odef.ReadUInt32();
+                        odef.ReadUInt16();
+                        var extraData = odef.ReadUInt16();
 
-                        var localPosition = new Vector3(pos.x%640, pos.y, pos.z%640);
-                        var patchPosX = (int)(pos.x/640.0f);
-                        var patchPosZ = (int)(pos.z/640.0f);
+                        var localPosition = new Vector3(pos.x % 640, pos.y, pos.z % 640);
+                        var patchPosX = (int)(pos.x / 640.0f);
+                        var patchPosZ = (int)(pos.z / 640.0f);
                         mdef.TerrainPatches[patchPosX, patchPosZ].Objects.Add(new Odef
                         {
                             Label = label,
                             Id = labelhigh,
                             LocalPosition = localPosition,
-                            ClassId = classId,
-                            TeamId = teamId,
+                            ClassId = (ClassId)classId,
+                            ExtraData = extraData,
                             LocalRotation = Quaternion.LookRotation(forward, upwards)
                         });
 

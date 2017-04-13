@@ -90,9 +90,13 @@
     <Compile Include="Assets\LevelManager.cs" />
     <Compile Include="Assets\MoveSky.cs" />
     <Compile Include="Assets\PartStream.cs" />
+    <Compile Include="Assets\TerrainSegment.cs" />
     <Compile Include="Assets\Triangulator.cs" />
     <Compile Include="Assets\Utils.cs" />
     <Compile Include="Assets\VirtualFilesystem.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Shaders\UnlitNoFog.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

@@ -62,7 +62,7 @@ namespace Assets
                     foreach (var vertexRef in face.VertexRefs)
                     {
                         vertices.Add(geoMesh.Vertices[vertexRef.VertexIndex]);
-                        normals.Add(geoMesh.Normals[faceIndex]);
+                        normals.Add(geoMesh.Normals[faceIndex % geoMesh.Normals.Length]);
                         uvs.Add(vertexRef.Uv);
                     }
 
