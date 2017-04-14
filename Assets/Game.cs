@@ -8,21 +8,14 @@ using UnityEngine;
 
 public class Game : MonoBehaviour
 {
-    public Material TextureMaterialPrefab;
-
     public string GamePath;
     public Texture2D SurfaceTexture;
     public Material TerrainMaterial;
     public Material SkyMaterial;
 
-    public Texture2D[] HeightmapTextures;
     public Terrain[,] TerrainPatches;
     public Vector2 RealTerrainGrid;
-
-    public Color32[] Palette;
-
-    public string SdfToLoad;
-    public string MapToLoad;
+    public string MissionFile;
 
     void Awake()
     {
@@ -33,40 +26,17 @@ public class Game : MonoBehaviour
     void Start()
     {
         VirtualFilesystem.Instance.Init(GamePath);
-
-        Palette = ActPaletteParser.ReadActPalette("t11.ACT");
-
-        //var path = @"e:\i76\extracted\map";
-        //Directory.CreateDirectory(path);
-        //foreach (var mapFile in VirtualFilesystem.Instance.FindAllWithExtension(".map"))
-        //{
-        //    File.WriteAllBytes(Path.Combine(path, mapFile), MapTextureParser.ReadMapTexture(mapFile, Palette).EncodeToPNG());
-        //}
-        //path = @"e:\i76\extracted\vqm";
-        //Directory.CreateDirectory(path);
-        //foreach (var mapFile in VirtualFilesystem.Instance.FindAllWithExtension(".vqm"))
-        //{
-        //    File.WriteAllBytes(Path.Combine(path, mapFile), VqmTextureParser.ReadVqmTexture(mapFile, Palette).EncodeToPNG());
-        //}
-
-        var levelManager = new LevelManager();
-        levelManager.TextureMaterialPrefab = TextureMaterialPrefab;
-        levelManager.Palette = Palette;
-
-        levelManager.ImportSdf(SdfToLoad, null, null, Vector3.zero, Quaternion.identity);
-
-        if (!string.IsNullOrEmpty(MapToLoad))
-            GetComponent<GUITexture>().texture = MapTextureParser.ReadMapTexture(MapToLoad, Palette);
+        var cacheManager = FindObjectOfType<CacheManager>();
 
         TerrainPatches = new Terrain[80, 80];
-        var textures = new List<Texture2D>();
-        var mdef = MsnMissionParser.ReadMsnMission("T01.msn");
+        var mdef = MsnMissionParser.ReadMsnMission(MissionFile);
 
-        var palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
-        SurfaceTexture = MapTextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, palette);
+        cacheManager.Palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
+        SurfaceTexture = TextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, cacheManager.Palette);
 
-        var skyTexture = MapTextureParser.ReadMapTexture(mdef.SkyTextureFilePath, palette);
+        var skyTexture = TextureParser.ReadMapTexture(mdef.SkyTextureFilePath, cacheManager.Palette);
         SkyMaterial.mainTexture = skyTexture;
+
 
         var splatPrototypes = new SplatPrototype[1]
         {
@@ -101,8 +71,10 @@ public class Game : MonoBehaviour
                 foreach (var odef in mdef.TerrainPatches[x, z].Objects)
                 {
                     //Debug.Log("Load " + odef.Label + " id: " + odef.Id);
-                    if (odef.ClassId != MsnMissionParser.ClassId.Car && odef.ClassId != MsnMissionParser.ClassId.Special && odef.LocalPosition != Vector3.zero)
-                        levelManager.ImportSdf(odef.Label + ".sdf", odef.Label, patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
+                    if (odef.ClassId != MsnMissionParser.ClassId.Car && odef.ClassId != MsnMissionParser.ClassId.Special)
+                    {
+                        cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
+                    }
                 }
 
                 //var texture = new Texture2D(128, 128, TextureFormat.ARGB32, false);
@@ -121,8 +93,57 @@ public class Game : MonoBehaviour
                 RealTerrainGrid = new Vector2(x, z);
             }
         }
-        HeightmapTextures = textures.ToArray();
+        //foreach (var road in mdef.Roads)
+        //{
+        //    var roadGo = new GameObject("Road");
+        //    var meshFilter = roadGo.AddComponent<MeshFilter>();
+        //    roadGo.AddComponent<MeshRenderer>();
 
+        //    var mesh = new Mesh();
+        //    var vertices = new List<Vector3>();
+
+        //    foreach (var roadSegment in road.RoadSegments)
+        //    {
+        //        vertices.Add(roadSegment.Left);
+        //        vertices.Add(roadSegment.Right);
+        //    }
+
+        //    var indices = new List<int>();
+        //    var idx = 0;
+        //    for (int i = 0; i < (vertices.Count-2) / 2 ; i++)
+        //    {
+        //        indices.Add(idx + 2);
+        //        indices.Add(idx + 1);
+        //        indices.Add(idx);
+        //        idx += 2;
+        //    }
+
+        //    mesh.vertices = vertices.ToArray();
+        //    mesh.triangles = indices.ToArray();
+        //    mesh.RecalculateNormals();
+        //    meshFilter.sharedMesh = mesh;
+        //}
+        //foreach (var ldef in mdef.StringObjects)
+        //{
+        //    var sdfObj = levelManager.ImportSdf(ldef.Label + ".sdf", ldef.Label, null, Vector3.zero, Quaternion.identity);
+        //    for (int i = 0; i < ldef.StringPositions.Count; i++)
+        //    {
+        //        var pos = ldef.StringPositions[i];
+        //        Vector3 relSpos;
+        //        if (i < ldef.StringPositions.Count - 1)
+        //            relSpos = ldef.StringPositions[i + 1];
+        //        else
+        //            relSpos = ldef.StringPositions[i - 1];
+
+        //        var localPosition = new Vector3(pos.x % 640, pos.y, pos.z % 640);
+        //        var patchPosX = (int)(pos.x / 640.0f);
+        //        var patchPosZ = (int)(pos.z / 640.0f);
+        //        sdfObj.transform.parent = TerrainPatches[patchPosX, patchPosZ].transform;
+        //        sdfObj.transform.localPosition = localPosition;
+        //        sdfObj.transform.LookAt(relSpos, Vector3.up);
+        //        sdfObj = Instantiate(sdfObj);
+        //    }
+        //}
         RepositionCurrentTerrainPatch(RealTerrainGrid);
     }
 
@@ -170,7 +191,7 @@ public class Game : MonoBehaviour
     private void RepositionCurrentTerrainPatch(Vector2 newTerrainGrid)
     {
         var frustum = GeometryUtility.CalculateFrustumPlanes(Camera.main);
-        
+
         for (int z = -1; z <= 1; z++)
         {
             var tpZ = (int)(RealTerrainGrid.y + z);
@@ -187,7 +208,7 @@ public class Game : MonoBehaviour
                 tp.gameObject.SetActive(false);
             }
         }
-        
+
         for (int z = -1; z <= 1; z++)
         {
             var tpZ = (int)(newTerrainGrid.y + z);

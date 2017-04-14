@@ -13,11 +13,13 @@
     <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <TargetFrameworkProfile>Unity Subset v3.5</TargetFrameworkProfile>
-    <CompilerResponseFile></CompilerResponseFile>
+    <CompilerResponseFile>
+    </CompilerResponseFile>
     <UnityProjectType>Game:1</UnityProjectType>
     <UnityBuildTarget>StandaloneWindows:5</UnityBuildTarget>
     <UnityVersion>5.5.0f3</UnityVersion>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <LangVersion Condition=" '$(VisualStudioVersion)' != '10.0' ">4</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -78,16 +80,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\CacheManager.cs" />
     <Compile Include="Assets\ExtendedFlycam.cs" />
     <Compile Include="Assets\Fileparsers\ActPaletteParser.cs" />
     <Compile Include="Assets\Fileparsers\Bwd2Reader.cs" />
     <Compile Include="Assets\Fileparsers\GeoParser.cs" />
-    <Compile Include="Assets\Fileparsers\MapTextureParser.cs" />
     <Compile Include="Assets\Fileparsers\MsnMissionParser.cs" />
     <Compile Include="Assets\Fileparsers\SdfObjectParser.cs" />
-    <Compile Include="Assets\Fileparsers\VqmTextureParser.cs" />
+    <Compile Include="Assets\Fileparsers\TextureParser.cs" />
     <Compile Include="Assets\Game.cs" />
-    <Compile Include="Assets\LevelManager.cs" />
     <Compile Include="Assets\MoveSky.cs" />
     <Compile Include="Assets\PartStream.cs" />
     <Compile Include="Assets\TerrainSegment.cs" />
@@ -96,7 +97,7 @@
     <Compile Include="Assets\VirtualFilesystem.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Shaders\UnlitNoFog.shader" />
+    <None Include="Assets\Shaders\UnlitSky.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

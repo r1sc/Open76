@@ -4,15 +4,27 @@ using System.Linq;
 using System.Text;
 using Assets.Fileparsers;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Assets
 {
-    class LevelManager
+    class CacheManager : MonoBehaviour
     {
+        public Material ColorMaterialPrefab;
         public Material TextureMaterialPrefab;
+        public Material TransparentMaterialPrefab;
 
-        private Dictionary<string, Material> _materials = new Dictionary<string, Material>();
         public Color32[] Palette;
+
+        private readonly Dictionary<string, Material> _materials = new Dictionary<string, Material>();
+
+        void Start()
+        {
+            
+        }
+        
+        //private Dictionary<string, Sdf> _sdfCache = new Dictionary<string, Sdf>();
+        //private Dictionary<string, GameObject> _geoCache = new Dictionary<string, GameObject>();
 
         private Material GetMaterial(GeoFace geoFace)
         {
@@ -20,20 +32,31 @@ namespace Assets
             if (!_materials.ContainsKey(matName))
             {
 
-                var material = GameObject.Instantiate(TextureMaterialPrefab);
+                Material material;
                 if (geoFace.TextureName != null)
                 {
-                    if(VirtualFilesystem.Instance.FileExists(geoFace.TextureName + ".vqm"))
-                        material.mainTexture = VqmTextureParser.ReadVqmTexture(geoFace.TextureName + ".vqm", Palette, "t05.lum");
-                    else if(VirtualFilesystem.Instance.FileExists(geoFace.TextureName + ".map"))
-                        material.mainTexture = MapTextureParser.ReadMapTexture(geoFace.TextureName + ".map", Palette);
+                    if (VirtualFilesystem.Instance.FileExists(geoFace.TextureName + ".vqm"))
+                    {
+                        var texture = TextureParser.ReadVqmTexture(geoFace.TextureName + ".vqm", Palette,
+                            "t05.lum");
+                        material = Object.Instantiate(texture.alphaIsTransparency ? TransparentMaterialPrefab : TextureMaterialPrefab);
+                        material.mainTexture = texture;
+                    }
+                    else if (VirtualFilesystem.Instance.FileExists(geoFace.TextureName + ".map"))
+                    {
+                        material = Object.Instantiate(TextureMaterialPrefab);
+                        material.mainTexture = TextureParser.ReadMapTexture(geoFace.TextureName + ".map", Palette);
+                    }
                     else
                     {
                         throw new Exception("Texture not found: " + geoFace.TextureName);
                     }
                 }
                 else
+                {
+                    material = Object.Instantiate(ColorMaterialPrefab);
                     material.color = geoFace.Color;
+                }
                 _materials[matName] = material;
             }
 
@@ -42,6 +65,15 @@ namespace Assets
 
         public GameObject ImportGeo(string geoFile)
         {
+
+            //if (_geoCache.ContainsKey(geoFile))
+            //{
+            //    var objCopy = Object.Instantiate(_geoCache[geoFile]);
+            //    while (objCopy.transform.childCount > 0)
+            //        Object.Destroy(objCopy.transform.GetChild(0));
+            //    return objCopy;
+            //}
+
             var geoMesh = GeoParser.ReadGeoMesh(geoFile);
 
             var mesh = new Mesh();
@@ -101,28 +133,36 @@ namespace Assets
             var obj = new GameObject(geoMesh.Name);
             obj.AddComponent<MeshFilter>().sharedMesh = mesh;
             obj.AddComponent<MeshRenderer>().materials = facesGroupedByMaterial.Select(x => x.Key).ToArray();
+            //_geoCache.Add(geoFile, obj);
             return obj;
         }
 
-        public void ImportSdf(string filename, string label, Transform parent, Vector3 localPosition, Quaternion localRotation)
+        public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation)
         {
             var sdf = SdfObjectParser.LoadSdf(filename);
-            var partDict = new Dictionary<string, GameObject>();
 
-            var root = new GameObject(label ?? sdf.Name);
-            root.transform.parent = parent;
-            partDict.Add("WORLD", root);
+            var sdfObject = new GameObject(sdf.Name);
+            sdfObject.transform.parent = parent;
+            sdfObject.transform.localPosition = localPosition;
+            sdfObject.transform.rotation = rotation;
+
+            var partDict = new Dictionary<string, GameObject> { { "WORLD", sdfObject } };
 
             foreach (var sdfPart in sdf.Parts)
             {
                 var partObj = ImportGeo(sdfPart.Name + ".geo");
                 partObj.transform.parent = partDict[sdfPart.ParentName].transform;
                 partObj.transform.localPosition = sdfPart.Position;
+                partObj.transform.localRotation = Quaternion.identity;
                 partDict.Add(sdfPart.Name, partObj);
             }
 
-            root.transform.localPosition = localPosition;
-            root.transform.localRotation = localRotation;
+            return sdfObject;
+        }
+
+        public void ClearCache()
+        {
+            _materials.Clear();
         }
     }
 }

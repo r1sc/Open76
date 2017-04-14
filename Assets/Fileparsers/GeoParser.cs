@@ -37,8 +37,13 @@ namespace Assets.Fileparsers
 
     public class GeoParser
     {
+        private static readonly Dictionary<string, GeoMesh> GeoMeshCache = new Dictionary<string, GeoMesh>();
+
         public static GeoMesh ReadGeoMesh(string filename)
         {
+            if (GeoMeshCache.ContainsKey(filename))
+                return GeoMeshCache[filename];
+
             using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
             {
                 var mesh = new GeoMesh();
@@ -93,6 +98,7 @@ namespace Assets.Fileparsers
                     }
                     mesh.Faces[i] = face;
                 }
+                GeoMeshCache.Add(filename, mesh);
                 return mesh;
             }
         }

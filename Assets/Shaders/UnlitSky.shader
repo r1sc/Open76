@@ -1,4 +1,4 @@
-﻿Shader "Unlit/UnlitNoFog"
+﻿Shader "Unlit/UnlitSky"
 {
 	Properties
 	{
@@ -6,11 +6,16 @@
 	}
 		SubShader
 	{
-		Tags{ "LightMode" = "Vertex" }
-		Fog{ Mode Off }
+		Tags{ 
+			"Queue" = "Background"
+			"RenderType" = "Background"
+			"ForceNoShadowCasting" = "True"
+		}
+		Fog { Mode Off }
 
 		Pass
 		{
+			ZWrite Off
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag

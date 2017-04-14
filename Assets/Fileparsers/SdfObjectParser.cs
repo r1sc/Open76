@@ -23,8 +23,14 @@ namespace Assets.Fileparsers
 
     public class SdfObjectParser
     {
+        private static readonly Dictionary<string, Sdf> SdfCache = new Dictionary<string, Sdf>();
+
         public static Sdf LoadSdf(string filename)
         {
+            filename = filename.ToLower();
+            if (SdfCache.ContainsKey(filename))
+                return SdfCache[filename];
+
             using (var br = new Bwd2Reader(filename))
             {
                 var sdf = new Sdf();
@@ -64,6 +70,7 @@ namespace Assets.Fileparsers
                     sdf.Parts[i] = sdfPart;
                 }
 
+                SdfCache.Add(filename, sdf);
                 return sdf;
             }
         }
