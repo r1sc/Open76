@@ -21,7 +21,11 @@ namespace Assets.Fileparsers
             {
                 var width = br.ReadInt32();
                 var height = br.ReadInt32();
-                var texture = new Texture2D(width, height, TextureFormat.ARGB32, true) { filterMode = FilterMode.Bilinear };
+                var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Repeat
+                };
                 for (int y = 0; y < height; y++)
                 {
                     for (int x = 0; x < width; x++)
@@ -46,8 +50,11 @@ namespace Assets.Fileparsers
             {
                 var width = br.ReadInt32();
                 var height = br.ReadInt32();
-                var texture = new Texture2D(width, height, TextureFormat.ARGB32, true);
-                texture.filterMode = FilterMode.Bilinear;
+                var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
+                {
+                    filterMode = FilterMode.Bilinear,
+                    wrapMode = TextureWrapMode.Repeat
+                };
                 var cbkFile = new string(br.ReadChars(12)).Replace("\0", "");
                 var unk1 = br.ReadInt32();
                 var transparent = new Color32(0, 0, 0, 0);

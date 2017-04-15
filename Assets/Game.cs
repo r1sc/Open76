@@ -44,7 +44,7 @@ public class Game : MonoBehaviour
             Destroy(worldGameObject);
         worldGameObject = new GameObject("World");
 
-        var splatPrototypes = new SplatPrototype[1]
+        var splatPrototypes = new[]
         {
             new SplatPrototype
             {
@@ -64,7 +64,6 @@ public class Game : MonoBehaviour
                 var patchGameObject = new GameObject("Ter " + x + ", " + z);
                 patchGameObject.transform.position = new Vector3(x * 640, 0, z * 640);
                 patchGameObject.transform.parent = worldGameObject.transform;
-                //patchGameObject.SetActive(false);
 
                 var terrain = patchGameObject.AddComponent<Terrain>();
                 terrain.terrainData = mdef.TerrainPatches[x, z].TerrainData;
@@ -82,18 +81,6 @@ public class Game : MonoBehaviour
                         cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
                     }
                 }
-
-                //var texture = new Texture2D(128, 128, TextureFormat.ARGB32, false);
-                //for (int iz = 0; iz < 128; iz++)
-                //{
-                //    for (int ix = 0; ix < 128; ix++)
-                //    {
-                //        var h = terrain.terrainData.GetHeight(ix, iz);
-                //        texture.SetPixel(ix, iz, Color.white * h);
-                //    }
-                //}
-                //texture.Apply();
-                //textures.Add(texture);
 
                 TerrainPatches[x, z] = terrain;
                 RealTerrainGrid = new Vector2(x, z);
@@ -165,27 +152,33 @@ public class Game : MonoBehaviour
             mesh.RecalculateNormals();
             meshFilter.sharedMesh = mesh;
         }
-        //foreach (var ldef in mdef.StringObjects)
-        //{
-        //    var sdfObj = levelManager.ImportSdf(ldef.Label + ".sdf", ldef.Label, null, Vector3.zero, Quaternion.identity);
-        //    for (int i = 0; i < ldef.StringPositions.Count; i++)
-        //    {
-        //        var pos = ldef.StringPositions[i];
-        //        Vector3 relSpos;
-        //        if (i < ldef.StringPositions.Count - 1)
-        //            relSpos = ldef.StringPositions[i + 1];
-        //        else
-        //            relSpos = ldef.StringPositions[i - 1];
+        foreach (var ldef in mdef.StringObjects)
+        {
+            var sdfObj = cacheManager.ImportSdf(ldef.Label + ".sdf", null, Vector3.zero, Quaternion.identity);
+            //sdfObj.name += " - " + ldef.Label;
+            for (int i = 0; i < ldef.StringPositions.Count; i++)
+            {
+                var pos = ldef.StringPositions[i];
+                var localPosition = new Vector3(pos.x % 640, pos.y, pos.z % 640);
+                var patchPosX = (int)(pos.x / 640.0f);
+                var patchPosZ = (int)(pos.z / 640.0f);
+                sdfObj.name = ldef.Label + " " + i;
+                sdfObj.transform.parent = TerrainPatches[patchPosX, patchPosZ].transform;
+                sdfObj.transform.localPosition = localPosition;
+                if (i < ldef.StringPositions.Count - 1)
+                {
+                    sdfObj.transform.LookAt(ldef.StringPositions[i + 1], Vector3.up);
+                }
+                else
+                {
+                    sdfObj.transform.LookAt(ldef.StringPositions[i - 1], Vector3.up);
+                    sdfObj.transform.localRotation *= Quaternion.AngleAxis(180, Vector3.up);
+                }
 
-        //        var localPosition = new Vector3(pos.x % 640, pos.y, pos.z % 640);
-        //        var patchPosX = (int)(pos.x / 640.0f);
-        //        var patchPosZ = (int)(pos.z / 640.0f);
-        //        sdfObj.transform.parent = TerrainPatches[patchPosX, patchPosZ].transform;
-        //        sdfObj.transform.localPosition = localPosition;
-        //        sdfObj.transform.LookAt(relSpos, Vector3.up);
-        //        sdfObj = Instantiate(sdfObj);
-        //    }
-        //}
+                if (i < ldef.StringPositions.Count - 1)
+                    sdfObj = Instantiate(sdfObj);
+            }
+        }
         //RepositionCurrentTerrainPatch(RealTerrainGrid);
         worldGameObject.transform.position = new Vector3(-mdef.Middle.x*640, 0, -mdef.Middle.y*640);
         FindObjectOfType<Light>().color = cacheManager.Palette[176];
