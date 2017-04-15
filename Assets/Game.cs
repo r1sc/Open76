@@ -30,6 +30,8 @@ public class Game : MonoBehaviour
         VirtualFilesystem.Instance.Init(GamePath);
         var cacheManager = FindObjectOfType<CacheManager>();
 
+        var vcf = VcfParser.ReadVcf("vppirna3.vcf");
+
         TerrainPatches = new Terrain[80, 80];
         var mdef = MsnMissionParser.ReadMsnMission(MissionFile);
 

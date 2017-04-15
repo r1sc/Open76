@@ -11,7 +11,7 @@ public class MoveSky : MonoBehaviour
     // Use this for initialization
 	void Start ()
 	{
-	    _material = GetComponent<MeshRenderer>().sharedMaterial;
+	    _material = GetComponent<MeshRenderer>().material;
 	}
 	
 	// Update is called once per frame
