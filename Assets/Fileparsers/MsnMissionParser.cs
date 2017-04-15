@@ -93,11 +93,14 @@ namespace Assets.Fileparsers
             public string LevelMapFilePath { get; set; }
             public string HzdFilePath { get; set; }
             public List<Ldef> StringObjects { get; set; }
+            public List<Road> Roads { get; set; }
+            public Vector2 Middle { get; set; }
 
             public MissonDefinition()
             {
                 TerrainPatches = new TerrainPatch[80, 80];
                 StringObjects = new List<Ldef>();
+                Roads = new List<Road>();
             }
         }
 
@@ -122,17 +125,18 @@ namespace Assets.Fileparsers
                     mdef.HzdFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
                 }
                 msn.FindNext("TDEF");
+                var heights = new List<float[,]>();
+                byte[] patchConfig;
                 using (var tdef = new Bwd2Reader(msn))
                 {
                     tdef.FindNext("ZMAP");
                     var numUniqueTerrainPatches = tdef.ReadByte();
-                    var patchConfig = tdef.ReadBytes(80 * 80);
+                    patchConfig = tdef.ReadBytes(80 * 80);
 
                     tdef.FindNext("ZONE");
                     var unk = tdef.ReadByte();
                     var terrainFilePath = new string(tdef.ReadChars(13)).Replace("\0", "");
 
-                    var heights = new List<float[,]>();
                     using (var terr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(terrainFilePath)))
                     {
                         for (var i = 0; i < numUniqueTerrainPatches; i++)
@@ -152,6 +156,8 @@ namespace Assets.Fileparsers
                         }
                     }
 
+                    var botLeft = new Vector2(80,80);
+                    var topRight = new Vector2(0, 0);
 
                     var defaultHeights = new float[129, 129];
                     for (int z = 0; z < 80; z++)
@@ -165,6 +171,15 @@ namespace Assets.Fileparsers
                             }
                             else
                             {
+                                if (x < botLeft.x)
+                                    botLeft.x = x;
+                                if (z < botLeft.y)
+                                    botLeft.y = z;
+                                if (x > topRight.x)
+                                    topRight.x = x;
+                                if (z > topRight.y)
+                                    topRight.y = z;
+
                                 var h = heights[patchIdx];
                                 var rightPatchIdx = x == 79 ? 0xFF : patchConfig[z * 80 + x + 1];
                                 var rightHeights = rightPatchIdx == 0xFF ? defaultHeights : heights[rightPatchIdx];
@@ -193,6 +208,8 @@ namespace Assets.Fileparsers
                             }
                         }
                     }
+                    mdef.Middle = (topRight + botLeft) / 2.0f;
+                    
                 }
 
                 msn.FindNext("RDEF");
@@ -207,7 +224,7 @@ namespace Assets.Fileparsers
                         {
                             SegmentType = (RoadSegmentType)segmentType
                         };
-                        
+
                         for (int i = 0; i < segmentPieceCount; i++)
                         {
                             var roadSegment = new RoadSegment
@@ -215,14 +232,34 @@ namespace Assets.Fileparsers
                                 Left = new Vector3(rdef.ReadSingle(), rdef.ReadSingle(), rdef.ReadSingle()),
                                 Right = new Vector3(rdef.ReadSingle(), rdef.ReadSingle(), rdef.ReadSingle())
                             };
-                            
-                            
-                            var localPosition = new Vector3(roadSegment.Left.x % 640, roadSegment.Left.y, roadSegment.Left.z % 640);
-                            var patchPosX = (int)(roadSegment.Left.x / 640.0f);
-                            var patchPosZ = (int)(roadSegment.Left.z / 640.0f);
-                            var terrainPatch = mdef.TerrainPatches[patchPosX, patchPosZ];
+
+                            var pos = roadSegment.Left;
+                            var patchPosX = (int)(pos.x / 640.0f);
+                            var patchPosZ = (int)(pos.z / 640.0f);
+                            var localPositionX = (pos.x % 640) / 640.0f;
+                            var localPositionZ = (pos.z % 640) / 640.0f;
+                            var y =
+                                mdef.TerrainPatches[patchPosX, patchPosZ].TerrainData.GetInterpolatedHeight(localPositionX,
+                                    localPositionZ) + 0.1f;
+                            pos.y = y;
+                            roadSegment.Left = pos;
+
+                            pos = roadSegment.Right;
+                            patchPosX = (int)(pos.x / 640.0f);
+                            patchPosZ = (int)(pos.z / 640.0f);
+                            localPositionX = (pos.x % 640) / 640.0f;
+                            localPositionZ = (pos.z % 640) / 640.0f;
+                            y =
+                                mdef.TerrainPatches[patchPosX, patchPosZ].TerrainData.GetInterpolatedHeight(localPositionX,
+                                    localPositionZ) + 0.1f;
+                            pos.y = y;
+                            roadSegment.Right = pos;
+
+                            road.RoadSegments.Add(roadSegment);
                             //TODO: Figure out
                         }
+                        mdef.Roads.Add(road);
+
                         rdef.Next();
                     }
                 }
@@ -314,7 +351,7 @@ namespace Assets.Fileparsers
         {
             var tdata = new TerrainData();
             tdata.heightmapResolution = 128;
-            tdata.size = new Vector3(640, 409.6f, 640);
+            tdata.size = new Vector3(640, 409.5f, 640);
             return tdata;
         }
 

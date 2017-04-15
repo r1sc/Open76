@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Assets;
 using Assets.Fileparsers;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class Game : MonoBehaviour
 {
@@ -57,7 +59,8 @@ public class Game : MonoBehaviour
 
                 var patchGameObject = new GameObject("Ter " + x + ", " + z);
                 patchGameObject.transform.position = new Vector3(x * 640, 0, z * 640);
-                patchGameObject.SetActive(false);
+                patchGameObject.transform.parent = transform;
+                //patchGameObject.SetActive(false);
 
                 var terrain = patchGameObject.AddComponent<Terrain>();
                 terrain.terrainData = mdef.TerrainPatches[x, z].TerrainData;
@@ -93,36 +96,72 @@ public class Game : MonoBehaviour
                 RealTerrainGrid = new Vector2(x, z);
             }
         }
-        //foreach (var road in mdef.Roads)
-        //{
-        //    var roadGo = new GameObject("Road");
-        //    var meshFilter = roadGo.AddComponent<MeshFilter>();
-        //    roadGo.AddComponent<MeshRenderer>();
 
-        //    var mesh = new Mesh();
-        //    var vertices = new List<Vector3>();
 
-        //    foreach (var roadSegment in road.RoadSegments)
-        //    {
-        //        vertices.Add(roadSegment.Left);
-        //        vertices.Add(roadSegment.Right);
-        //    }
+        foreach (var road in mdef.Roads)
+        {
+            var roadGo = new GameObject("Road");
+            roadGo.transform.parent = transform;
+            var meshFilter = roadGo.AddComponent<MeshFilter>();
+            var meshRenderer = roadGo.AddComponent<MeshRenderer>();
+            meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
 
-        //    var indices = new List<int>();
-        //    var idx = 0;
-        //    for (int i = 0; i < (vertices.Count-2) / 2 ; i++)
-        //    {
-        //        indices.Add(idx + 2);
-        //        indices.Add(idx + 1);
-        //        indices.Add(idx);
-        //        idx += 2;
-        //    }
 
-        //    mesh.vertices = vertices.ToArray();
-        //    mesh.triangles = indices.ToArray();
-        //    mesh.RecalculateNormals();
-        //    meshFilter.sharedMesh = mesh;
-        //}
+            string roadTextureFilename;
+            switch (road.SegmentType)
+            {
+                case MsnMissionParser.RoadSegmentType.PavedHighway:
+                    roadTextureFilename = "r2ayr_51";
+                    break;
+                case MsnMissionParser.RoadSegmentType.DirtTrack:
+                    roadTextureFilename = "r2dnr_37";
+                    break;
+                case MsnMissionParser.RoadSegmentType.RiverBed:
+                    roadTextureFilename = "r2wnr_39";
+                    break;
+                case MsnMissionParser.RoadSegmentType.FourLaneHighway:
+                    roadTextureFilename = "r2ayr_51";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            var roadMaterial = cacheManager.GetMaterial(roadTextureFilename);
+            meshRenderer.material = roadMaterial;
+
+            var mesh = new Mesh();
+            var vertices = new List<Vector3>();
+            var uvs = new List<Vector2>();
+
+            var uvIdx = 0;
+            foreach (var roadSegment in road.RoadSegments)
+            {
+                vertices.Add(roadSegment.Left);
+                vertices.Add(roadSegment.Right);
+                uvs.Add(new Vector2(0, uvIdx));
+                uvs.Add(new Vector2(1, uvIdx));
+                uvIdx += 1;
+            }
+
+            var indices = new List<int>();
+            var idx = 0;
+            for (int i = 0; i < (vertices.Count - 2)/2; i++)
+            {
+                indices.Add(idx + 2);
+                indices.Add(idx + 1);
+                indices.Add(idx);
+
+                indices.Add(idx + 2);
+                indices.Add(idx + 3);
+                indices.Add(idx + 1);
+                idx += 2;
+            }
+
+            mesh.vertices = vertices.ToArray();
+            mesh.triangles = indices.ToArray();
+            mesh.uv = uvs.ToArray();
+            mesh.RecalculateNormals();
+            meshFilter.sharedMesh = mesh;
+        }
         //foreach (var ldef in mdef.StringObjects)
         //{
         //    var sdfObj = levelManager.ImportSdf(ldef.Label + ".sdf", ldef.Label, null, Vector3.zero, Quaternion.identity);
@@ -144,7 +183,8 @@ public class Game : MonoBehaviour
         //        sdfObj = Instantiate(sdfObj);
         //    }
         //}
-        RepositionCurrentTerrainPatch(RealTerrainGrid);
+        //RepositionCurrentTerrainPatch(RealTerrainGrid);
+        transform.position = new Vector3(-mdef.Middle.x*640, 0, -mdef.Middle.y*640);
     }
 
     // Update is called once per frame
@@ -172,7 +212,6 @@ public class Game : MonoBehaviour
             newTerrainGrid.y += 1;
             newz = 0;
             changed = true;
-
         }
         else if (newz < 0.0f) // Moved forward
         {
@@ -183,23 +222,21 @@ public class Game : MonoBehaviour
 
         if (changed)
         {
-            Camera.main.transform.position = new Vector3(newx, Camera.main.transform.position.y, newz);
-            RepositionCurrentTerrainPatch(newTerrainGrid);
+            //Camera.main.transform.position = new Vector3(newx, Camera.main.transform.position.y, newz);
+            //RepositionCurrentTerrainPatch(newTerrainGrid);
         }
     }
 
     private void RepositionCurrentTerrainPatch(Vector2 newTerrainGrid)
     {
-        var frustum = GeometryUtility.CalculateFrustumPlanes(Camera.main);
-
         for (int z = -1; z <= 1; z++)
         {
-            var tpZ = (int)(RealTerrainGrid.y + z);
+            var tpZ = (int) (RealTerrainGrid.y + z);
             if (tpZ < 0 || tpZ > 79)
                 continue;
             for (int x = -1; x <= 1; x++)
             {
-                var tpX = (int)(RealTerrainGrid.x + x);
+                var tpX = (int) (RealTerrainGrid.x + x);
                 if (tpX < 0 || tpX > 79)
                     continue;
                 var tp = TerrainPatches[tpX, tpZ];
@@ -211,19 +248,19 @@ public class Game : MonoBehaviour
 
         for (int z = -1; z <= 1; z++)
         {
-            var tpZ = (int)(newTerrainGrid.y + z);
+            var tpZ = (int) (newTerrainGrid.y + z);
             if (tpZ < 0 || tpZ > 79)
                 continue;
             for (int x = -1; x <= 1; x++)
             {
-                var tpX = (int)(newTerrainGrid.x + x);
+                var tpX = (int) (newTerrainGrid.x + x);
                 if (tpX < 0 || tpX > 79)
                     continue;
                 var tp = TerrainPatches[tpX, tpZ];
                 if (tp == null)
                     continue;
                 tp.gameObject.SetActive(true);
-                tp.transform.position = new Vector3(x * 640, 0, z * 640);
+                tp.transform.position = new Vector3(x*640, 0, z*640);
             }
         }
 

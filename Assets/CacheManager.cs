@@ -25,38 +25,45 @@ namespace Assets
         
         //private Dictionary<string, Sdf> _sdfCache = new Dictionary<string, Sdf>();
         //private Dictionary<string, GameObject> _geoCache = new Dictionary<string, GameObject>();
+        public Material GetMaterial(string textureName)
+        {
+            if (!_materials.ContainsKey(textureName))
+            {
+
+                Material material;
+                if (VirtualFilesystem.Instance.FileExists(textureName + ".vqm"))
+                {
+                    var texture = TextureParser.ReadVqmTexture(textureName + ".vqm", Palette);
+                    material = Object.Instantiate(texture.alphaIsTransparency ? TransparentMaterialPrefab : TextureMaterialPrefab);
+                    material.mainTexture = texture;
+                }
+                else if (VirtualFilesystem.Instance.FileExists(textureName + ".map"))
+                {
+                    material = Object.Instantiate(TextureMaterialPrefab);
+                    material.mainTexture = TextureParser.ReadMapTexture(textureName + ".map", Palette);
+                }
+                else
+                {
+                    throw new Exception("Texture not found: " + textureName);
+                }
+                _materials[textureName] = material;
+            }
+
+            return _materials[textureName];
+        }
 
         private Material GetMaterial(GeoFace geoFace)
         {
             var matName = geoFace.TextureName ?? "color" + geoFace.Color;
             if (!_materials.ContainsKey(matName))
             {
-
-                Material material;
                 if (geoFace.TextureName != null)
                 {
-                    if (VirtualFilesystem.Instance.FileExists(geoFace.TextureName + ".vqm"))
-                    {
-                        var texture = TextureParser.ReadVqmTexture(geoFace.TextureName + ".vqm", Palette,
-                            "t05.lum");
-                        material = Object.Instantiate(texture.alphaIsTransparency ? TransparentMaterialPrefab : TextureMaterialPrefab);
-                        material.mainTexture = texture;
-                    }
-                    else if (VirtualFilesystem.Instance.FileExists(geoFace.TextureName + ".map"))
-                    {
-                        material = Object.Instantiate(TextureMaterialPrefab);
-                        material.mainTexture = TextureParser.ReadMapTexture(geoFace.TextureName + ".map", Palette);
-                    }
-                    else
-                    {
-                        throw new Exception("Texture not found: " + geoFace.TextureName);
-                    }
+                    return GetMaterial(geoFace.TextureName);
                 }
-                else
-                {
-                    material = Object.Instantiate(ColorMaterialPrefab);
-                    material.color = geoFace.Color;
-                }
+
+                var material = Object.Instantiate(ColorMaterialPrefab);
+                material.color = geoFace.Color;
                 _materials[matName] = material;
             }
 
