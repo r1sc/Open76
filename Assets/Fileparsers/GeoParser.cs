@@ -47,9 +47,9 @@ namespace Assets.Fileparsers
             using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
             {
                 var mesh = new GeoMesh();
-                var magic = new string(br.ReadChars(4));
+                var magic = br.ReadCString(4);
                 var unk1 = br.ReadUInt32();
-                mesh.Name = new string(br.ReadChars(16)).TrimEnd('\0');
+                mesh.Name = br.ReadCString(16);
                 var vertexCount = br.ReadUInt32();
                 var faceCount = br.ReadUInt32();
                 var unk2 = br.ReadUInt32();
@@ -80,9 +80,9 @@ namespace Assets.Fileparsers
                     face.SurfaceFlags1 = br.ReadByte();
                     face.SurfaceFlags2 = br.ReadByte();
                     face.SurfaceFlags3 = br.ReadByte();
-                    var textureName = br.ReadChars(13);
-                    if(textureName[0] != '\0')
-                        face.TextureName = new string(textureName).TrimEnd('\0');
+                    var textureName = br.ReadCString(13);
+                    if (textureName != "")
+                        face.TextureName = textureName;
                     var unk4 = br.ReadUInt32();
                     var unk5 = br.ReadUInt32();
                     //Debug.Log("Surf " + face.TextureName + " flags: " + face.SurfaceFlags1 + ", " + face.SurfaceFlags2 + ", " + face.SurfaceFlags3 + ", " + unk3 + ", " + unk4 + ", " + unk5 + ", color=" + face.Color);

@@ -55,7 +55,7 @@ namespace Assets.Fileparsers
                     filterMode = FilterMode.Bilinear,
                     wrapMode = TextureWrapMode.Repeat
                 };
-                var cbkFile = new string(br.ReadChars(12)).Replace("\0", "");
+                var cbkFile = br.ReadCString(12);
                 var unk1 = br.ReadInt32();
                 var transparent = new Color32(0, 0, 0, 0);
                 bool hasTransparency = false;

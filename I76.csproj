@@ -80,6 +80,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\BinaryReaderExtensions.cs" />
     <Compile Include="Assets\CacheManager.cs" />
     <Compile Include="Assets\ExtendedFlycam.cs" />
     <Compile Include="Assets\Fileparsers\ActPaletteParser.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="Assets\Fileparsers\SdfObjectParser.cs" />
     <Compile Include="Assets\Fileparsers\TextureParser.cs" />
     <Compile Include="Assets\Fileparsers\VcfParser.cs" />
+    <Compile Include="Assets\Fileparsers\VdfParser.cs" />
     <Compile Include="Assets\Game.cs" />
     <Compile Include="Assets\MoveSky.cs" />
     <Compile Include="Assets\PartStream.cs" />

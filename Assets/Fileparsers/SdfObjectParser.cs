@@ -36,14 +36,14 @@ namespace Assets.Fileparsers
                 var sdf = new Sdf();
 
                 br.FindNext("SDFC");
-                sdf.Name = new string(br.ReadChars(16)).TrimEnd('\0');
+                sdf.Name = br.ReadCString(16);
                 var one = br.ReadUInt32();
                 var size = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                 var unk1 = br.ReadUInt32();
                 var unk2 = br.ReadUInt32();
                 var fifty = br.ReadUInt32();
-                var xdf = new string(br.ReadChars(13)).TrimEnd('\0');
-                var wav = new string(br.ReadChars(13)).TrimEnd('\0');
+                var xdf = br.ReadCString(13);
+                var wav = br.ReadCString(13);
                 
                 br.FindNext("SGEO");
                 var numParts = br.ReadUInt32();
@@ -51,7 +51,7 @@ namespace Assets.Fileparsers
                 for (int i = 0; i < numParts; i++)
                 {
                     var sdfPart = new SdfPart();
-                    sdfPart.Name = new string(br.ReadChars(8)).TrimEnd('\0');
+                    sdfPart.Name = br.ReadCString(8);
                     var xScale = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     var yScale = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     var zScale = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
@@ -62,7 +62,7 @@ namespace Assets.Fileparsers
                     if (zScale != Vector3.forward)
                         Debug.Log(".sdf Z discrepancy:" + zScale);
                     sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    sdfPart.ParentName = new string(br.ReadChars(8)).TrimEnd('\0');
+                    sdfPart.ParentName = br.ReadCString(8);
                     br.BaseStream.Seek(56, SeekOrigin.Current);
 
                     sdf.Parts[i] = sdfPart;

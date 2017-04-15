@@ -114,15 +114,15 @@ namespace Assets.Fileparsers
                 {
                     wdef.FindNext("WRLD");
                     wdef.BaseStream.Seek(30, SeekOrigin.Current);
-                    mdef.PaletteFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
-                    mdef.LumaTableFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
-                    mdef.XlucencyTableFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
-                    mdef.ObjectiveFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
-                    mdef.SkyTextureFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
-                    mdef.ScroungeTextureFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
-                    mdef.SurfaceTextureFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
-                    mdef.LevelMapFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
-                    mdef.HzdFilePath = new string(wdef.ReadChars(13)).Replace("\0", "");
+                    mdef.PaletteFilePath = wdef.ReadCString(13);
+                    mdef.LumaTableFilePath = wdef.ReadCString(13);
+                    mdef.XlucencyTableFilePath = wdef.ReadCString(13);
+                    mdef.ObjectiveFilePath = wdef.ReadCString(13);
+                    mdef.SkyTextureFilePath = wdef.ReadCString(13);
+                    mdef.ScroungeTextureFilePath = wdef.ReadCString(13);
+                    mdef.SurfaceTextureFilePath = wdef.ReadCString(13);
+                    mdef.LevelMapFilePath = wdef.ReadCString(13);
+                    mdef.HzdFilePath = wdef.ReadCString(13);
                 }
                 msn.FindNext("TDEF");
                 var heights = new List<float[,]>();
@@ -135,7 +135,7 @@ namespace Assets.Fileparsers
 
                     tdef.FindNext("ZONE");
                     var unk = tdef.ReadByte();
-                    var terrainFilePath = new string(tdef.ReadChars(13)).Replace("\0", "");
+                    var terrainFilePath = tdef.ReadCString(13);
 
                     using (var terr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(terrainFilePath)))
                     {
@@ -321,7 +321,7 @@ namespace Assets.Fileparsers
                     ldef.FindNext("OBJ");
                     while (ldef.Current != null && ldef.Current.Name != "EXIT")
                     {
-                        var label = new string(ldef.ReadChars(8)).TrimEnd('\0');
+                        var label = ldef.ReadCString(8);
                         ldef.BaseStream.Position += 84;
                         var classId = (ClassId)ldef.ReadUInt32();
                         ldef.ReadUInt32();

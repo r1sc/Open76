@@ -24,7 +24,7 @@ namespace Assets.Fileparsers
         {
             while (BaseStream.Position < BaseStream.Length)
             {
-                var tagName = new string(ReadChars(4)).Replace("\0", "");
+                var tagName = this.ReadCString(4);
                 var dataLength = ReadUInt32() - 8;
                 var tag = new Tag { Name = tagName, DataPosition = BaseStream.Position, DataLength = dataLength };
                 if (_root == null)

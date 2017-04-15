@@ -36,7 +36,7 @@ namespace Assets
             var zfsPath = Path.Combine(gamepath, "I76.ZFS");
             _br = new BinaryReader(new FileStream(zfsPath, FileMode.Open));
 
-            var magic = new string(_br.ReadChars(4));
+            var magic = _br.ReadCString(4);
             if (magic != "ZFSF")
                 throw new Exception("Not an ZFS file");
             var version = _br.ReadUInt32();
@@ -57,7 +57,7 @@ namespace Assets
                     if (_files.Count == numFilesTotal)
                         break;
                     var zfsFileInfo = new ZFSFileInfo();
-                    zfsFileInfo.Filename = new string(_br.ReadChars(16)).Replace("\0", "").ToLower();
+                    zfsFileInfo.Filename = _br.ReadCString(16).ToLower();
                     zfsFileInfo.Offset = _br.ReadUInt32();
                     zfsFileInfo.Id = _br.ReadUInt32();
                     zfsFileInfo.Length = _br.ReadUInt32();

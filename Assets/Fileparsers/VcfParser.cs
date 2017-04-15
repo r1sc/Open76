@@ -51,15 +51,15 @@ namespace Assets.Fileparsers
                 br.FindNext("VCFC");
 
                 var vcf = new Vcf();
-                vcf.VariantName = new string(br.ReadChars(16)).TrimEnd('\0');
-                vcf.VdfFilename = new string(br.ReadChars(13)).TrimEnd('\0');
-                vcf.VtfFilename = new string(br.ReadChars(13)).TrimEnd('\0');
+                vcf.VariantName = br.ReadCString(16);
+                vcf.VdfFilename = br.ReadCString(13);
+                vcf.VtfFilename = br.ReadCString(13);
                 vcf.EngineType = br.ReadUInt32();
                 vcf.SuspensionType = br.ReadUInt32();
                 vcf.BrakesType = br.ReadUInt32();
-                vcf.WdfFrontFilename = Encoding.ASCII.GetString(br.ReadBytes(13)).TrimEnd('\0');
-                vcf.WdfMidFilename = Encoding.ASCII.GetString(br.ReadBytes(13)).TrimEnd('\0');
-                vcf.WdfBackFilename = Encoding.ASCII.GetString(br.ReadBytes(13)).TrimEnd('\0');
+                vcf.WdfFrontFilename = br.ReadCString(13);
+                vcf.WdfMidFilename = br.ReadCString(13);
+                vcf.WdfBackFilename = br.ReadCString(13);
                 vcf.ArmorFront = br.ReadUInt32();
                 vcf.ArmorLeft = br.ReadUInt32();
                 vcf.ArmorRight = br.ReadUInt32();
@@ -77,7 +77,7 @@ namespace Assets.Fileparsers
                     var vcfWeapon = new VcfWeapon
                     {
                         MountPoint = (MountPoint)br.ReadUInt32(),
-                        GdfFilename = new string(br.ReadChars(13)).TrimEnd('\0')
+                        GdfFilename = br.ReadCString(13)
                     };
                     vcf.Weapons.Add(vcfWeapon);
                     br.Next();
