@@ -39,6 +39,10 @@ public class Game : MonoBehaviour
         var skyTexture = TextureParser.ReadMapTexture(mdef.SkyTextureFilePath, cacheManager.Palette);
         SkyMaterial.mainTexture = skyTexture;
 
+        var worldGameObject = GameObject.Find("World");
+        if(worldGameObject != null)
+            Destroy(worldGameObject);
+        worldGameObject = new GameObject("World");
 
         var splatPrototypes = new SplatPrototype[1]
         {
@@ -59,7 +63,7 @@ public class Game : MonoBehaviour
 
                 var patchGameObject = new GameObject("Ter " + x + ", " + z);
                 patchGameObject.transform.position = new Vector3(x * 640, 0, z * 640);
-                patchGameObject.transform.parent = transform;
+                patchGameObject.transform.parent = worldGameObject.transform;
                 //patchGameObject.SetActive(false);
 
                 var terrain = patchGameObject.AddComponent<Terrain>();
@@ -73,7 +77,6 @@ public class Game : MonoBehaviour
 
                 foreach (var odef in mdef.TerrainPatches[x, z].Objects)
                 {
-                    //Debug.Log("Load " + odef.Label + " id: " + odef.Id);
                     if (odef.ClassId != MsnMissionParser.ClassId.Car && odef.ClassId != MsnMissionParser.ClassId.Special)
                     {
                         cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
@@ -101,7 +104,7 @@ public class Game : MonoBehaviour
         foreach (var road in mdef.Roads)
         {
             var roadGo = new GameObject("Road");
-            roadGo.transform.parent = transform;
+            roadGo.transform.parent = worldGameObject.transform;
             var meshFilter = roadGo.AddComponent<MeshFilter>();
             var meshRenderer = roadGo.AddComponent<MeshRenderer>();
             meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
@@ -125,7 +128,7 @@ public class Game : MonoBehaviour
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            var roadMaterial = cacheManager.GetMaterial(roadTextureFilename);
+            var roadMaterial = cacheManager.GetMaterial(roadTextureFilename, false);
             meshRenderer.material = roadMaterial;
 
             var mesh = new Mesh();
@@ -184,7 +187,12 @@ public class Game : MonoBehaviour
         //    }
         //}
         //RepositionCurrentTerrainPatch(RealTerrainGrid);
-        transform.position = new Vector3(-mdef.Middle.x*640, 0, -mdef.Middle.y*640);
+        worldGameObject.transform.position = new Vector3(-mdef.Middle.x*640, 0, -mdef.Middle.y*640);
+        FindObjectOfType<Light>().color = cacheManager.Palette[176];
+        Camera.main.backgroundColor = cacheManager.Palette[239];
+        RenderSettings.fogColor = cacheManager.Palette[239];
+        RenderSettings.ambientLight = cacheManager.Palette[247];
+
     }
 
     // Update is called once per frame

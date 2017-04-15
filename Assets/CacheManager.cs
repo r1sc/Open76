@@ -25,7 +25,7 @@ namespace Assets
         
         //private Dictionary<string, Sdf> _sdfCache = new Dictionary<string, Sdf>();
         //private Dictionary<string, GameObject> _geoCache = new Dictionary<string, GameObject>();
-        public Material GetMaterial(string textureName)
+        public Material GetMaterial(string textureName, bool transparent)
         {
             if (!_materials.ContainsKey(textureName))
             {
@@ -34,7 +34,7 @@ namespace Assets
                 if (VirtualFilesystem.Instance.FileExists(textureName + ".vqm"))
                 {
                     var texture = TextureParser.ReadVqmTexture(textureName + ".vqm", Palette);
-                    material = Object.Instantiate(texture.alphaIsTransparency ? TransparentMaterialPrefab : TextureMaterialPrefab);
+                    material = Object.Instantiate(transparent ? TransparentMaterialPrefab : TextureMaterialPrefab);
                     material.mainTexture = texture;
                 }
                 else if (VirtualFilesystem.Instance.FileExists(textureName + ".map"))
@@ -46,9 +46,10 @@ namespace Assets
                 {
                     throw new Exception("Texture not found: " + textureName);
                 }
+                material.name = textureName;
                 _materials[textureName] = material;
             }
-
+            
             return _materials[textureName];
         }
 
@@ -59,7 +60,7 @@ namespace Assets
             {
                 if (geoFace.TextureName != null)
                 {
-                    return GetMaterial(geoFace.TextureName);
+                    return GetMaterial(geoFace.TextureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
                 }
 
                 var material = Object.Instantiate(ColorMaterialPrefab);

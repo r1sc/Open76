@@ -38,12 +38,10 @@ namespace Assets.Fileparsers
                 br.FindNext("SDFC");
                 sdf.Name = new string(br.ReadChars(16)).TrimEnd('\0');
                 var one = br.ReadUInt32();
-                Debug.Log(".sdf One: " + one);
                 var size = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                 var unk1 = br.ReadUInt32();
                 var unk2 = br.ReadUInt32();
                 var fifty = br.ReadUInt32();
-                Debug.Log(".sdf Fifty: " + fifty);
                 var xdf = new string(br.ReadChars(13)).TrimEnd('\0');
                 var wav = new string(br.ReadChars(13)).TrimEnd('\0');
                 

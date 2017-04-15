@@ -85,6 +85,7 @@ namespace Assets.Fileparsers
                         face.TextureName = new string(textureName).TrimEnd('\0');
                     var unk4 = br.ReadUInt32();
                     var unk5 = br.ReadUInt32();
+                    //Debug.Log("Surf " + face.TextureName + " flags: " + face.SurfaceFlags1 + ", " + face.SurfaceFlags2 + ", " + face.SurfaceFlags3 + ", " + unk3 + ", " + unk4 + ", " + unk5 + ", color=" + face.Color);
 
                     face.VertexRefs = new GeoVertexRef[numVerticesInFace];
                     for (int v = 0; v < numVerticesInFace; v++)
