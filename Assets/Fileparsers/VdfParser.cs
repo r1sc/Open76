@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace Assets.Fileparsers
 {
@@ -27,11 +29,13 @@ namespace Assets.Fileparsers
         public uint Unk1 { get; set; }
         public uint Unk2 { get; set; }
         public uint Unk4 { get; set; }
+        public List<SdfPart[]> PartsThirdPerson { get; set; }
+        public SdfPart[] PartsFirstPerson { get; set; }
     }
 
     public class VdfParser
     {
-        public static void ParseVdf(string filename)
+        public static Vdf ParseVdf(string filename)
         {
             using (var br = new Bwd2Reader(filename))
             {
@@ -60,6 +64,46 @@ namespace Assets.Fileparsers
 
 
                 vdf.Unk4 = br.ReadUInt32();
+
+                br.FindNext("VGEO");
+                var numParts = br.ReadUInt32();
+                vdf.PartsThirdPerson = new List<SdfPart[]>(4);
+                for (int damageState = 0; damageState < 4; damageState++)
+                {
+                    var parts = new SdfPart[numParts];
+                    for (int i = 0; i < numParts; i++)
+                    {
+                        var sdfPart = new SdfPart();
+                        sdfPart.Name = br.ReadCString(8);
+                        sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                        sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                        sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                        sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                        sdfPart.ParentName = br.ReadCString(8);
+                        br.BaseStream.Seek(36, SeekOrigin.Current);
+
+                        parts[i] = sdfPart;
+                    }
+                    vdf.PartsThirdPerson.Add(parts);
+                }
+                br.BaseStream.Seek(100 * numParts * 12, SeekOrigin.Current);
+
+                vdf.PartsFirstPerson = new SdfPart[numParts];
+                for (int i = 0; i < numParts; i++)
+                {
+                    var sdfPart = new SdfPart();
+                    sdfPart.Name = br.ReadCString(8);
+                    sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    sdfPart.ParentName = br.ReadCString(8);
+                    br.BaseStream.Seek(36, SeekOrigin.Current);
+
+                    vdf.PartsFirstPerson[i] = sdfPart;
+                }
+
+                return vdf;
             }
         }
     }

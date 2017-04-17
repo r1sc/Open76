@@ -19,6 +19,9 @@ namespace Assets.Fileparsers
         public string Name { get; set; }
         public string ParentName { get; set; }
         public Vector3 Position { get; set; }
+        public Vector3 Right { get; set; }
+        public Vector3 Up { get; set; }
+        public Vector3 Forward { get; set; }
     }
 
     public class SdfObjectParser

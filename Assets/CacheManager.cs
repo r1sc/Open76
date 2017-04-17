@@ -18,49 +18,54 @@ namespace Assets
 
         private readonly Dictionary<string, Material> _materials = new Dictionary<string, Material>();
 
-        void Start()
+        void Awake()
         {
-            
+            _materials["default"] = Object.Instantiate(TextureMaterialPrefab);
         }
-        
+
         //private Dictionary<string, Sdf> _sdfCache = new Dictionary<string, Sdf>();
         //private Dictionary<string, GameObject> _geoCache = new Dictionary<string, GameObject>();
         public Material GetMaterial(string textureName, bool transparent)
         {
             if (!_materials.ContainsKey(textureName))
             {
-
-                Material material;
+                Texture2D texture;
                 if (VirtualFilesystem.Instance.FileExists(textureName + ".vqm"))
                 {
-                    var texture = TextureParser.ReadVqmTexture(textureName + ".vqm", Palette);
-                    material = Object.Instantiate(transparent ? TransparentMaterialPrefab : TextureMaterialPrefab);
-                    material.mainTexture = texture;
+                    texture = TextureParser.ReadVqmTexture(textureName + ".vqm", Palette);
                 }
                 else if (VirtualFilesystem.Instance.FileExists(textureName + ".map"))
                 {
-                    material = Object.Instantiate(TextureMaterialPrefab);
-                    material.mainTexture = TextureParser.ReadMapTexture(textureName + ".map", Palette);
+                    texture = TextureParser.ReadMapTexture(textureName + ".map", Palette);
                 }
                 else
                 {
                     throw new Exception("Texture not found: " + textureName);
                 }
+                var material = Instantiate(transparent ? TransparentMaterialPrefab : TextureMaterialPrefab);
+                material.mainTexture = texture;
                 material.name = textureName;
                 _materials[textureName] = material;
             }
-            
+
             return _materials[textureName];
         }
 
         private Material GetMaterial(GeoFace geoFace)
         {
             var matName = geoFace.TextureName ?? "color" + geoFace.Color;
+            if (matName.StartsWith("V"))
+            {
+                Debug.Log("Vehicle tmt reference: " + matName);
+                matName = "default";
+            }
             if (!_materials.ContainsKey(matName))
             {
                 if (geoFace.TextureName != null)
                 {
-                    return GetMaterial(geoFace.TextureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
+                    var mat = GetMaterial(geoFace.TextureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
+                    //Debug.Log(geoFace.TextureName + "color=" + geoFace.Color + " flag1=" + geoFace.SurfaceFlags1 + " flag2=" + geoFace.SurfaceFlags2, mat);
+                    return mat;
                 }
 
                 var material = Object.Instantiate(ColorMaterialPrefab);
@@ -166,6 +171,38 @@ namespace Assets
             }
 
             return sdfObject;
+        }
+
+        public GameObject ImportVcf(string filename)
+        {
+            var vcf = VcfParser.ParseVcf(filename);
+            var vdf = VdfParser.ParseVdf(vcf.VdfFilename);
+            var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
+
+            var vdfObject = new GameObject(vdf.Name);
+            var partDict = new Dictionary<string, GameObject> { { "WORLD", vdfObject } };
+
+            foreach (var sdfPart in vdf.PartsFirstPerson)
+            {
+                if (sdfPart.Name == "NULL")
+                    continue;
+                var partObj = ImportGeo(sdfPart.Name + ".geo");
+                var parentName = sdfPart.ParentName;
+                if (!partDict.ContainsKey(parentName))
+                {
+                    Debug.Log("Cant find parent '" + sdfPart.ParentName + "' for '" + sdfPart.Name + "'");
+                    parentName = "WORLD";
+                }
+                partObj.transform.parent = partDict[parentName].transform;
+                partObj.transform.right = sdfPart.Right;
+                partObj.transform.up = sdfPart.Up;
+                partObj.transform.forward = sdfPart.Forward;
+                partObj.transform.localPosition = sdfPart.Position;
+                partDict.Add(sdfPart.Name, partObj);
+            }
+
+
+            return vdfObject;
         }
 
         public void ClearCache()

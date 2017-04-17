@@ -18,6 +18,7 @@ public class Game : MonoBehaviour
     public Terrain[,] TerrainPatches;
     public Vector2 RealTerrainGrid;
     public string MissionFile;
+    public string VcfToLoad = "vppirna1.vcf";
 
     void Awake()
     {
@@ -29,9 +30,7 @@ public class Game : MonoBehaviour
     {
         VirtualFilesystem.Instance.Init(GamePath);
         var cacheManager = FindObjectOfType<CacheManager>();
-
-        var vcf = VcfParser.ReadVcf("vppirna3.vcf");
-
+        
         TerrainPatches = new Terrain[80, 80];
         var mdef = MsnMissionParser.ReadMsnMission(MissionFile);
 
@@ -45,6 +44,9 @@ public class Game : MonoBehaviour
         if(worldGameObject != null)
             Destroy(worldGameObject);
         worldGameObject = new GameObject("World");
+
+        
+        cacheManager.ImportVcf(VcfToLoad);
 
         var splatPrototypes = new[]
         {

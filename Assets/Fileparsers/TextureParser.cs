@@ -9,6 +9,7 @@ namespace Assets.Fileparsers
 {
     class TextureParser
     {
+        private static Color32 transparent = new Color32(0, 0, 0, 0);
         private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>();
 
         public static Texture2D ReadMapTexture(string filename, Color32[] palette)
@@ -17,6 +18,7 @@ namespace Assets.Fileparsers
             if (TextureCache.ContainsKey(filename))
                 return TextureCache[filename];
 
+            var hasTransparency = false;
             using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
             {
                 var width = br.ReadInt32();
@@ -30,10 +32,14 @@ namespace Assets.Fileparsers
                 {
                     for (int x = 0; x < width; x++)
                     {
-                        var paletteIdx = br.ReadByte();
-                        texture.SetPixel(x, y, palette[paletteIdx]);
+                        var paletteIndex = br.ReadByte();
+                        if (paletteIndex == 0xFF)
+                            hasTransparency = true;
+                        var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
+                        texture.SetPixel(x, y, color);
                     }
                 }
+                texture.alphaIsTransparency = hasTransparency;
                 texture.Apply(true);
                 TextureCache.Add(filename, texture);
                 return texture;
@@ -57,7 +63,6 @@ namespace Assets.Fileparsers
                 };
                 var cbkFile = br.ReadCString(12);
                 var unk1 = br.ReadInt32();
-                var transparent = new Color32(0, 0, 0, 0);
                 bool hasTransparency = false;
 
                 using (var cbkBr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(cbkFile)))

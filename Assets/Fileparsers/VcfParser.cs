@@ -44,7 +44,7 @@ namespace Assets.Fileparsers
             SecondTop
         }
 
-        public static Vcf ReadVcf(string filename)
+        public static Vcf ParseVcf(string filename)
         {
             using (var br = new Bwd2Reader(filename))
             {
