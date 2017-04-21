@@ -119,7 +119,7 @@ public class Game : MonoBehaviour
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            var roadMaterial = cacheManager.GetMaterial(roadTextureFilename, false);
+            var roadMaterial = cacheManager.GetTextureMaterial(roadTextureFilename, false);
             meshRenderer.material = roadMaterial;
 
             var mesh = new Mesh();

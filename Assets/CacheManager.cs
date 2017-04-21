@@ -20,12 +20,10 @@ namespace Assets
 
         void Awake()
         {
-            _materials["default"] = Object.Instantiate(TextureMaterialPrefab);
+            _materials["default"] = Instantiate(TextureMaterialPrefab);
         }
 
-        //private Dictionary<string, Sdf> _sdfCache = new Dictionary<string, Sdf>();
-        //private Dictionary<string, GameObject> _geoCache = new Dictionary<string, GameObject>();
-        public Material GetMaterial(string textureName, bool transparent)
+        public Material GetTextureMaterial(string textureName, bool transparent)
         {
             if (!_materials.ContainsKey(textureName))
             {
@@ -51,50 +49,57 @@ namespace Assets
             return _materials[textureName];
         }
 
-        private Material GetMaterial(GeoFace geoFace)
+        public Material GetColorMaterial(string materialName, Color32 color)
         {
-            var matName = geoFace.TextureName ?? "color" + geoFace.Color;
-            if (matName.StartsWith("V"))
-            {
-                Debug.Log("Vehicle tmt reference: " + matName);
-                matName = "default";
-            }
-            if (!_materials.ContainsKey(matName))
-            {
-                if (geoFace.TextureName != null)
-                {
-                    var mat = GetMaterial(geoFace.TextureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
-                    //Debug.Log(geoFace.TextureName + "color=" + geoFace.Color + " flag1=" + geoFace.SurfaceFlags1 + " flag2=" + geoFace.SurfaceFlags2, mat);
-                    return mat;
-                }
+            if (_materials.ContainsKey(materialName))
+                return _materials[materialName];
 
-                var material = Object.Instantiate(ColorMaterialPrefab);
-                material.color = geoFace.Color;
-                _materials[matName] = material;
-            }
+            var material = Instantiate(ColorMaterialPrefab);
+            material.color = color;
+            _materials[materialName] = material;
 
-            return _materials[matName];
+            return material;
         }
 
-        public GameObject ImportGeo(string geoFile)
+        private Material GetMaterial(GeoFace geoFace, Vtf vtf)
         {
+            
+            if (geoFace.TextureName != null)
+            {
+                if (vtf != null && geoFace.TextureName.StartsWith("V"))
+                {
+                    Debug.Log("Vehicle tmt reference: " + geoFace.TextureName);
+                    switch (geoFace.TextureName)
+                    {
+                        case "V1 BO DY":
+                            geoFace.TextureName = vtf.Maps[12];
+                            break;
+                        case "V5 FT TP":
+                            geoFace.TextureName = vtf.Maps[1];
+                            break;
+                        default:
+                            geoFace.TextureName = vtf.Maps[0];
+                            break;
+                    }
+                }
+                return GetTextureMaterial(geoFace.TextureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
+                //Debug.Log(geoFace.TextureName + "color=" + geoFace.Color + " flag1=" + geoFace.SurfaceFlags1 + " flag2=" + geoFace.SurfaceFlags2, mat);
+            }
+            return GetColorMaterial("color" + geoFace.Color, geoFace.Color);
+        }
+        
 
-            //if (_geoCache.ContainsKey(geoFile))
-            //{
-            //    var objCopy = Object.Instantiate(_geoCache[geoFile]);
-            //    while (objCopy.transform.childCount > 0)
-            //        Object.Destroy(objCopy.transform.GetChild(0));
-            //    return objCopy;
-            //}
 
-            var geoMesh = GeoParser.ReadGeoMesh(geoFile);
+        public GameObject ImportGeo(string filename, Vtf vtf)
+        {
+            var geoMesh = GeoParser.ReadGeoMesh(filename);
 
             var mesh = new Mesh();
             var vertices = new List<Vector3>();
             var uvs = new List<Vector2>();
             var normals = new List<Vector3>();
 
-            var facesGroupedByMaterial = geoMesh.Faces.GroupBy(GetMaterial).ToArray();
+            var facesGroupedByMaterial = geoMesh.Faces.GroupBy(face => GetMaterial(face, vtf)).ToArray();
             mesh.subMeshCount = facesGroupedByMaterial.Length;
             var submeshTriangles = new Dictionary<Material, List<int>>();
             foreach (var faceGroup in facesGroupedByMaterial)
@@ -146,12 +151,22 @@ namespace Assets
             var obj = new GameObject(geoMesh.Name);
             obj.AddComponent<MeshFilter>().sharedMesh = mesh;
             obj.AddComponent<MeshRenderer>().materials = facesGroupedByMaterial.Select(x => x.Key).ToArray();
-            //_geoCache.Add(geoFile, obj);
+
             return obj;
         }
 
+
+        private Dictionary<string, GameObject> _sdfCache = new Dictionary<string, GameObject>();
         public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation)
         {
+            if (_sdfCache.ContainsKey(filename))
+            {
+                var obj = Instantiate(_sdfCache[filename], parent);
+                obj.transform.localPosition = localPosition;
+                obj.transform.localRotation = rotation;
+                return obj;
+            }
+
             var sdf = SdfObjectParser.LoadSdf(filename);
 
             var sdfObject = new GameObject(sdf.Name);
@@ -163,13 +178,14 @@ namespace Assets
 
             foreach (var sdfPart in sdf.Parts)
             {
-                var partObj = ImportGeo(sdfPart.Name + ".geo");
+                var partObj = ImportGeo(sdfPart.Name + ".geo", null);
                 partObj.transform.parent = partDict[sdfPart.ParentName].transform;
                 partObj.transform.localPosition = sdfPart.Position;
                 partObj.transform.localRotation = Quaternion.identity;
                 partDict.Add(sdfPart.Name, partObj);
             }
 
+            _sdfCache.Add(filename, sdfObject);
             return sdfObject;
         }
 
@@ -178,15 +194,17 @@ namespace Assets
             var vcf = VcfParser.ParseVcf(filename);
             var vdf = VdfParser.ParseVdf(vcf.VdfFilename);
             var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
+            
+
 
             var vdfObject = new GameObject(vdf.Name);
             var partDict = new Dictionary<string, GameObject> { { "WORLD", vdfObject } };
 
             foreach (var sdfPart in vdf.PartsFirstPerson)
             {
-                if (sdfPart.Name == "NULL")
+                if (sdfPart.Name == "NULL" || sdfPart.Name.EndsWith("3"))
                     continue;
-                var partObj = ImportGeo(sdfPart.Name + ".geo");
+                var partObj = ImportGeo(sdfPart.Name + ".geo", vtf);
                 var parentName = sdfPart.ParentName;
                 if (!partDict.ContainsKey(parentName))
                 {

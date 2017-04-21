@@ -72,7 +72,7 @@ namespace Assets.Fileparsers
 
                 br.FindNext("WEPN");
                 vcf.Weapons = new List<VcfWeapon>();
-                while (br.Current.Name != "EXIT")
+                while (br.Current != null && br.Current.Name != "EXIT")
                 {
                     var vcfWeapon = new VcfWeapon
                     {
