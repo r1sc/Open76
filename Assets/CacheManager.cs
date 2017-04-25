@@ -13,7 +13,6 @@ namespace Assets
         public Material ColorMaterialPrefab;
         public Material TextureMaterialPrefab;
         public Material TransparentMaterialPrefab;
-
         public Color32[] Palette;
 
         private readonly Dictionary<string, Material> _materials = new Dictionary<string, Material>();
@@ -63,31 +62,34 @@ namespace Assets
 
         private Material GetMaterial(GeoFace geoFace, Vtf vtf)
         {
-            
+
             if (geoFace.TextureName != null)
             {
+                var textureName = geoFace.TextureName;
                 if (vtf != null && geoFace.TextureName.StartsWith("V"))
                 {
-                    Debug.Log("Vehicle tmt reference: " + geoFace.TextureName);
-                    switch (geoFace.TextureName)
+                    if (geoFace.TextureName.EndsWith("BO DY"))
                     {
-                        case "V1 BO DY":
-                            geoFace.TextureName = vtf.Maps[12];
-                            break;
-                        case "V5 FT TP":
-                            geoFace.TextureName = vtf.Maps[1];
-                            break;
-                        default:
-                            geoFace.TextureName = vtf.Maps[0];
-                            break;
+                        textureName = vtf.Maps[12];
+                    }
+                    else
+                    {
+                        var key = geoFace.TextureName.Substring(1).Replace(" ", "").Replace("LF", "LT") + ".TMT";
+
+                        if (vtf.Tmts.ContainsKey(key))
+                        {
+                            //Debug.Log("Vehicle tmt reference: " + geoFace.TextureName + " decoded: " + key);
+                            var tmt = vtf.Tmts[key];
+                            textureName = tmt.TextureNames[0];
+                        }
                     }
                 }
-                return GetTextureMaterial(geoFace.TextureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
+                return GetTextureMaterial(textureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
                 //Debug.Log(geoFace.TextureName + "color=" + geoFace.Color + " flag1=" + geoFace.SurfaceFlags1 + " flag2=" + geoFace.SurfaceFlags2, mat);
             }
             return GetColorMaterial("color" + geoFace.Color, geoFace.Color);
         }
-        
+
 
 
         public GameObject ImportGeo(string filename, Vtf vtf)
@@ -194,13 +196,16 @@ namespace Assets
             var vcf = VcfParser.ParseVcf(filename);
             var vdf = VdfParser.ParseVdf(vcf.VdfFilename);
             var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
-            
 
 
+
+            //var idx = 0;
+            //foreach (var parts in vdf.PartsThirdPerson)
+            //{
             var vdfObject = new GameObject(vdf.Name);
             var partDict = new Dictionary<string, GameObject> { { "WORLD", vdfObject } };
 
-            foreach (var sdfPart in vdf.PartsFirstPerson)
+            foreach (var sdfPart in vdf.PartsThirdPerson[0])
             {
                 if (sdfPart.Name == "NULL" || sdfPart.Name.EndsWith("3"))
                     continue;
@@ -219,7 +224,7 @@ namespace Assets
                 partDict.Add(sdfPart.Name, partObj);
             }
 
-
+            //}
             return vdfObject;
         }
 

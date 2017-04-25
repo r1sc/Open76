@@ -44,9 +44,9 @@ public class Game : MonoBehaviour
         if(worldGameObject != null)
             Destroy(worldGameObject);
         worldGameObject = new GameObject("World");
-
         
-        cacheManager.ImportVcf(VcfToLoad);
+        
+        //cacheManager.ImportVcf(VcfToLoad);
 
         var splatPrototypes = new[]
         {
@@ -80,7 +80,18 @@ public class Game : MonoBehaviour
 
                 foreach (var odef in mdef.TerrainPatches[x, z].Objects)
                 {
-                    if (odef.ClassId != MsnMissionParser.ClassId.Car && odef.ClassId != MsnMissionParser.ClassId.Special)
+                    if (odef.ClassId == MsnMissionParser.ClassId.Car)
+                    {
+                        if (odef.Label != "spawn" && odef.Label != "REGEN")
+                        {
+                            var car = cacheManager.ImportVcf(odef.Label + ".vcf");
+                            car.transform.parent = patchGameObject.transform;
+                            car.transform.localPosition = odef.LocalPosition;
+                            car.transform.localRotation = odef.LocalRotation;
+                        }
+
+                    }
+                    else if (odef.ClassId != MsnMissionParser.ClassId.Special)
                     {
                         cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
                     }
