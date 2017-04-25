@@ -1,24 +1,22 @@
-﻿using System;
-using System.Collections;
+﻿
+using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Assets;
 using Assets.Fileparsers;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Random = UnityEngine.Random;
 
 public class Game : MonoBehaviour
 {
-    public string GamePath;
     public Texture2D SurfaceTexture;
     public Material TerrainMaterial;
     public Material SkyMaterial;
+    public GameObject SpawnPrefab, RegenPrefab;
 
-    public Terrain[,] TerrainPatches;
-    public Vector2 RealTerrainGrid;
+    public string GamePath;
     public string MissionFile;
-    public string VcfToLoad = "vppirna1.vcf";
+    public string VcfToLoad;
 
     void Awake()
     {
@@ -31,7 +29,7 @@ public class Game : MonoBehaviour
         VirtualFilesystem.Instance.Init(GamePath);
         var cacheManager = FindObjectOfType<CacheManager>();
         
-        TerrainPatches = new Terrain[80, 80];
+        var terrainPatches = new Terrain[80, 80];
         var mdef = MsnMissionParser.ReadMsnMission(MissionFile);
 
         cacheManager.Palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
@@ -44,9 +42,6 @@ public class Game : MonoBehaviour
         if(worldGameObject != null)
             Destroy(worldGameObject);
         worldGameObject = new GameObject("World");
-        
-        
-        //cacheManager.ImportVcf(VcfToLoad);
 
         var splatPrototypes = new[]
         {
@@ -82,14 +77,27 @@ public class Game : MonoBehaviour
                 {
                     if (odef.ClassId == MsnMissionParser.ClassId.Car)
                     {
-                        if (odef.Label != "spawn" && odef.Label != "REGEN")
-                        {
-                            var car = cacheManager.ImportVcf(odef.Label + ".vcf");
-                            car.transform.parent = patchGameObject.transform;
-                            car.transform.localPosition = odef.LocalPosition;
-                            car.transform.localRotation = odef.LocalRotation;
-                        }
+                        var lblUpper = odef.Label.ToUpper();
 
+                        GameObject carObj;
+                        switch (lblUpper)
+                        {
+                            case "SPAWN":
+                                carObj = Instantiate(SpawnPrefab);
+                                carObj.tag = "Spawn";
+                                break;
+                            case "REGEN":
+                                carObj = Instantiate(RegenPrefab);
+                                carObj.tag = "Regen";
+                                break;
+                            default:
+                                carObj = cacheManager.ImportVcf(odef.Label + ".vcf");
+                                break;
+                        }
+                        
+                        carObj.transform.parent = patchGameObject.transform;
+                        carObj.transform.localPosition = odef.LocalPosition;
+                        carObj.transform.localRotation = odef.LocalRotation;
                     }
                     else if (odef.ClassId != MsnMissionParser.ClassId.Special)
                     {
@@ -97,8 +105,7 @@ public class Game : MonoBehaviour
                     }
                 }
 
-                TerrainPatches[x, z] = terrain;
-                RealTerrainGrid = new Vector2(x, z);
+                terrainPatches[x, z] = terrain;
             }
         }
 
@@ -178,7 +185,7 @@ public class Game : MonoBehaviour
                 var patchPosX = (int)(pos.x / 640.0f);
                 var patchPosZ = (int)(pos.z / 640.0f);
                 sdfObj.name = ldef.Label + " " + i;
-                sdfObj.transform.parent = TerrainPatches[patchPosX, patchPosZ].transform;
+                sdfObj.transform.parent = terrainPatches[patchPosX, patchPosZ].transform;
                 sdfObj.transform.localPosition = localPosition;
                 if (i < ldef.StringPositions.Count - 1)
                 {
@@ -201,85 +208,95 @@ public class Game : MonoBehaviour
         RenderSettings.fogColor = cacheManager.Palette[239];
         RenderSettings.ambientLight = cacheManager.Palette[247];
 
+        //var importedVcf = cacheManager.ImportVcf(VcfToLoad);
+
+        //var spawnPoint = RandomElement(GameObject.FindGameObjectsWithTag("Spawn"));
+        //importedVcf.transform.position = spawnPoint.transform.position;
+        //importedVcf.transform.rotation = spawnPoint.transform.rotation;
+    }
+
+    T RandomElement<T>(T[] array)
+    {
+        return array[Random.Range(0, array.Length)];
     }
 
     // Update is called once per frame
     void Update()
     {
-        var newx = Camera.main.transform.position.x;
-        var newz = Camera.main.transform.position.z;
-        bool changed = false;
-        var newTerrainGrid = RealTerrainGrid;
+        //var newx = Camera.main.transform.position.x;
+        //var newz = Camera.main.transform.position.z;
+        //bool changed = false;
+        //var newTerrainGrid = RealTerrainGrid;
 
-        if (newx > 640) // Moved right
-        {
-            newTerrainGrid.x += 1;
-            newx = 0;
-            changed = true;
-        }
-        else if (newx < 0) // Moved left
-        {
-            newTerrainGrid.x -= 1;
-            newx = 640;
-            changed = true;
-        }
-        if (newz > 640) // Moved back
-        {
-            newTerrainGrid.y += 1;
-            newz = 0;
-            changed = true;
-        }
-        else if (newz < 0.0f) // Moved forward
-        {
-            newTerrainGrid.y -= 1;
-            newz = 640;
-            changed = true;
-        }
+        //if (newx > 640) // Moved right
+        //{
+        //    newTerrainGrid.x += 1;
+        //    newx = 0;
+        //    changed = true;
+        //}
+        //else if (newx < 0) // Moved left
+        //{
+        //    newTerrainGrid.x -= 1;
+        //    newx = 640;
+        //    changed = true;
+        //}
+        //if (newz > 640) // Moved back
+        //{
+        //    newTerrainGrid.y += 1;
+        //    newz = 0;
+        //    changed = true;
+        //}
+        //else if (newz < 0.0f) // Moved forward
+        //{
+        //    newTerrainGrid.y -= 1;
+        //    newz = 640;
+        //    changed = true;
+        //}
 
-        if (changed)
-        {
-            //Camera.main.transform.position = new Vector3(newx, Camera.main.transform.position.y, newz);
-            //RepositionCurrentTerrainPatch(newTerrainGrid);
-        }
+        //if (changed)
+        //{
+        //    //Camera.main.transform.position = new Vector3(newx, Camera.main.transform.position.y, newz);
+        //    //RepositionCurrentTerrainPatch(newTerrainGrid);
+        //}
     }
 
-    private void RepositionCurrentTerrainPatch(Vector2 newTerrainGrid)
-    {
-        for (int z = -1; z <= 1; z++)
-        {
-            var tpZ = (int) (RealTerrainGrid.y + z);
-            if (tpZ < 0 || tpZ > 79)
-                continue;
-            for (int x = -1; x <= 1; x++)
-            {
-                var tpX = (int) (RealTerrainGrid.x + x);
-                if (tpX < 0 || tpX > 79)
-                    continue;
-                var tp = TerrainPatches[tpX, tpZ];
-                if (tp == null)
-                    continue;
-                tp.gameObject.SetActive(false);
-            }
-        }
+    //private void RepositionCurrentTerrainPatch(Vector2 newTerrainGrid)
+    //{
+    //    for (int z = -1; z <= 1; z++)
+    //    {
+    //        var tpZ = (int) (RealTerrainGrid.y + z);
+    //        if (tpZ < 0 || tpZ > 79)
+    //            continue;
+    //        for (int x = -1; x <= 1; x++)
+    //        {
+    //            var tpX = (int) (RealTerrainGrid.x + x);
+    //            if (tpX < 0 || tpX > 79)
+    //                continue;
+    //            var tp = TerrainPatches[tpX, tpZ];
+    //            if (tp == null)
+    //                continue;
+    //            tp.gameObject.SetActive(false);
+    //        }
+    //    }
 
-        for (int z = -1; z <= 1; z++)
-        {
-            var tpZ = (int) (newTerrainGrid.y + z);
-            if (tpZ < 0 || tpZ > 79)
-                continue;
-            for (int x = -1; x <= 1; x++)
-            {
-                var tpX = (int) (newTerrainGrid.x + x);
-                if (tpX < 0 || tpX > 79)
-                    continue;
-                var tp = TerrainPatches[tpX, tpZ];
-                if (tp == null)
-                    continue;
-                tp.gameObject.SetActive(true);
-                tp.transform.position = new Vector3(x*640, 0, z*640);
-            }
-        }
+    //    for (int z = -1; z <= 1; z++)
+    //    {
+    //        var tpZ = (int) (newTerrainGrid.y + z);
+    //        if (tpZ < 0 || tpZ > 79)
+    //            continue;
+    //        for (int x = -1; x <= 1; x++)
+    //        {
+    //            var tpX = (int) (newTerrainGrid.x + x);
+    //            if (tpX < 0 || tpX > 79)
+    //                continue;
+    //            var tp = TerrainPatches[tpX, tpZ];
+    //            if (tp == null)
+    //                continue;
+    //            tp.gameObject.SetActive(true);
+    //            tp.transform.position = new Vector3(x*640, 0, z*640);
+    //        }
+    //    }
 
-        RealTerrainGrid = newTerrainGrid;
-    }
+    //    RealTerrainGrid = newTerrainGrid;
+    //}
 }

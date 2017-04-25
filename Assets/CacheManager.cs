@@ -10,6 +10,8 @@ namespace Assets
 {
     class CacheManager : MonoBehaviour
     {
+        public bool RecalculateNormals = false;
+
         public Material ColorMaterialPrefab;
         public Material TextureMaterialPrefab;
         public Material TransparentMaterialPrefab;
@@ -149,6 +151,9 @@ namespace Assets
                 i++;
             }
             mesh.RecalculateBounds();
+
+            if(RecalculateNormals)
+                mesh.RecalculateNormals();
 
             var obj = new GameObject(geoMesh.Name);
             obj.AddComponent<MeshFilter>().sharedMesh = mesh;

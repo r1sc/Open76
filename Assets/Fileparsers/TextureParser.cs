@@ -9,6 +9,7 @@ namespace Assets.Fileparsers
 {
     class TextureParser
     {
+        const FilterMode FilterMode = UnityEngine.FilterMode.Bilinear;
         private static Color32 transparent = new Color32(0, 0, 0, 0);
         private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>();
 
@@ -25,7 +26,7 @@ namespace Assets.Fileparsers
                 var height = br.ReadInt32();
                 var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
                 {
-                    filterMode = FilterMode.Bilinear,
+                    filterMode = FilterMode,
                     wrapMode = TextureWrapMode.Repeat
                 };
                 for (int y = 0; y < height; y++)
@@ -58,7 +59,7 @@ namespace Assets.Fileparsers
                 var height = br.ReadInt32();
                 var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
                 {
-                    filterMode = FilterMode.Bilinear,
+                    filterMode = FilterMode,
                     wrapMode = TextureWrapMode.Repeat
                 };
                 var cbkFile = br.ReadCString(12);
