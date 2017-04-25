@@ -1,0 +1,9 @@
+WLOC
+	112 bytes for Front, Mid and Back tires. Total of 336 bytes.
+	Each 56 byte section describes the position of a wheel on the format (repeated twice per section for 2 wheels, total of 112 bytes):
+		uint	1??
+		vec3 xdir
+		vec3 ydir
+		vec3 zdir
+		vec3 position
+		float unk?

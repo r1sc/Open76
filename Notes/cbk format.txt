@@ -1,0 +1,39 @@
+CBK (palette with 16 light levels)
+
+struct RGB {
+	char r;
+	char g;
+	char b;
+}
+
+struct CBK {
+	DWORD numcolors;
+	struct RGB colors[16][numcolors];
+}
+	
+
+PIX (Pak IndeX?)
+Lists filenames in .pak file with same name
+
+PAK - BWD2 file.
+
+BWD2
+-----
+compnent.cdf	Car part data?
+wauto_1a.wdf	Wheel 13in stock
+gdumb.gdf		Firerite Rocket
+gmlight.gdf		30cal machine gun
+goilslck.gdf	Oil slick
+
+*.GPW			RIFF Audio
+*.ACT			Adobe color table
+*.LUM			Luma file
+*.TBL			Translucency table
+*.MAP			Sky texture / surface texture / level map
+*.SDF			World object definitions
+
+
+word unk //1280
+word unk //1
+char texname[13]
+

@@ -1,0 +1,42 @@
+TMT's are referred in this order:
+Front, Back, Right, Left, Top, Under
+
+Given a filename of:
+1CP1FTFT
+
+decodes as 
+1CP = First cop car skin
+1 = LOD level
+FTFT = Front Front
+
+
+Front
+Mid
+Back
+Top
+
+
+
+FTFT
+FTBK
+FTRT
+FTLT
+FTTP
+FTUN
+
+MDFT
+MDBK
+MDRT
+MDLT
+MDTP
+MDUN
+
+BKFT
+BKBK
+BKRT
+BKLT
+BKTP
+BKUN
+
+TPFT
+TP

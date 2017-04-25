@@ -1,0 +1,2739 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="subject" content="Custom Paint hacking for I76">
+<meta name="keywords" content="Hacking, i76, paint">
+<meta name="doccomm" content="The authority on the subject">
+<meta name="GENERATOR" content="David Hopkinson">
+<title>Hoppo's Guide to Custom Paint Job's for Interstate76</title>
+</head>
+
+<body link="#006600" vlink="#666600" bgcolor="#FFFFFF" text="#000099" alink="#00FF00">
+<p><font size="4" face="Arial"><b>Hoppo&#146;s Guide to Custom
+Paintjobs for the Game Interstate76 </b></font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="2" face="Arial">Copyright (c) David Hopkinson</font></p>
+
+<p><font size="2" face="Arial">All rights reserved</font></p>
+
+<p><font size="2" face="Arial">First published in Great Britain
+in 1999</font></p>
+
+<p><font size="2" face="Arial">First Edition</font></p>
+<hr align="CENTER" NOSHADE>
+<p><font size="5" face="Arial"><b>Introduction</b></font></p>
+
+<p><font size="2" face="Arial">I've written this guide to explain
+the methods I have developed to create custom paintjobs for
+vehicles in the game Interstate76. In the course of the guide I
+will explain what files are used to define the textures, and how
+to adapt these files to create custom paintjobs.</font></p>
+
+<p><font size="2" face="Arial">This is reasonably advanced
+hacking and may seem daunting at first, but I have devised a
+series of step-by-step exercises that should enable you to
+understand the basic principles. I won&#146;t pretend it will be
+very easy, and I will guarantee you will probably get very
+frustrated at various stages, but if you persist you will be able
+to create your own customs.</font></p>
+
+<p><font size="2" face="Arial">To follow this guide I advise printing it out&#133;but 
+  before you do that finish reading this introduction as you need some files...</font></p>
+
+<p><font face="Arial"><b>Before we start s<font face="Arial, Helvetica, sans-serif">ome 
+  things need...</font></b></font></p>
+<p><font face="Arial, Helvetica, sans-serif" size="2">You will need some files 
+  that are refered to in this guide. You can open a zip with them in by clicking 
+  <a href="files.zip" target="">HERE.</a> From now on the contents of this zip 
+  will be referred to as <b>&quot;the &quot;files&quot; folder that accompanies 
+  this guide&quot;</b></font></p>
+<p><font size="2" face="Arial">To open the files for viewing you will need a hex 
+  editor - I advise using Break Point Software's Hex Workshop. This is editor 
+  used in the examples in this guide, and a fully functioning evaluation copy 
+  is available for download from Break Point's website (</font><a
+href="http://www.bpsoft.com/"><font size="2" face="Arial">http://www.bpsoft.com</font></a><font
+size="2" face="Arial">)</font></p>
+
+<p><font size="2" face="Arial">It is possible to create custom
+textures using only a hex editor by editing an image pixel by
+pixel (This is how I made the first customs, but this is
+extremely time consuming and takes great patience).</font></p>
+
+<p><font size="2" face="Arial">I now have an easier method that
+allows you to create your textures in the more regular manner of
+using a paint program (though some hexing is still necessary).</font></p>
+
+<p><font size="2" face="Arial">The paint program used in these
+examples is JASC's Paint Shop Pro, an evaluation copy of which is
+also available for download. ( </font><a
+href="http://www.jasc.com/"><font size="2" face="Arial">http://www.jasc.com</font></a><font
+size="2" face="Arial"> <i>)[NOTE version 4.10 allows continued
+use after the trial 30 days, whereas the most recent version,
+5.0, is limited to 30 days use]</i></font></p>
+
+<p><font size="2" face="Arial">The original texture files (along
+with many other types of file) are contained within a file called
+I76.ZFS. This is a huge file (60.8 MB) made up of 3927 different
+files back to back. The ZFS is located at C:/Program
+Files/Activision/I76. To extract files from the ZFS you need
+pack76 a utility made by ReVoLt and bIGfreek that are available
+to download from Smidge's website. (</font><a
+href="http://www.smidge.com/files/html/miscfiles.htm"><font
+size="1" face="Arial">http://www.smidge.com/files/html/miscfiles.htm</font></a><font
+size="2" face="Arial">) </font></p>
+
+<p><font size="2" face="Arial">One of the most important things
+to know when modifying Interstate76 is that any file (or copy of
+a file) that is in the Addon folder will be used by the game,
+even if a file of the same name is in the ZFS. The Addon folder
+is located at C:/Program Files/Activision/I76/Addon</font></p>
+
+<p><font size="2" face="Arial">For the purposes of this guide I
+will refer to working with the original i76 game - this is
+because the files in Nitro/Gold Edition are encrypted, and so
+inaccessible. Files extracted from the original i76 can be placed
+in the Gold or Nitro Addon and will usually function normally.</font></p>
+
+<p><font size="2" face="Arial">In case you do not have a copy of the original 
+  I76 there are copies of the files extracted from I76.ZFS that are used in the 
+  exercises. They can be found in the &quot;files&quot; folder that accompanies 
+  this guide.</font></p>
+<hr NOSHADE align="CENTER">
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="4" face="Arial"><b>Finding out what file does
+what...</b></font></p>
+
+<p><font size="2" face="Arial">First of all we need to open a VCF
+file. VCF stands for Vehicle Configuration File. These files
+determine the type, paintjob, wheels, armour, suspension, weapons
+and specials settings of any given vehicle. This information is
+conveyed by either a value in hex (as in the value of armour) or
+by referring to another file (which is how the game knows which
+paintjob your car has).</font></p>
+
+<p><font size="2" face="Arial">When you create a new variant of a
+vehicle a new VCF file is created in your Addon folder
+(C:/Program Files/Activision/I76/Addon). </font></p>
+
+<p><font size="2" face="Arial">The VCFs that define the default
+variants available in auto-melee, the trip, and all the a.i.
+vehicles are contained in the ZFS.</font></p>
+
+<p><font size="2" face="Arial">In the following exercise we will
+use the file VPPIRNA1.VCF as an example. This is the first
+variant of the Picard Piranha, in familiar orange and black&#133;</font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image1.gif"
+width="308" height="186"></font></p>
+
+<p><font face="Arial"><b>Exercise 1 (Altering a VCF) </b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Extract the file VPPIRNA1.VCF from I76.ZFS 
+    using PACK76</b></font></li>
+  <li><font size="2" face="Arial"><b>Open the file VPPIRNA1.VCF with Hex Workshop</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You should see the following...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image2.gif"
+width="634" height="331"></font></p>
+
+<p><font size="2" face="Arial">I've marked in red the reference
+to the paintjob file - which in this case is PIRANHA1.VTF.</font></p>
+
+<p><font size="2" face="Arial">VTF stands for Vehicle Texture
+File. There is one VTF file for each paintjob in the game, and
+all these files are within the ZFS and can be extracted with
+Pack76.</font></p>
+
+<p><font size="2" face="Arial">If you configure the Piranha
+within I76 you only have an option of 3 different paintjobs; that
+is the ones designed for the Piranha which are - orange/black
+(PIRHANA1.VTF), blue/white (PIRHANA2.VTF) or black/checkers
+(PIRHANA3.VTF).</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image3.gif"
+width="391" height="205"></font></p>
+
+<p><font size="2" face="Arial">There are in fact 79 different
+VTFs in i76 [117 in Nitro/Gold].</font></p>
+
+<p><font size="2" face="Arial">The names of VTFs are fairly
+self-explanatory; i.e. PIRANHA1.VTF is for the Piranha,
+CLYDSDL1.VTF for the Clydesdale, etc. (There is a list of all
+VTFs at the end of this guide).</font></p>
+
+<p><font size="2" face="Arial">Using Hex Workshop we can replace
+the reference to PIRANHA1.VTF in VPPIRNA1.VCF with a VTF file
+designed for another car, for example LEPRECN1.VTF, a paintjob
+designed for the Leprechaun...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image4.gif"
+width="251" height="159"></font></p>
+
+<p><font size="2" face="Arial">To do this you need to use Hex
+Workshop to replace the reference to PIRANHA1.VTF with
+LEPRECN1.VTF</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>In Hex workshop type LEPRECN1.VTF over PIRANHA1.VTF</b></font></li>
+</ul>
+<p><font size="2" face="Arial">It should look like this&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image5.gif"
+width="634" height="331"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose &quot;File&quot; &gt; 
+    &quot;Save As&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A window will appear</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Use the pull down menu next to the &quot;Save 
+    in&quot; box to browse to the Addon Folder</b></font></li>
+  <li><font size="2" face="Arial"><b>Press &quot;Save&quot;</b></font></li>
+  <li><font size="2" face="Arial"><b>Exit Hex Workshop</b></font></li>
+  <li><font size="2" face="Arial"><b>Launch I76 and go to Instant Melee Choose 
+    the first Picard Piranha variant Enter an Area of Play</b></font></li>
+  <li><font size="2" face="Arial"><b>Press F2 to go to external view</b></font></li>
+  <li><font size="2" face="Arial"><b>Use the arrow keys to adjust the camera view, 
+    and inspect your altered paintjob </b></font></li>
+</ul>
+<p><font size="2" face="Arial">It should look like this&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image6.gif"
+width="324" height="164"></font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="2" face="Arial">The paintjob does not look exactly
+correct, because the object it is stretched over differs from the
+one it was designed for. However we have established that by
+changing the VCF we can change a car's paintjob.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Delete the altered VPPIRANA.VCF file from 
+    your Addon</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This returns the Piranha to normal</font></p>
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 2 (Altering a VTF)</b></font></p>
+
+<p><font size="2" face="Arial">To alter the actual paintjob we
+will need to open a VTF file.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Extract the files PIRANHA1.VTF and LEPRECN1.VTF 
+    from the ZFS using PACK76.</b></font></li>
+  <li><font size="2" face="Arial"><b>Open both these files with Hex Workshop.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This is what we see...</font></p>
+
+<p align="center"><font size="2" face="Arial"><i><img
+src="image7.gif"
+width="630" height="520"></i></font></p>
+
+<p><font size="2" face="Arial"><i></i></font>&nbsp;</p>
+
+<p><font size="2" face="Arial"><i>[NOTE: You can Press F2 in Hex
+Workshop to make the files fill the window. The files are larger
+than shown here&#133;use the scroll bar in Hex Workshop to view
+the entire files.]</i></font></p>
+
+<p><font size="2" face="Arial">Again these files have references
+to other files - here they are mainly files with the extension
+TMT, and some with the extension MAP.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Replace the reference 1PP1FTRT.TMT In PIRANHA1.VTF 
+    with 1AL1FTRT.TMT</b></font></li>
+</ul>
+<p><font size="2" face="Arial">By doing this you are replacing a
+reference from PIRANHA1.VTF with a reference from LEPRECN1.VTF</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose &quot;File&quot; &gt; 
+    &quot;Save As&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A window will appear</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Use the pull down menu next to the &quot;Save 
+    in&quot; box to browse to the Addon Folder.</b></font></li>
+  <li><font size="2" face="Arial"><b>Exit Hex Workshop</b></font></li>
+  <li><font size="2" face="Arial"><b>Launch I76 and go to Instant Melee</b></font></li>
+  <li><font size="2" face="Arial"><b>Choose the first Picard Piranha variant</b></font></li>
+  <li><font size="2" face="Arial"><b>Enter an Area of Play</b></font></li>
+  <li><font size="2" face="Arial"><b>Press F2 to go to external view</b></font></li>
+  <li><font size="2" face="Arial"><b>Use the arrow keys to adjust the camera view, 
+    and inspect your altered paintjob</b></font></li>
+</ul>
+<p><font size="2" face="Arial">It should like this&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image8.gif"
+width="330" height="174"></font></p>
+
+<p><font size="2" face="Arial">The front right hand section has
+been replaced with the section from the leprechaun paintjob. By
+mixing and matching TMT references you can construct new VTF
+files</font></p>
+
+<p><font size="2" face="Arial"><i>[NOTE: These new paintjobs
+won't be visible to other players in Net games because only your
+VCF is transferred when you enter a game]</i></font></p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>How can we tell which TMT is which?</b></font></p>
+
+<p><font size="2" face="Arial">Working out what each TMT stands
+for is reasonably easy:</font></p>
+
+<p><font size="2" face="Arial">Let's take 1PP1FTRT.TMT as an
+example and break it up into parts&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image9.gif"
+width="90" height="39"></font></p>
+
+<blockquote>
+    <p><font color="#FF0000" size="2" face="Arial">1</font><font
+    size="2" face="Arial">PP1FTRT.TMT</font></p>
+</blockquote>
+
+<p><font size="2" face="Arial">The first number refers to which
+version of the paintjob it is for - this is &quot;1&quot; because
+its orange/black (i.e. PIRANHA1.VTF), if it was &quot;2&quot; it
+would be Blue/White (i.e. PIRANHA2.VTF) and &quot;3&quot; would
+be Black/Checkers (i.e. PIRANHA3.VTF)</font></p>
+
+<blockquote>
+    <p><font size="2" face="Arial">1</font><font color="#FF0000"
+    size="2" face="Arial">PP</font><font size="2" face="Arial">1FTRT.TMT</font></p>
+</blockquote>
+
+<p><font size="2" face="Arial">The next 2 letters refer to which
+Vehicle it is intended for. In this example it is PP.</font></p>
+
+<p><font size="2" face="Arial">This is PP - meaning Picard
+Piranha. Each vehicle has a 2-letter abbreviation that is used in
+various file names. Here is a list of all the abbreviations and
+the vehicles they represent...</font></p>
+
+<p><font size="1" face="Arial"></font>&nbsp;</p>
+<div align="center"><center>
+
+    <table border="1" cellpadding="2" cellspacing="1" width="255" bgcolor="#FFFFFF" bordercolorlight="#FFFFFF" bordercolordark="#000000" bordercolor="#FFFFFF">
+      <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">AL
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">ABX
+        Leprechaun</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">AS
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">ABX
+        Stryder</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">AZ
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">ABX
+        AMZ</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">CC
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Courcheval
+        Cavera</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">CG
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Courcheval
+        Courchelle</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">CM
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Courcheval
+        Manta</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">CP
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Courcheval
+        Royale Police Cruiser</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">CR
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Courcheval
+        Royale</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">CV
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Street
+        Van</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">DL
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Dover
+        Lightning</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">DS
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Dover
+        Stag</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">FC
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Pheadra
+        Coupe</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">FD
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Pheadra
+        Clydesdale</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">FP
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Pheadra
+        Palomino</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">FR
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Pheadra
+        Rattler</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">FY
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Pheadra
+        Pony</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">GO
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Glenn
+        Bushmaster</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">JS
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Jefferson
+        Sovereign</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">MX
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Moth
+        Truck</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">PJ
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Picard
+        Jackrabbit</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">PP
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Picard
+        Piranha</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">ST
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Tank</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">SV
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Skeeter's
+        Van</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">UC
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Huey
+        Helicopter</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">UG
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Cobra
+        Helicopter</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">VA
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Vikea
+        420L Wagon</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">XB
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Bus</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">XK
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Tractor</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">XM
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Milk
+        Truck</font></td>
+    </tr>
+</table>
+    <p>&nbsp;</p>
+  </center>
+  <p><b><font size="1" face="Arial">And for Nitro/Gold</font></b></p>
+  <p>&nbsp; </p>
+</div>
+
+<div align="center"><center>
+
+    <table border="1" cellpadding="2" cellspacing="1" width="255" bgcolor="#FFFFFF" bordercolorlight="#FFFFFF" bordercolordark="#000000">
+      <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">AG
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">ABX
+        Grappler</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">CH
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Courcheval
+        Hacienda</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">DR
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Dover
+        Rampage</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">JD
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Jefferson
+        Limo</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">LE
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Leopard
+        XLC</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">ML
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Moth
+        Loadmaster</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">MT
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Moth
+        Tanker</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">RM
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Ransom
+        Marshal</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">UB
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Hot
+        Air Balloon</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">UP
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">F4D
+        Phantom II</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">WC
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Warendorf
+        Clown Car</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">WF
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Warendorf
+        FV</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">XA
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Ambulance</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="29%"><font size="1" face="Arial">XH
+        </font></td>
+        <td valign="top" width="71%"><font size="1" face="Arial">Hearse</font></td>
+    </tr>
+</table>
+</center></div>
+
+<blockquote>
+    <p><font size="2" face="Arial">1PP</font><font
+    color="#FF0000" size="2" face="Arial">1</font><font size="2"
+    face="Arial">FTRT.TMT</font></p>
+</blockquote>
+
+<p><font size="2" face="Arial">The next number refers to
+different views. There are three types...</font></p>
+
+<blockquote> 
+  <p><font size="2" face="Arial">&quot;1&quot; - Near view &#150; This is the 
+    regular view you see of your own vehicle in F2 mode.</font></p>
+  <p><font size="2" face="Arial">&quot;3&quot; - View from a distance &#150; This 
+    is the view you see when zoomed out, or by another player.</font></p>
+  <p><font size="2" face="Arial">&quot;5&quot; - View of the hood from the inside 
+    of the car &#150; This speaks for itself.</font></p>
+</blockquote>
+<p><font size="2" face="Arial">I will explain these different
+views in more detail later.</font></p>
+
+<blockquote>
+    <p><font size="2" face="Arial">1PP1</font><font
+    color="#FF0000" size="2" face="Arial">FTRT</font><font
+    size="2" face="Arial">.TMT</font></p>
+</blockquote>
+
+<p><font size="2" face="Arial">The final four letters tell us
+which section of the vehicle this part of the paintjob is for.</font></p>
+
+<p><font size="2" face="Arial">In this case it if
+&quot;FTRT&quot; which means Front Right. Each TMT uses a
+combination of 2 abbreviations to define its intended location.</font></p>
+
+<p><font size="2" face="Arial">The following abbreviations are
+used:</font></p>
+
+<ul>
+  <li><font size="2" face="Arial">FT - Front</font></li>
+  <li><font size="2" face="Arial">BK - Back</font></li>
+  <li><font size="2" face="Arial">LT - Left</font></li>
+  <li><font size="2" face="Arial">RT - Right</font></li>
+  <li><font size="2" face="Arial">MD - Middle</font></li>
+  <li><font size="2" face="Arial">TP - Top</font></li>
+  <li><font size="2" face="Arial">UN - Under</font></li>
+</ul>
+<p><font size="2" face="Arial">The first instances represent the
+near view and appear in this order...</font></p>
+<div align="center"><center>
+
+    <table border="1" cellpadding="1" cellspacing="1" width="654" bgcolor="#FFFFFF" bordercolorlight="#FFFFFF" bordercolordark="#000000">
+      <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>TMT ending in</b></font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>Portion of the Vehicle</b></font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>Offset in Hex in the VTF</b></font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1FTFT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Front Front</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0039</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1FTBK</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Front Back</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0046</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1FTRT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Front Right</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0053</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1FTLT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Front Left</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0060</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1FTTP</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Front Top</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">006D</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1FTUN</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Front Under</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">007A</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1MDFT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Middle Top</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0087</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1MDBK</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Middle Back</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0094</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1MDRT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Middle Right</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">00A1</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1MDLT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Middle Left</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">00AE</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1MDTP</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Middle Top</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">00BB</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1MDUN</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Middle Under</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">00C8</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1BKFT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Back Front</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">00D5</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1BKBK</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Back Back</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">00E2</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1BKRT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Back Right</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">00EF</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1BKLT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Back Left</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">00FC</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1BKTP</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Back Top</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0109</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1BKUN</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Back Under</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0116</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1TPFT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Top Front</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0123</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1TPBK</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Top Back</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0130</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1TPRT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Top Right</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">013D</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1TPLT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Top Left</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">014A</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;1TPTP</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Near View Top Top</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0157</font></p>
+        </td>
+    </tr>
+</table>
+<p>&nbsp;</p></center></div>
+
+<p><font size="2" face="Arial"><i>[NOTE: As each vehicle is a
+different shape, different combinations appear - for example the
+moth truck has MDBK (Middle Back) which the Piranha does not.
+When a TMT is not needed because of the vehicle's shape it's
+position is replaced with &quot;NULL&quot;.]</i></font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="2" face="Arial">The next group of instances
+represents the far view and appears in this order...</font></p>
+<div align="center"><center>
+
+    <table border="1" cellpadding="1" cellspacing="1" width="654" bgcolor="#FFFFFF" bordercolorlight="#FFFFFF" bordercolordark="#000000">
+      <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>TMT ending in</b></font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>Portion of the Vehicle</b></font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>Offset in Hex in the VTF</b></font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;3MDFT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Far View Middle Front</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">01D8</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;3MDBK</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Far View Middle Back</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">01E6</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;3MDRT</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Far View Middle Right</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">01F3</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;3MDTP</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Far View Middle Top</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">020D</font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;3MDUN</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Far View Middle Under</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">021A</font></p>
+        </td>
+    </tr>
+</table>
+</center></div>
+
+<p><font size="2" face="Arial">And the final TMT in the VTF is</font></p>
+<div align="center"><center>
+
+    <table border="1" cellpadding="1" cellspacing="1" width="654" bgcolor="#FFFFFF" bordercolorlight="#FFFFFF" bordercolordark="#000000">
+      <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>TMT ending in</b></font></p>
+        </td>
+
+       <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>Portion of the Vehicle</b></font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial"><b>Offset in Hex in the VTF</b></font></p>
+        </td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">&#133;5FTTP</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">Internal View of the hood</font></p>
+        </td>
+        <td valign="top" width="33%"><p align="center"><font
+        size="2" face="Arial">0311</font></p>
+        </td>
+    </tr>
+</table>
+</center></div>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="2" face="Arial">There are now some references to
+MAP files at the following offsets 042f; 043C; 0499; 0456 and
+0463. These define the textures that appear on the panels that
+fly off the car when it explodes.</font></p>
+
+<p><font size="2" face="Arial">And finally the last MAP file is
+at 04CB. In VPIRNA1.VTF this is PP11BDY1.MAP. This refers to a
+single colour image that is stretched over the window ledge.</font></p>
+
+<p><font size="2" face="Arial">This sounds complicated. Here are
+some pictures to help explain which section is which using the
+piranha as an example.</font></p>
+
+<p align="center"><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image10.gif"
+width="400" height="400"></font></p>
+
+<p align="center"><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image11.gif"
+width="400" height="400"></font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image12.gif"
+width="404" height="314"></font></p>
+
+<p align="center"><font size="2" face="Arial">These are the TMT
+files for the near view (1)</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image13.gif"
+width="300" height="600"></font></p>
+
+<p align="center"><font size="2" face="Arial">These are the TMT
+files for the far view (3)</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image14.gif"
+width="349" height="193"></font></p>
+
+<p align="center"><font size="2" face="Arial">This is the TMT for
+the view of the hood from the inside (5)</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image15.gif"
+width="392" height="292"></font></p>
+
+<p align="center"><font size="2" face="Arial">These are the
+pieces that fly off when you explode. They are MAP files rather
+than TMT files.</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image16.gif"
+width="320" height="240"><img
+src="image17.gif"
+width="320" height="240"></font></p>
+
+<p align="center"><font size="2" face="Arial">This MAP file is a
+single colour image that is stretched over the window ledge.</font></p>
+
+<hr NOSHADE align="CENTER">
+<p><font size="4" face="Arial"><b>Where are the TMTs?</b></font></p>
+
+<p><font size="2" face="Arial">The next move towards your custom
+paintjob is to find the TMT files that are listed in the VTF...</font></p>
+
+<p><font size="2" face="Arial">On first looking they do not
+appear to be within the ZFS. There are some files with the
+extension TMT, but not the ones listed in the VTF&#133;</font></p>
+
+<p><font size="2" face="Arial">However they are there... to
+access them you need to use PACK76 to extract the following two
+files - PIRANA1T.PAK and PIRANA1T.PIX, and then extract the TMTs
+from these files.</font></p>
+
+<p><font size="2" face="Arial">Here's how you do that...</font></p>
+
+<p><font face="Arial"><b>Exercise 3 (Extracting a TMT)</b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Extract the files PIRANA1T.PAK and PIRANA1T.PAK 
+    from I76.ZFS using Pack76</b></font></li>
+  <li><font size="2" face="Arial"><b>Double click on PIRANA1T.PIX (Make sure it 
+    is PIRANA1T.</b></font><font
+    color="#FF0000" size="2" face="Arial"><b>PIX</b></font><font
+    size="2" face="Arial"><b> not PIRANA1T.PAK)</b></font></li>
+  <li><font size="2" face="Arial"><b>Windows will ask you to choose the program 
+    you want to open it with</b></font></li>
+  <li><font size="2" face="Arial"><b>Scroll down the list of programs to NOTEPAD</b></font></li>
+  <li><font size="2" face="Arial"><b>Double click NOTEPAD</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You will see the following text...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image18.gif"
+width="226" height="435"></font></p>
+
+<p><font size="2" face="Arial">This is an index file that shows
+the contents of the file PIRANA1T.PAK</font></p>
+
+<p><font size="2" face="Arial">The number at the top is the
+number of files contained within PIRANA1T.PAK, in this case 24.</font></p>
+
+<p><font size="2" face="Arial">Then the names of the files are
+listed; each followed by 2 numbers</font></p>
+
+<p><font size="2" face="Arial">The first of these numbers is the
+file's offset in hex. The second number is the file's length</font></p>
+
+<p><font size="2" face="Arial">Using this information we can open
+PIRANA1T.PAK using Hex Workshop, and extract TMT files...</font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="2" face="Arial">For this example we will extract
+1PP1MDLT.TMT</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open PIRANA1T.PAK with Hex Workshop</b></font></li>
+</ul>
+<p><font size="2" face="Arial">It should look something like
+this&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><b><img
+src="image19.gif"
+width="633" height="323"></b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Goto</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A window appears asking for the
+offset</font></p>
+
+<p align="center"><font size="2" face="Arial"><b><img
+src="image20.gif"
+width="377" height="184"></b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Type in the offset as listed next to 1PP1MDLT.TMT 
+    in PIRANA1T.PIX - 704</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;GO&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This makes the cursor go to the
+value you put in, in this case 704 </font></p>
+
+<p><font size="2" face="Arial"><b></b></font>&nbsp;</p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Select Block</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A window appears asking for the
+size of the block&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><b><img
+src="image21.gif"
+width="308" height="166"></b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Type in the size as listed in the PIX file 
+    - in this case 96</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;OK&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The code that makes up
+1PP1MDLT.TMT is highlighted</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Copy</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This copies the code onto the
+clipboard</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; New</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A new file instance appears</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Paste</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This copies the code to the new
+file instance</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; Save As</b></font></li>
+  <li><font size="2" face="Arial"><b>When Prompted for File Name type 1PP1MDLT.TMT</b></font></li>
+</ul>
+<p><font size="2" face="Arial">We have extracted a TMT file.</font></p>
+
+<p><font size="2" face="Arial"><i>[NOTE: You can extract TMT
+files from any file ending in &quot;t.pak&quot; with the method.</i></font></p>
+
+<p><font size="2" face="Arial"><i>Also note Several different
+file types are &quot;PAKed&quot; like this within the ZFS, these
+include files with the following extensions - TMT, VQM, GEO and
+MAP.]</i></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Close PIRANA1T.PAK in Hex Workshop</b></font></li>
+</ul>
+<p><font size="2" face="Arial">We're left with the file
+1PP1MDLT.TMT, which looks like this...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image22.gif"
+width="613" height="135"></font></p>
+
+<p><font size="2" face="Arial">It is a very small file -
+certainly not big enough to contain the actual image information.</font></p>
+
+<p><font size="2" face="Arial">Once again it appears to refer to
+other files, in this case pp11mdl1 pp12mdl1 pp13mdl1 and
+vw14mdl2. No extensions are shown, but the file pp13mdl1.map is
+referred to in PIRANHA1.VTF.</font></p>
+
+<p><font size="2" face="Arial">These four files are the actual
+image files for that middle left section. There are more than one
+because there are different representations of the section
+depending on how much damage the vehicle has taken.</font></p>
+
+<p><font size="2" face="Arial">Here is a picture to help
+explain...</font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image23.gif"
+width="391" height="61"></font></p>
+
+<p><font size="2" face="Arial">These files actually have the
+extension VQM</font></p>
+
+<p><font size="2" face="Arial">To alter existing image files, or
+create new ones we need to access these files. We can do this
+using the same method we used to extract the TMT file.</font></p>
+
+<p><font face="Arial"><b></b></font>&nbsp;</p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 4 (Extracting a VQM)</b></font></p>
+
+<p><font size="2" face="Arial">The files we need to extract from
+the ZFS, using PACK76, are PIRANA1M.PAK and PIRANA1M.PIX</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Extract the files PIRANA1M.PAK and PIRANA1M.PAK 
+    from I76.ZFS using Pack76</b></font></li>
+  <li><font size="2" face="Arial"><b>Open PIRANA1M.PIX with notepad.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You will see the following...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image24.gif"
+width="220" height="599"></font></p>
+
+<p><font size="2" face="Arial">Using this information we can
+extract the file PP113MDL1.VQM</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open PIRANA1M.PAK with Hex Workshop</b></font></li>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Goto</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The window appears asking for the
+offset</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Type in the offset as listed next to PP11MDL1.VQM 
+    in PIRANA1M.PIX - 10300</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;GO&quot;</b></font></li>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Select Block</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The window appears asking for the
+size of the block</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Type in the size as listed in the PIX file 
+    - in this case 392</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;OK&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The code that makes up
+PP11MDL1.VQM is highlighted</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Copy</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This copies the code onto the
+clipboard</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; New</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A new file instance appears</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Paste</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This copies the code to the new
+file instance</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; Save As</b></font></li>
+  <li><font size="2" face="Arial"><b>When Prompted for File Name type PP11MDL1.VQM</b></font></li>
+</ul>
+<p><font size="2" face="Arial">We have extracted a VQM file.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Close PIRANA1T.PAK in Hex Workshop</b></font></li>
+</ul>
+<p><font size="2" face="Arial">We're left with the file
+PP13MDL1.VQM, which looks like this...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image25.gif"
+width="607" height="441"></font></p>
+
+<p><font size="2" face="Arial">This code does have the appearance
+of an image file. However there is still a reference to another
+file (ORNGEVCL.CBK) </font></p>
+
+<p><font size="2" face="Arial">ORNGEVCL.CBK can be extracted from
+the ZFS with PACK76 and when opened in Hex Workshop looks like
+this...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image26.gif"
+width="633" height="365"></font></p>
+
+<p><font size="2" face="Arial">There are no references to other
+files, but the file is quite large (65kb).</font></p>
+
+<p><font size="2" face="Arial">The extension CBK stands for
+Colour Bank.</font></p>
+
+<p><font size="2" face="Arial">There are various CBK files for
+various groups of textures, for example ORNGEVCL.CBK has
+information for Orange Vehicles, and REDBLD.CBK has information
+for Red Buildings, etc.</font></p>
+
+<p><font size="2" face="Arial">Presumably to save space, the VQM
+files are image files which refer to a large database of colour
+intersections stored in the CBK files.</font></p>
+
+<p><font size="2" face="Arial">Some of the values in the VQM
+files refer to a common palette that remains the same regardless
+of which CBK the VQM is referenced to.</font></p>
+
+<p><font size="2" face="Arial">This sounds complicated. Following
+the next exercise should help to explain...</font></p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 5 (Viewing a VQM)</b></font></p>
+
+<p><font size="2" face="Arial">The keen-eyed among you may have
+noticed there are some VQM files in the ZFS not contained within
+PAK files. These have names like ZMAP6S01.VQM and ZMAP6T01.VQM.
+These are the image files for the maps you see when you press the
+&quot;M&quot; key during a game.</font></p>
+
+<p><font size="2" face="Arial">The default map for melee games is
+called ZMAP6M00.VQM, and looks like this&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image27.gif"
+width="320" height="200"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Find the file PP11MDL1.VQM</b> (you extracted 
+    in the last exercise)</font></li>
+  <li><font size="2" face="Arial"><b>Rename the file ZMAP6M00.VQM </b><i>[NOTE: 
+    that's 2 zeros NOT 2 letter O's at the end]</i></font></li>
+  <li><font size="2" face="Arial"><b>Place this file in the Addon Folder.</b></font></li>
+  <li><font size="2" face="Arial"><b>Launch the game in window mode.</b></font></li>
+  <li><font size="2" face="Arial"><b>Go to Air Base in Instant Melee</b></font></li>
+  <li><font size="2" face="Arial"><b>Press &quot;M&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">Instead of the map you should see
+the middle panel of the Piranha. Which looks like this...</font></p>
+
+<p align="center"><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image28.gif"
+width="323" height="253"></font></p>
+
+<p><font size="2" face="Arial">The image is stretched because the
+map and the panel have different dimensions, and the image is
+also upside down, but this method does allow us to view the VQM.</font></p>
+
+<p><font size="2" face="Arial">Viewed the right way up, and with
+the right proportions it would appear like this&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image29.gif"
+width="90" height="30"></font></p>
+
+<p><font face="Arial"><b></b></font>&nbsp;</p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 6 (Altering a VQM)</b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Exit the game</b></font></li>
+  <li><font size="2" face="Arial"><b>Use Hex Workshop to open the ZMAP6M00.VQM 
+    file from your Addon Folder</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This is what you should see...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image25.gif"
+width="607" height="441"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Change ORNGEVCL.CBK to GREENVCL.CBK</b></font></li>
+  <li><font size="2" face="Arial"><b>Save the file in the Addon Folder.</b></font></li>
+  <li><font size="2" face="Arial"><b>Launch the game</b></font></li>
+  <li><font size="2" face="Arial"><b>Go to Air Base again</b></font></li>
+  <li><font size="2" face="Arial"><b>Press &quot;M&quot; again.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This is what you should see...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image30.gif"
+width="323" height="253"></font></p>
+
+<p><font size="2" face="Arial">This looks like a mess, but if you
+compare the two closely you can see that the 9 orange areas and
+the brown section in the top right hand corner have remained the
+same. These are examples of the colours that remain constant in a
+VQM, whatever CBK is referred to. If you examined the hex you
+would discover that 6A80 represents an orange pixel and 5780
+represents a brown one. I used this method to discover enough
+information to make custom paintjobs by altering VQM files pixel
+by pixel. Thankfully there is an easier way...</font></p>
+
+<p><font size="2" face="Arial">Not all the image files in I76
+refer to CBK files. The image files that don't have the extension
+MAP.</font></p>
+
+<p><font size="2" face="Arial">These files contain the
+information for the textures for the objects inside the car, the
+road, sky and ground surfaces, plus the weapons. Basically the
+surfaces that don&#146;t need to change due to progressive damage
+in the game.</font></p>
+
+<p><font size="2" face="Arial">It is possible to open these files
+in Paint Shop Pro.</font></p>
+
+<p><font size="2" face="Arial">Follow the next exercise to do
+this...</font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 7 (Viewing a MAP in Paint Shop Pro)</b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Extract the file ZSY_.MAP from the ZFS using 
+    PACK76</b></font></li>
+  <li><font size="2" face="Arial"><b>Open the file with Hex Workshop</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This is what you see...</font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image31.gif"
+width="616" height="376"></font></p>
+
+<p><font size="2" face="Arial">The first 8 bytes (F000 0000 7A00
+0000), are the &quot;header&quot; which defines the image's
+dimensions. </font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>In the menu choose Tools &gt; Base Converter</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This window will appear...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image32.gif"
+width="221" height="179"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Type in &quot;F0&quot; in the Hex box</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The Converter will show 240 in the
+Decimal box, this is the image's width in pixels. Make a note of
+this value.</font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Type in &quot;7A&quot; in the Hex box</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The Converter will show 122 in the
+Decimal box, this is the image's height in pixels. Make a note of
+this value.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Exit Hex Workshop</b></font></li>
+</ul>
+<p><font size="2" face="Arial">To open the file in Paint Shop pro
+it needs to have the extension RAW</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Make a copy of ZSY_.MAP</b></font></li>
+</ul>
+<p><font size="2" face="Arial">(To do this right click the file
+and select copy from the menu that appears. Then hold down
+&quot;Ctrl&quot; and press &quot;V&quot; - a file called
+&quot;Copy of zsy_.map&quot; will appear)</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Change the name of the file &quot;copy of 
+    ZSY_.MAP&quot; to &quot;ZSY_.RAW&quot; </b></font></li>
+</ul>
+<p><font size="2" face="Arial">(To do this right click the file
+and select rename from the menu that appears. Type
+&quot;ZSY_.MAP&quot; and press &quot;Return&quot;)This file can
+now be opened using Paint Shop Pro, although you will need to use
+a file called i76.pal to view it. (You will find I76.pal in the
+&quot;Files&quot; folder that accompanies this guide, or double
+click on the icon below.)</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image33.gif"
+width="52" height="48"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open ZSY_.RAW with Paint Shop Pro</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You will see the following
+window...</font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image34.gif"
+width="261" height="370"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Enter the width as 240</b></font></li>
+  <li><font size="2" face="Arial"><b>Enter the Height as 122</b></font></li>
+  <li><font size="2" face="Arial"><b>Check Single channel (greyscale)</b></font></li>
+  <li><font size="2" face="Arial"><b>Enter Header size (in bytes) as 8</b></font></li>
+  <li><font size="2" face="Arial"><b>Check Flipped (bottom up)</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;OK&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You should have an image that
+looks like this...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image35.gif"
+width="240" height="122"></font></p>
+
+<p><font size="2" face="Arial">To view it properly you need to
+apply the right palette. This is where I76.PAL comes in.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>In the menu choose Colors &gt; Load Palette</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The following window will come
+up...</font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image36.gif"
+width="420" height="335"></font></p>
+
+<ul>
+  <li><font color="#FF0000" size="2" face="Arial"><b>IMPORTANT</b></font><font
+size="2" face="Arial"><b>: Make sure &quot;</b></font><font
+color="#FF0000" size="2" face="Arial"><b>Maintain indexes</b></font><font
+size="2" face="Arial"><b>&quot; in the &quot;Apply palette using&quot; list at 
+    the bottom of the window is checked.</b> (This applies the I76 palette to 
+    the indexes listed in the map file)</font></li>
+  <li><font size="2" face="Arial"><b>Browse to the &quot;files&quot; folder that 
+    accompanies this guide</b></font></li>
+  <li><font size="2" face="Arial"><b>Select I76.pal</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;Open&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You should have an image that
+looks like this...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image37.gif"
+width="240" height="122"></font></p>
+
+<p><font size="2" face="Arial">By doing this we establish that
+image files from the game can be opened in a paint program.</font></p>
+
+<p><font size="2" face="Arial">The next step is to alter the file
+and then put it back in the game.</font></p>
+
+<p><font size="2" face="Arial">This next exercise will show you
+how to do that...</font></p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 7 (Altering a MAP in Paint Shop Pro)</b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Zoom into the image</b></font></li>
+  <li><font size="2" face="Arial"><b>Using the smallest brush size draw something 
+    on the green part to the left of the car chassis in the image.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">Here's my example...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image38.gif"
+width="240" height="122"></font></p>
+
+<p><font size="2" face="Arial">Before saving the altered file you
+need to flip the image. This is because it was flipped when it
+was imported as a raw file. To do this you need to...</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Image &gt; Flip</b></font></li>
+</ul>
+<p><font size="2" face="Arial">Now you are ready to save...</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; Save As</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The following window will
+appear...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image39.gif"
+width="420" height="300"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the &quot;Save as type&quot; pull down 
+    menu choose &quot;RAW - Raw File Format&quot;</b></font></li>
+  <li><font size="2" face="Arial"><b>Use the &quot;Save in&quot; pull down menu 
+    to browse to the Addon Folder</b></font></li>
+  <li><font size="2" face="Arial"><b>Press &quot;Save&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">Although the raw code produced by
+Paint Shop Pro is compatible with I76, the header which defines
+the dimensions of the image is not included in the saved file.
+You can use Hex Workshop to put this in.</font></p>
+
+<p><font size="2" face="Arial">The next exercise explains how to
+do this&#133;</font></p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 8 (Inserting a header to a file saved in RAW 
+  format)</b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open the original ZSY_.MAP file you first 
+    extracted from the ZFS, and select the first 8 bytes </b>(make sure you do 
+    this in the Hex, on the left-hand side).</font></li>
+</ul>
+<p><font size="2" face="Arial">It should look like this... </font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image31.gif"
+width="616" height="376"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Copy</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This copies the header, which
+defines the image&#146;s width and height, to the clipboard</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; Open</b></font></li>
+  <li><font size="2" face="Arial"><b>Browse to the Addon Folder and choose ZSY_.RAW</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;Open&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">It should look something like the
+following&#133;</font></p>
+
+<p><font size="2" face="Arial"><img
+src="image40.gif"
+width="622" height="292"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Paste</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This pastes the header from the
+clipboard into the front of the adapted file</font></p>
+
+<p><font size="2" face="Arial">Making it look like this&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image41.gif"
+width="624" height="292"></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; Save As</b></font></li>
+  <li><font color="#FF0000" size="2" face="Arial"><b>IMPORTANT</b></font><font
+size="2" face="Arial"><b>: In the file name box type &quot;ZSY_.</b></font><font
+color="#FF0000" size="2" face="Arial"><b>MAP</b></font><font
+size="2" face="Arial"><b>&quot;</b> </font></li>
+</ul>
+<p><font size="2" face="Arial">This saves the file with the
+extension MAP, which I76 can recognise.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Exit Hex Workshop.</b></font></li>
+  <li><font size="2" face="Arial"><b>Launch I76 and go to auto melee</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You should see something like
+this...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image42.gif"
+width="640" height="480"></font></p>
+
+<p><font size="2" face="Arial">We have successfully imported a
+custom image into I76.</font></p>
+
+<p><font size="2" face="Arial">The next move is to put this
+custom MAP onto the outside of the car.</font></p>
+
+<p><font size="2" face="Arial">The next exercise explains
+how&#133;</font></p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 9 (Adapting a TMT and VTF file to accommodate 
+  a custom MAP)</b></font></p>
+
+<p><font size="2" face="Arial">The VQM and MAP files used for the
+outside of vehicles all have filenames that are 8 characters long
+(e.g. pp11mdl1). Because of this we need to rename our custom
+ZSY_.MAP file 12345678.MAP. <i>[NOTE: The name of the MAP could
+be anything, as long as it is 8 Characters long, and different to
+the VQMs and MAPs that already exist.]</i></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Go to the Addon Folder</b></font></li>
+  <li><font size="2" face="Arial"><b>Select ZSY_.MAP - it will become highlighted</b></font></li>
+  <li><font size="2" face="Arial"><b>Press F2</b></font></li>
+  <li><font size="2" face="Arial"><b>Type 12345678.MAP</b></font></li>
+  <li><font size="2" face="Arial"><b>Press Return</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You have now renamed the file
+12345678.MAP</font></p>
+
+<p><font size="2" face="Arial">To put this custom MAP onto the
+outside of the car you need to adapt a TMT file, and a VTF file.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open 1PP1MDLT.TMT in Hex Workshop</b></font></li>
+</ul>
+<p><font size="2" face="Arial">(this is the file you extracted in
+Exercise 3. If you do not have it follow Exercise 3 again)</font></p>
+
+<p><font size="2" face="Arial">It should look like this...</font></p>
+
+<p><font size="2" face="Arial"><img
+src="image22.gif"
+width="613" height="135"></font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="2" face="Arial">The last 64 bytes refer to the
+following VQM files:</font></p>
+
+<ul>
+  <li><font size="2" face="Arial">PP11MDL1.VQM </font></li>
+  <li><font size="2" face="Arial">PP12MDL1.VQM</font></li>
+  <li><font size="2" face="Arial">PP13MDL1.VQM</font></li>
+  <li><font size="2" face="Arial">VW14MDL2.VQM</font></li>
+</ul>
+<p><font size="2" face="Arial">These are the references to the
+various images depicting the increasingly damaged states of the
+Piranha's left side.</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image23.gif"
+width="391" height="61"></font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="2" face="Arial">We need to replace all 4 of these
+references with references to our custom file. For added realism
+you could make a series of different images, but for the purposes
+of this exercise we will replace ALL the references with
+12345678. By doing this our image will remain constant regardless
+of hits. </font></p>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Replace the code - </b><b><i>pp11mdl1pp12mdl1pp13mdl1vw14mdl2</i></b></font></li>
+  <li><font size="2" face="Arial"><b>with the code - </b><b><i>12345678123456781234567812345678</i></b></font></li>
+  <li><font size="2" face="Arial"><b>From the Menu choose File &gt; Save As</b></font></li>
+  <li><font size="2" face="Arial"><b>In the file name box type </b></font><font
+color="#FF0000" size="2" face="Arial"><b>11CUSTOM.TMT</b></font></li>
+  <li><font size="2" face="Arial"><b>Browse to the Addon Folder</b></font></li>
+  <li><font size="2" face="Arial"><b>Click Save</b></font></li>
+</ul>
+<p><font size="2" face="Arial">We now have a custom TMT file,
+called 11CUSTOM.TMT, which refers to 12345678.MAP, our custom MAP
+file.</font></p>
+
+<p><font size="2" face="Arial"><i>[NOTE: As with the MAP the name
+of the TMT could be anything, as long as it is 8 Characters long,
+and different to the TMTs that already exist.]</i></font></p>
+
+<p><font size="2" face="Arial">The next step is to reference the
+custom TMT in a VTF.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open PIRANHA1.VTF</b></font></li>
+  <li><font size="2" face="Arial"><b>Replace the TMT listing 1PP1MDLT.TMT with 
+    11CUSTOM.TMT</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This replaces the middle left side
+of the Piranha with the new TMT.</font></p>
+
+<p><font size="2" face="Arial">To show that TMTs can be used more
+than once in one VTF we will also...</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Replace the TMT listing 1PP1FTTP.TMT with 
+    11CUSTOM.TMT</b></font></li>
+</ul>
+<p><font size="2" face="Arial">It should look like this&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><b><img
+src="image43.gif"
+width="621" height="379"></b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Save PIRANHA1.VTF to the Addon Folder</b></font></li>
+  <li><font size="2" face="Arial"><b>Exit Hex Workshop</b></font></li>
+  <li><font size="2" face="Arial"><b>Launch I76 and view your handy work.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You should see something like
+this...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image44.gif"
+width="286" height="196"></font></p>
+
+<p><font size="2" face="Arial">By using this method we are able
+to import custom images onto the outsides of vehicles.</font></p>
+
+<p><font size="2" face="Arial">The next move is to bring in an
+image that has nothing to do with the game&#133;</font></p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 10 (bringing in an entirely new image)</b></font></p>
+
+<p><font size="2" face="Arial">Any image that uses the I76
+palette, is saved in RAW format and given the extension MAP can
+be imported into the game.</font></p>
+
+<p><font size="2" face="Arial">This includes images created from
+scratch, or images taken from any source.</font></p>
+
+<p><font size="2" face="Arial">Use the file hop76log.bmp from the
+&quot;files&quot; folder that accompanies this guide to
+demonstrate this.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open the file hop76log.bmp in Paint Shop 
+    Pro</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You should see the following...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image45.gif"
+width="240" height="122"></font></p>
+
+<p><font size="2" face="Arial">This file has nothing to do with
+I76 code, I made it from scratch. To make it compatible with I76
+you need to do the following...</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Colors &gt; Load Palette</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The following window will come
+up...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image46.gif"
+width="426" height="360"></font></p>
+
+<ul>
+  <li><font color="#FF0000" size="2" face="Arial"><b>IMPORTANT</b></font><font
+size="2" face="Arial"><b>: Make sure &quot;</b></font><font
+color="#FF0000" size="2" face="Arial"><b>Nearest color matching</b></font><font
+size="2" face="Arial"><b>&quot; in the &quot;Apply palette using&quot; list at 
+    the bottom of the window is checked. </b></font></li>
+</ul>
+<p><font size="2" face="Arial">This will approximate the colours
+of any given image, using the colours that i76 uses.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Select i76.pal from the &quot;files&quot; 
+    folder that accompanies this guide.</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;Open&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This applies the palette used by
+I76 to the image</font></p>
+
+<p><font size="2" face="Arial"><i>[NOTE: If the colours change
+radically that probably means you did not have &quot;Nearest
+color matching&quot; checked. If this happens choose Edit &gt;
+Undo from the menu, and try again with it checked.]</i></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; Save As</b></font></li>
+  <li><font size="2" face="Arial"><b>Choose &quot;RAW Raw File Format&quot; from 
+    the &quot;Save as type&quot; box</b></font></li>
+  <li><font size="2" face="Arial"><b>Browse to the Addon Folder in the &quot;Save 
+    in&quot; box</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;Save&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This saves the file to the Addon
+in RAW format, under the name HOP76LOG.RAW</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose View &gt; Image Information</b></font></li>
+  <li><font size="2" face="Arial"><b>Make a note of the image's width and height 
+    (In this case 240 by 122)</b></font></li>
+  <li><font size="2" face="Arial"><b>Press &quot;OK&quot;</b></font></li>
+  <li><font size="2" face="Arial"><b>Exit Paint Shop Pro</b></font></li>
+</ul>
+<p><font size="2" face="Arial">As before you need to input the
+header for the RAW file, and save it as a MAP file.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Using Hex Workshop open the ZSY_.MAP file 
+    you just saved to the Addon Folder</b></font></li>
+</ul>
+<p><font size="2" face="Arial">It should look like this...</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Tools &gt; Base converter</b></font></li>
+  <li><font size="2" face="Arial"><b>In the decimal window type &quot;240&quot;, 
+    which is the width of the image.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">&quot;000000F0&quot; appears in
+the Hex window. This tells us that 240 in Decimal is F0 in Hex </font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>In the decimal window of Base Converter type 
+    &quot;122&quot;, which is the height of the image.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">&quot;0000007A&quot; appears in
+the Hex window. This tells us that 122 in Decimal is 7A in Hex </font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Make sure the cursor is at the top of the 
+    file on the left-hand side</b></font></li>
+  <li><font size="2" face="Arial"><b>Press &quot;Insert&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This allows you to insert code</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Insert the following header: </b><b><i>F000 
+    0000 7A00 0000</i></b></font></li>
+</ul>
+<p><font size="2" face="Arial">The beginning of your file should
+look like this...</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; Save As</b></font></li>
+  <li><font size="2" face="Arial"><b>IMPORTANT: In the file name box type </b></font><font color="#000080" size="2" face="Arial"><b>HOP76LOG.</b></font><font
+color="#FF0000" size="2" face="Arial"><b>MAP</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This saves the file with the
+extension MAP, which I76 can recognise</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Exit Hex Workshop</b></font></li>
+</ul>
+<p><font size="2" face="Arial">To view the map in the game you
+need to alter a TMT and VTF file for it. To save time you can
+just rename the file 12345678.MAP so we can view it using the TMT
+and VTF we altered in the previous exercise.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Go to the Addon Folder</b></font></li>
+  <li><font size="2" face="Arial"><b>Delete the file 12345678.MAP</b></font></li>
+  <li><font size="2" face="Arial"><b>Rename the file HOP76LOG.MAP with the name 
+    12345678.MAP</b></font></li>
+  <li><font size="2" face="Arial"><b>Launch the game to check it out.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You should see something like
+this...</font></p>
+
+<p align="center"><font size="2" face="Arial"><img
+src="image47.gif"
+width="299" height="163"></font></p>
+
+<p><font size="2" face="Arial">The entirely custom image has been
+imported into the game.</font></p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Summary</b></font></p>
+<p><font size="2" face="Arial">Any image can be imported into the game as long 
+  as:</font> </p>
+<ol>
+  <ol>
+    <li><font size="2" face="Arial">The I76.pal applied to it.</font></li>
+    <li><font size="2" face="Arial">It is saved in raw file format.</font></li>
+    <li><font size="2" face="Arial">It has the file extension MAP</font></li>
+    <li><font size="2" face="Arial">It has an 8-byte header inserted stating the 
+      image's dimensions in hex.</font></li>
+  </ol>
+</ol>
+<p><font size="2" face="Arial">Using this information you can make your own custom 
+  paintjobs</font></p>
+<p><font face="Arial"><b></b></font>&nbsp;</p>
+
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Tips</b></font></p>
+<blockquote> 
+  <blockquote> 
+    <p><font size="2" face="Arial">Only make as many custom images as you need 
+      to. If no text if used on an altered side piece you can use one TMT for 
+      both sides (If text is used you need to make two because one will become 
+      mirrored).</font></p>
+    <p><font
+                size="2" face="Arial">Where possible use existing TMTs (even if 
+      they are designed for other vehicles). For example in the General Lee paintjob 
+      of a possible 23 TMTs I made only 5 custom ones. However as there is no 
+      red paintjob for the Dover Lightning in regular I76, most of the references 
+      to TMTs in the VTF were changed to existing ones for other cars (Here ones 
+      from the second version of the Cavera and the third version of the Sovereign). 
+      The General Lee paintjob is available for download from my page </font><a
+                href="http://www.smidge.com/hoppo/"><font
+                size="2" face="Arial">http://www.smidge.com/hoppo/</font></a></p>
+    <p><font size="2" face="Arial">Some of the TMTs you can extract from I76.ZFS, 
+      such as BLADE101.TMT are used to have animated textures in the game (such 
+      as the cop car&#146;s lights, helicopter&#146;s blades, flames etc). By 
+      adapting these TMTs to refer to your custom MAP files you can make your 
+      own animated custom paintjobs.</font></p>
+    <p><font size="2" face="Arial">Make sure the custom map you make has the same 
+      or similar dimensions to the VQM it is replacing. You can find the dimensions 
+      of any given VQM by opening it in Hex Workshop, and using Base Converter 
+      to translate the header. If the dimensions differ your map will be distorted 
+      when stretched on the vehicle.</font></p>
+    <p><font size="2" face="Arial">The best way to ensure your custom map will 
+      properly fit is to use the original image as a guide. That is import it 
+      into Paint Shop Pro where you can recolor it, add text or a logo etc. However 
+      VQMs cannot be opened with Paint Shop Pro like MAP files can. To get round 
+      this you can replace a Roadmap VQM with the VQM you want to see, as we did 
+      in Exercise 6, and take a screen grab. The final exercise explains how to 
+      do this.</font></p>
+  </blockquote>
+</blockquote>
+<hr NOSHADE align="CENTER">
+<p><font face="Arial"><b>Exercise 11 (Taking a screen grab of a VQM)</b></font></p>
+<p><font size="2" face="Arial">First choose the VQM you which to make a copy of. 
+  In this example we will use PP11TP_1.VQM</font></p>
+<p><font size="2" face="Arial">To extract this file you need to
+use the same method as we used in Exercise 4</font></p>
+
+<p><font size="2" face="Arial">You should have already extracted
+PIRANA1M.PIX and PIRANAM.PAK from I76.ZFS</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open PIRANA1T.PIX with Notepad</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You will see the following&#133;</font></p>
+
+<p align="center"><font size="2" face="Arial"><b><img
+src="image48.gif"
+width="240" height="601"></b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Open PIRANA1T.PAK with Hex Workshop</b></font></li>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Go to</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A window appears asking for the
+offset</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Type in the offset as listed next to PP11TP_1.VQM 
+    in PIRANA1M.PIX &#150; 21362 Click &quot;GO&quot; From the menu choose Edit 
+    &gt; Select Block</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A window appears asking for the
+size of the block</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Type in the size as listed in the PIX file 
+    - in this case 5694</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;OK&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The code that makes up PP11TP_1.VQM is highlighted</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Copy</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This copies the code onto the
+clipboard</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; New</b></font></li>
+</ul>
+<p><font size="2" face="Arial">A new file instance appears</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose Edit &gt; Paste</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This copies the code to the new
+file instance.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>From the menu choose File &gt; Save As</b></font></li>
+  <li><font size="2" face="Arial"><b>Use the pull down menu in the Save in box 
+    to browse to the Addon Folder</b></font></li>
+  <li><font size="2" face="Arial"><b>When Prompted for File Name type ZMAP6M00.VQM 
+    </b><i>[NOTE: that's 2 zeros at the end]</i></font></li>
+  <li><font size="2" face="Arial"><b>Press &quot;Save&quot;</b></font></li>
+  <li><font size="2" face="Arial"><b>Make a note of the header ( which in this 
+    case is B400 0000 FC00 0000)</b></font> </li>
+  <li><font size="2" face="Arial"><b>Exit Hex Workshop</b></font></li>
+</ul>
+<dir> 
+  <p>&nbsp;</p>
+</dir>
+
+<p><font size="2" face="Arial">We have extracted the VQM file and
+saved it as the default map for melee games.</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Launch I76 in Window Mode</b></font></li>
+  <li><font size="2" face="Arial"><b>Go to a melee game and Press &quot;M&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">You should see the following image&#133;</font></p>
+<p align="CENTER"><font size="2" face="Arial"><b><img
+                src="image49.gif"
+                width="323" height="253" align="ABSMIDDLE"></b></font></p>
+<ul>
+  <li><font size="2" face="Arial"><b>Press &quot;Escape&quot; in I76 </b></font> 
+  </li>
+  <li><font size="2" face="Arial"><b>Minimise the I76 window</b></font> </li>
+  <li><font size="2" face="Arial"><b>Start Paint Shop Pro</b></font></li>
+  <li><font size="2" face="Arial"><b>From the menu choose Capture &gt; Setup</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The following window comes up...</font></p>
+<p align="CENTER"><font size="2" face="Arial"><img
+src="image50.gif"
+width="401" height="197"></font></p>
+<ul>
+  <li><font size="2" face="Arial"><b>Make sure &quot;Client area&quot; is selected 
+    from the &quot;Capture&quot; list on the left</b></font></li>
+  <li><font size="2" face="Arial"><b>Make sure &quot;Right mouse click&quot; is 
+    selected from &quot;Activate capture using&quot; list</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;Capture Now&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">Paint Shop Pro will minimise.<b>
+Maximise I76 Press &quot;escape&quot; again to return to the game</b></font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Press the &quot;m&quot; key to show the image</b></font></li>
+  <li><font size="2" face="Arial"><b>Right click the mouse.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">Paint shop Pro will maximise with the image grabbed 
+  from the screen.</font></p>
+<ul>
+  <li><font size="2" face="Arial"><b>Hold down &quot;Alt&quot; and press &quot;Tab&quot; 
+    to return to I76</b></font></li>
+  <li><font size="2" face="Arial"><b>Press &quot;Escape&quot; and exit the game.</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This image has been stretched to fit the window 
+  and is inverted. To fix this do the following...</font></p>
+<ul>
+  <li><font size="2" face="Arial">I<b>n Paint Shop Pro choose Image &gt; Flip</b></font></li>
+</ul>
+<p><font size="2" face="Arial">This inverts the image</font></p>
+
+<ul>
+  <li><font size="2" face="Arial"><b>Choose Image &gt; Resize</b></font></li>
+</ul>
+<p><font size="2" face="Arial">The following window appears...</font></p>
+
+<p align="center"><font size="2" face="Arial"><b><img
+src="image51.gif"
+width="282" height="367"></b></font></p>
+<ul>
+  <li><font size="2" face="Arial"><b>Make sure the &quot;Maintain aspect ratio&quot; 
+    box is </b></font><font
+                color="#FF0000" size="2" face="Arial"><b>not</b></font><font
+                size="2" face="Arial"><b> checked.Enter the size 180 x 252</b></font></li>
+  <li><font size="2" face="Arial"><b>Click &quot;OK&quot;</b></font></li>
+</ul>
+<p><font size="2" face="Arial">(This size is from the header of the original PP11TP_1.VQM 
+  file &#150; B400 0000 FC00 0000 which we can translate to 180 X 252 using Base 
+  Converter from Hex Workshop's &quot;tools&quot; menu. 00B4 in Hex = 180 in Decimal 
+  and 00FC = 252 )</font></p>
+<p><font size="2" face="Arial">This is how the image looks resized&#133;</font></p>
+<p align="CENTER"><font
+                size="2" face="Arial"><img
+                src="image52.gif"
+                width="90" height="126"></font></p>
+<ul>
+  <li><font size="2" face="Arial"><b>Choose File &gt; Save As</b></font></li>
+  <li><font size="2" face="Arial"><b>In the &quot;Save As Type&quot; box menu 
+    choose &quot;Windows or OS/2 Bitmap (*.bmp)&quot;</b></font></li>
+  <li><font
+                                size="2" face="Arial"><b>Press &quot;Save&quot;</b></font></li>
+</ul>
+<p align="LEFT"><font size="2" face="Arial">This is exactly the same as the image 
+  that appears as part of the VPPIRNA.VCF paintjob. You can alter this image in 
+  whatever way you choose, apply the I76 palette and then save it as a MAP file 
+  as previously outlined.</font></p>
+<hr NOSHADE align="CENTER">
+<p align="LEFT"><font size="2" face="Arial">It&#146;s a good idea to keep the 
+  MAP files you make the same size as the original VQMs. As they are generally 
+  quite small you may want to resize the image to a larger size to work on, and 
+  then resize them smaller again before saving them in RAW format. Remember to 
+  flip<font face="Arial, Helvetica, sans-serif"> the image, and don&#146;t forget 
+  to insert the header using Hex workshop too!</font></font></p>
+<p align="LEFT"><font face="Arial, Helvetica, sans-serif" size="2">To help you 
+  on your way I have already screen grabbed and resized most of the images of 
+  undamaged external parts for the regular I76 cars. You should be able to download 
+  these from the end of the online version of this document at <a href="http://www.hoppo.freeserve.co.uk/goodies.zip">http://www.hoppo.freeserve.co.uk</a> 
+  (The file is large though - just under 1Mb)</font></p>
+<p align="LEFT"><font size="2" face="Arial">Be creative with your customs &#150; 
+  this guide took a lot of time and effort, and I&#146;m looking forward to seeing 
+  what people do with the information. Good Luck, and have fun with it,</font></p>
+<p align="RIGHT"><font size="7" face="Arial">hoppo™</font></p>
+<p align="LEFT"><font size="2" face="Arial"><i>[One Last NOTE: The images used 
+  for the far view when rendered in Nitro and Gold are rotated by 90 degrees. 
+  You can alter your custom files in Paint Shop Pro by choosing </i><b><i>Image 
+  &gt; Rotate</i></b><i> from the menu.]</i></font></p>
+<hr NOSHADE align="CENTER">
+<p align="LEFT"><font size="4" face="Arial"><b>List of VTF files</b></font></p>
+<p align="CENTER"><font size="2" face="Arial"><b>I76 Original VTFs</b></font></p>
+<div align="center"><center>
+
+    <table border="1" cellpadding="1" cellspacing="1" width="585" bgcolor="#FFFFFF" bordercolorlight="#FFFFFF" bordercolordark="#000000">
+      <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">ambamz1.vtf
+        (blue)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">Ambamz2.vtf
+        (red/white/blue)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">ambamz3.vtf
+        (white)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">bus1.vtf
+        (yellow)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">cameo1.vtf
+        (bondo &amp; primer))</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">cameo2.vtf
+        (red)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">cameo3.vtf
+        (yellow)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">clydsdl1.vtf
+        (grey)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">clydsdl2.vtf
+        (white/red)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">clydsdl3.vtf
+        (white/green)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">corchel1.vtf
+        (gold)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">corchel2.vtf
+        (avacado)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">corchel3.vtf
+        (devil)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">coupe1.vtf
+        (blue)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">coupe2.vtf
+        (black)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">coupe3.vtf
+        (red)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">dillo1.vtf
+        (grey)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">goon1.vtf
+        (camoflage)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">goon2.vtf
+        (postal)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">goon3.vtf
+        (thing)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">howitzr1.vtf
+        (grey)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">huey1.vtf
+        (police)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">huey2.vtf
+        (black)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">jrabbit1.vtf
+        (black/red)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">jrabbit2.vtf
+        (yellow/red)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">jrabbit3.vtf
+        (teal/white)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">leprecn1.vtf
+        (brown/white)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">leprecn2.vtf
+        (black)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">leprecn3.vtf
+        (blue)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">lightng1.vtf
+        (brown)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">lightng2.vtf
+        (blue/white)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">lightng3.vtf
+        (teal)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">manta1.vtf
+        (dark green)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">manta2.vtf
+        (blue/white)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">manta3.vtf
+        (black/red)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">marx1.vtf
+        (red)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">marx2.vtf
+        (blue)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">marx3.vtf
+        (white)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">milktrk1.vtf
+        (blue/milk)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">milktrk2.vtf
+        (red/sincere)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">palamno1.vtf
+        (red/white) </font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">palamno2.vtf
+        (orange/white)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">palamno3.vtf
+        (yellow/black)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">Piranha1.vtf
+        (orange/black)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">piranha2.vtf
+        (blue/white)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">piranha3.vtf(black/checkers)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">police1.vtf
+        (sheriff)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">police2.vtf
+        (new mexico)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">police3.vtf
+        (texas)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">pony1.vtf
+        (green)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">pony2.vtf
+        (black/flames)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">pony3.vtf
+        (grey)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">rattler1.vtf
+        (blue)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">rattler2.vtf
+        (black/yellow)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">rattler3.vtf
+        (red/black)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">royale1.vtf
+        (black)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">royale2.vtf
+        (burgundy)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">royale3.vtf
+        (blue)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">sktvan1.vtf
+        (olive drab)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">sovergn1.vtf
+        (silver) </font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">sovergn2.vtf
+        (gold)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">sovergn3.vtf
+        (maroon)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">stag1.vtf
+        (red)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">stag2.vtf
+        (green)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">stag3.vtf
+        (blue)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">stryder1.vtf
+        (orange)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">stryder2.vtf
+        (rising sun)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">stryder3.vtf
+        (desert fox)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">stvan1.vtf
+        (yellow)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">stvan2.vtf
+        (orange)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">stvan3.vtf
+        (police)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">tank1.vtf
+        (camoflage)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">tank2.vtf
+        (police)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">tractor1.vtf
+        (red)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">turret1.vtf
+        (grey)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">ugcobra1.vtf
+        (camoflage)</font></td>
+        <td valign="top" width="33%">&nbsp;</td>
+        <td valign="top" width="33%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="33%"><font size="2" face="Arial">vikea1.vtf
+        (brown)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">vikea2.vtf
+        (gold)</font></td>
+        <td valign="top" width="33%"><font size="2" face="Arial">vikea3.vtf
+        (powder blue)</font></td>
+    </tr>
+</table>
+</center></div>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+<p align="CENTER"><font size="2" face="Arial"><b>Extra VTFs for NITRO/Gold Edition 
+  not in original I76</b></font></p>
+<div align="center"><center>
+
+    <table border="1" cellpadding="1" cellspacing="1" width="585" align="CENTER" bordercolorlight="#FFFFFF" bordercolordark="#000000" bgcolor="#FFFFFF">
+      <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">ambulnc1.vtf</font><font
+        size="2" face="Arial">(red/white top)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">balloon1.vtf(red,
+        yellow, green)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">bus2.vtf(whippet)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">cavera1.vtf(bondo
+        &amp; primer) </font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">cavera2.vtf(red)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">cavera3.vtf(yellow)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">cavera4.vtf(forest
+        green)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">clown1.vtf(clown
+        car)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">Cobra1.vtf(desert
+        camoflage)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">cobra2.vtf(olive
+        drab)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">dreadnt1.vtf(black)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">grapplr1.vtf(olive
+        drab)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">hacinda1.vtf(yellow/black)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">hacinda2.vtf(orange)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">hearse1.vtf(black)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">huey3.vtf(euro
+        1 camouflage)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">leopard1.vtf(british
+        racing green)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">leopard2.vtf(red/black
+        roof)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">leprecn4.vtf(sky
+        blue)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">lightng4.vtf(red)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">loadmst1.vtf(bronze)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">loadmst2.vtf(gray
+        2-tone)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">loadmst3.vtf(black)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">manta4.vtf(orange)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">marshal1.vtf(white)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">marshal2.vtf(dark
+        green)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">mcargo1.vtf(bronze/mondo
+        burger)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">mcargo2.vtf(bronze/generic)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">mcargo3.vtf(gray/generic)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">mcargo4.vtf(black/generic)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">mtanker1.vtf(blue/milk)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">mtanker2.vtf(red/sincere)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">mtanker3.vtf(white/generic
+        gas)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">palomno1.vtf(red/white)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">palomno2.vtf(orange/white)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">palomno3.vtf(yellow/black)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">palomno4.vtf(white)</font></td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">phantom1.vtf(nato
+        camouflage)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">piranha4.vtf(lime
+        green/black)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">rampage1.vtf(red)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">rampage2.vtf(blue
+        w/yellow)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">royale4.vtf(taxi)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">sandbag1.vtf(grey)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">stvan4.vtf(ice
+        cream)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">ufo1.vtf(ufo)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+    <tr>
+        <td valign="top" width="25%"><font size="2" face="Arial">wolffv1.vtf(lime
+        green)</font></td>
+        <td valign="top" width="25%"><font size="2" face="Arial">wolffv2.vtf(yellow)</font></td>
+        <td valign="top" width="25%">&nbsp;</td>
+        <td valign="top" width="25%">&nbsp;</td>
+    </tr>
+</table>
+</center></div>
+
+<p><font size="2" face="Arial"></font>&nbsp;</p>
+
+<p><font size="2" face="Arial">NOTE: cameo1.vtf from original I76
+becomes cavera1.vtf in Gold/Nitro</font></p>
+
+<p><font size="2" face="Arial">Also palomno1.vtf becomes pal</font><font
+color="#FF0000" size="2" face="Arial">a</font><font size="2"
+face="Arial">mno1.vtf</font></p>
+<hr NOSHADE align="CENTER">
+</body>
+</html>
