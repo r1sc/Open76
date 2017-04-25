@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Assets
 {
@@ -15,6 +16,17 @@ namespace Assets
 
             //Calculate the normal
             return Vector3.Normalize(Vector3.Cross(AB, AC));
+        }
+
+
+        public static T RandomElement<T>(T[] array)
+        {
+            return array[Random.Range(0, array.Length)];
+        }
+
+        public static T RandomElement<T>(IList<T> array)
+        {
+            return array[Random.Range(0, array.Count)];
         }
     }
 }

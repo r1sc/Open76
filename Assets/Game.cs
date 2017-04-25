@@ -108,8 +108,7 @@ public class Game : MonoBehaviour
                 terrainPatches[x, z] = terrain;
             }
         }
-
-
+        
         foreach (var road in mdef.Roads)
         {
             var roadGo = new GameObject("Road");
@@ -174,10 +173,11 @@ public class Game : MonoBehaviour
             mesh.RecalculateNormals();
             meshFilter.sharedMesh = mesh;
         }
+
         foreach (var ldef in mdef.StringObjects)
         {
             var sdfObj = cacheManager.ImportSdf(ldef.Label + ".sdf", null, Vector3.zero, Quaternion.identity);
-            //sdfObj.name += " - " + ldef.Label;
+
             for (int i = 0; i < ldef.StringPositions.Count; i++)
             {
                 var pos = ldef.StringPositions[i];
@@ -201,102 +201,24 @@ public class Game : MonoBehaviour
                     sdfObj = Instantiate(sdfObj);
             }
         }
-        //RepositionCurrentTerrainPatch(RealTerrainGrid);
+
         worldGameObject.transform.position = new Vector3(-mdef.Middle.x*640, 0, -mdef.Middle.y*640);
         FindObjectOfType<Light>().color = cacheManager.Palette[176];
         Camera.main.backgroundColor = cacheManager.Palette[239];
         RenderSettings.fogColor = cacheManager.Palette[239];
         RenderSettings.ambientLight = cacheManager.Palette[247];
 
-        //var importedVcf = cacheManager.ImportVcf(VcfToLoad);
+        var importedVcf = cacheManager.ImportVcf(VcfToLoad);
 
-        //var spawnPoint = RandomElement(GameObject.FindGameObjectsWithTag("Spawn"));
-        //importedVcf.transform.position = spawnPoint.transform.position;
-        //importedVcf.transform.rotation = spawnPoint.transform.rotation;
+        var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
+        importedVcf.transform.position = spawnPoint.transform.position;
+        importedVcf.transform.rotation = spawnPoint.transform.rotation;
     }
 
-    T RandomElement<T>(T[] array)
-    {
-        return array[Random.Range(0, array.Length)];
-    }
 
     // Update is called once per frame
     void Update()
     {
-        //var newx = Camera.main.transform.position.x;
-        //var newz = Camera.main.transform.position.z;
-        //bool changed = false;
-        //var newTerrainGrid = RealTerrainGrid;
-
-        //if (newx > 640) // Moved right
-        //{
-        //    newTerrainGrid.x += 1;
-        //    newx = 0;
-        //    changed = true;
-        //}
-        //else if (newx < 0) // Moved left
-        //{
-        //    newTerrainGrid.x -= 1;
-        //    newx = 640;
-        //    changed = true;
-        //}
-        //if (newz > 640) // Moved back
-        //{
-        //    newTerrainGrid.y += 1;
-        //    newz = 0;
-        //    changed = true;
-        //}
-        //else if (newz < 0.0f) // Moved forward
-        //{
-        //    newTerrainGrid.y -= 1;
-        //    newz = 640;
-        //    changed = true;
-        //}
-
-        //if (changed)
-        //{
-        //    //Camera.main.transform.position = new Vector3(newx, Camera.main.transform.position.y, newz);
-        //    //RepositionCurrentTerrainPatch(newTerrainGrid);
-        //}
+      
     }
-
-    //private void RepositionCurrentTerrainPatch(Vector2 newTerrainGrid)
-    //{
-    //    for (int z = -1; z <= 1; z++)
-    //    {
-    //        var tpZ = (int) (RealTerrainGrid.y + z);
-    //        if (tpZ < 0 || tpZ > 79)
-    //            continue;
-    //        for (int x = -1; x <= 1; x++)
-    //        {
-    //            var tpX = (int) (RealTerrainGrid.x + x);
-    //            if (tpX < 0 || tpX > 79)
-    //                continue;
-    //            var tp = TerrainPatches[tpX, tpZ];
-    //            if (tp == null)
-    //                continue;
-    //            tp.gameObject.SetActive(false);
-    //        }
-    //    }
-
-    //    for (int z = -1; z <= 1; z++)
-    //    {
-    //        var tpZ = (int) (newTerrainGrid.y + z);
-    //        if (tpZ < 0 || tpZ > 79)
-    //            continue;
-    //        for (int x = -1; x <= 1; x++)
-    //        {
-    //            var tpX = (int) (newTerrainGrid.x + x);
-    //            if (tpX < 0 || tpX > 79)
-    //                continue;
-    //            var tp = TerrainPatches[tpX, tpZ];
-    //            if (tp == null)
-    //                continue;
-    //            tp.gameObject.SetActive(true);
-    //            tp.transform.position = new Vector3(x*640, 0, z*640);
-    //        }
-    //    }
-
-    //    RealTerrainGrid = newTerrainGrid;
-    //}
 }

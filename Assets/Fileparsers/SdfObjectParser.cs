@@ -55,15 +55,9 @@ namespace Assets.Fileparsers
                 {
                     var sdfPart = new SdfPart();
                     sdfPart.Name = br.ReadCString(8);
-                    var xScale = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    var yScale = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    var zScale = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    if(xScale != Vector3.right)
-                        Debug.Log(".sdf X discrepancy:" + xScale);
-                    if (yScale != Vector3.up)
-                        Debug.Log(".sdf Y discrepancy:" + yScale);
-                    if (zScale != Vector3.forward)
-                        Debug.Log(".sdf Z discrepancy:" + zScale);
+                    sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.ParentName = br.ReadCString(8);
                     br.BaseStream.Seek(56, SeekOrigin.Current);

@@ -208,9 +208,31 @@ namespace Assets
             //foreach (var parts in vdf.PartsThirdPerson)
             //{
             var vdfObject = new GameObject(vdf.Name);
-            var partDict = new Dictionary<string, GameObject> { { "WORLD", vdfObject } };
 
-            foreach (var sdfPart in vdf.PartsThirdPerson[0])
+            ImportSdfParts(vdfObject, vtf, vdf.PartsThirdPerson[0]);
+
+            if (vcf.FrontWheelDef != null)
+            {
+                ImportSdfParts(vdfObject, vtf, vcf.FrontWheelDef.Parts);
+            }
+            if (vcf.MidWheelDef != null)
+            {
+                ImportSdfParts(vdfObject, vtf, vcf.MidWheelDef.Parts);
+            }
+            if (vcf.BackWheelDef != null)
+            {
+                ImportSdfParts(vdfObject, vtf, vcf.BackWheelDef.Parts);
+            }
+
+            //}
+            return vdfObject;
+        }
+
+        private void ImportSdfParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts)
+        {
+            var partDict = new Dictionary<string, GameObject> {{"WORLD", parent}};
+
+            foreach (var sdfPart in sdfParts)
             {
                 if (sdfPart.Name == "NULL" || sdfPart.Name.EndsWith("3"))
                     continue;
@@ -228,9 +250,6 @@ namespace Assets
                 partObj.transform.localPosition = sdfPart.Position;
                 partDict.Add(sdfPart.Name, partObj);
             }
-
-            //}
-            return vdfObject;
         }
 
         public void ClearCache()

@@ -28,6 +28,10 @@ namespace Assets.Fileparsers
             public uint ChassisRear { get; set; }
             public uint ArmorOrChassisLeftToAdd { get; set; }
             public List<VcfWeapon> Weapons { get; set; }
+
+            public Wdf FrontWheelDef { get; set; }
+            public Wdf MidWheelDef { get; set; }
+            public Wdf BackWheelDef { get; set; }
         }
 
         public class VcfWeapon
@@ -46,11 +50,11 @@ namespace Assets.Fileparsers
 
         public static Vcf ParseVcf(string filename)
         {
+            var vcf = new Vcf();
             using (var br = new Bwd2Reader(filename))
             {
                 br.FindNext("VCFC");
 
-                var vcf = new Vcf();
                 vcf.VariantName = br.ReadCString(16);
                 vcf.VdfFilename = br.ReadCString(13);
                 vcf.VtfFilename = br.ReadCString(13);
@@ -83,8 +87,16 @@ namespace Assets.Fileparsers
                     br.Next();
                 }
 
-                return vcf;
             }
+
+            if (vcf.WdfFrontFilename.ToUpper() != "NULL")
+                vcf.FrontWheelDef = WdfParser.ParseWdf(vcf.WdfFrontFilename);
+            if (vcf.WdfMidFilename.ToUpper() != "NULL")
+                vcf.MidWheelDef = WdfParser.ParseWdf(vcf.WdfMidFilename);
+            if (vcf.WdfBackFilename.ToUpper() != "NULL")
+                vcf.BackWheelDef = WdfParser.ParseWdf(vcf.WdfBackFilename);
+
+            return vcf;
         }
     }
 }
