@@ -7,6 +7,14 @@ using UnityEngine;
 
 namespace Assets.Fileparsers
 {
+    public class WheelLoc
+    {
+        public Vector3 Right { get; set; }
+        public Vector3 Up { get; set; }
+        public Vector3 Forward { get; set; }
+        public Vector3 Position { get; set; }
+    }
+
     public class Vdf
     {
         public float Unk70f;
@@ -31,6 +39,7 @@ namespace Assets.Fileparsers
         public uint Unk4 { get; set; }
         public List<SdfPart[]> PartsThirdPerson { get; set; }
         public SdfPart[] PartsFirstPerson { get; set; }
+        public WheelLoc[] WheelLoc { get; set; }
     }
 
     public class VdfParser
@@ -101,6 +110,19 @@ namespace Assets.Fileparsers
                     br.BaseStream.Seek(36, SeekOrigin.Current);
 
                     vdf.PartsFirstPerson[i] = sdfPart;
+                }
+
+                br.FindNext("WLOC");
+                vdf.WheelLoc = new WheelLoc[6];
+                for (int i = 0; i < 6; i++)
+                {
+                    var wheelLoc = vdf.WheelLoc[i] = new WheelLoc();
+                    var unk1 = br.ReadUInt32();
+                    wheelLoc.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    wheelLoc.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    wheelLoc.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    wheelLoc.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    var unk2 = br.ReadSingle();
                 }
 
                 return vdf;

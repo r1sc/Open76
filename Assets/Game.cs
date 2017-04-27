@@ -43,6 +43,7 @@ public class Game : MonoBehaviour
             Destroy(worldGameObject);
         worldGameObject = new GameObject("World");
 
+        
         var splatPrototypes = new[]
         {
             new SplatPrototype
@@ -203,6 +204,8 @@ public class Game : MonoBehaviour
         }
 
         worldGameObject.transform.position = new Vector3(-mdef.Middle.x*640, 0, -mdef.Middle.y*640);
+        
+
         FindObjectOfType<Light>().color = cacheManager.Palette[176];
         Camera.main.backgroundColor = cacheManager.Palette[239];
         RenderSettings.fogColor = cacheManager.Palette[239];
