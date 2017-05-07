@@ -11,6 +11,7 @@ class Car : MonoBehaviour
 
     public Wheel[] FrontWheels;
     public Wheel[] BackWheels;
+    public float Torque;
 
     void Start()
     {
@@ -25,7 +26,7 @@ class Car : MonoBehaviour
         }
         foreach (var backWheel in BackWheels)
         {
-            backWheel.WheelColider.motorTorque = Throttle*100;
+            backWheel.WheelColider.motorTorque = Throttle*Torque;
         }
     }
 }

@@ -15,7 +15,7 @@ public class MoveSky : MonoBehaviour
 	}
 	
 	// Update is called once per frame
-	void LateUpdate ()
+	void Update ()
 	{
 	    _material.mainTextureOffset += Speed*Time.deltaTime;
 	    transform.position = Camera.main.transform.position + Vector3.up* Height;

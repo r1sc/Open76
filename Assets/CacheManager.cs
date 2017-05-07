@@ -12,8 +12,9 @@ namespace Assets
     {
         public GameObject _3DObjectPrefab;
         public GameObject NoColliderPrefab;
-        public Wheel WheelPrefab;
+        public Suspension WheelPrefab;
         public GameObject CarBodyPrefab;
+        public Raycar CarPrefab;
 
         public Material ColorMaterialPrefab;
         public Material TextureMaterialPrefab;
@@ -190,38 +191,33 @@ namespace Assets
             var vcf = VcfParser.ParseVcf(filename);
             var vdf = VdfParser.ParseVdf(vcf.VdfFilename);
             var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
-            
-            var carObject = new GameObject(vdf.Name + " (" + vcf.VariantName + ")");
-            var car = carObject.AddComponent<Car>();
-            carObject.AddComponent<InputDeviceCarController>();
 
-            ImportCarParts(carObject, vtf, vdf.PartsThirdPerson[0]);
+            var carObject = Instantiate(CarPrefab);
+            carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
+            ImportCarParts(carObject.gameObject, vtf, vdf.PartsThirdPerson[0]);
             //ImportCarParts(carObject, vtf, vdf.PartsFirstPerson);
             //var destroyed = ImportCarParts(car, vtf, vdf.PartsThirdPerson[3]);
             //destroyed.gameObject.SetActive(false);
-
-            var rigidbody = carObject.AddComponent<Rigidbody>();
-            rigidbody.mass = 1000;
-            rigidbody.isKinematic = true;
-            rigidbody.centerOfMass += Vector3.down;
-
+            
             if (vcf.FrontWheelDef != null)
             {
-                car.FrontWheels = CreateWheelPair("Front", 0, carObject, vdf, vtf, vcf.FrontWheelDef.Parts);
+                var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef.Parts);
+                carObject.SteerWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
-                CreateWheelPair("Mid", 2, carObject, vdf, vtf, vcf.MidWheelDef.Parts);
+                CreateWheelPair("Mid", 2, carObject.gameObject, vdf, vtf, vcf.MidWheelDef.Parts);
             }
             if (vcf.BackWheelDef != null)
             {
-                car.BackWheels = CreateWheelPair("Back", 4, carObject, vdf, vtf, vcf.BackWheelDef.Parts);
+                var backWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef.Parts);
+                carObject.DriveWheels = backWheels;
             }
 
-            return carObject;
+            return carObject.gameObject;
         }
 
-        private Wheel[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
+        private Suspension[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
         {
             var wheel1Name = placement + "Right";
             var wheel = Instantiate(WheelPrefab, car.transform);
@@ -233,7 +229,7 @@ namespace Assets
             wheel2.name = placement + "Left";
             wheel2.transform.localPosition = vdf.WheelLoc[wheelIndex + 1].Position;
             wheel2.transform.Find("Mesh").localScale = new Vector3(-1,1,1);
-
+            
             return new[] {wheel, wheel2};
         }
 
