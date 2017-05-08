@@ -17,6 +17,11 @@ public class Suspension : MonoBehaviour
     public float SteerAmount;
     public Transform WheelGraphic;
 
+    public float AccelerationForceMagnitude;
+    public float BrakeForceMagnitude;
+    public float Throttle;
+    public float Brake;
+
     private Rigidbody _rigidbody;
     private float _previousCompression;
 
@@ -28,7 +33,7 @@ public class Suspension : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        var floor = -transform.up*(Length - Compression);
+        var floor = -transform.up * (Length - Compression);
         Gizmos.color = Compression == 0 ? Color.blue : Color.white;
         Gizmos.DrawLine(transform.position, transform.position + floor);
         Gizmos.color = Color.red;
@@ -37,7 +42,7 @@ public class Suspension : MonoBehaviour
 
     void Update()
     {
-        var steerAngle = SteerAmount*40;
+        var steerAngle = SteerAmount * 40;
         transform.localRotation = Quaternion.AngleAxis(steerAngle, Vector3.up);
     }
 
@@ -46,29 +51,39 @@ public class Suspension : MonoBehaviour
     {
         RaycastHit hit;
         var realLength = Length + WheelRadius;
-        Grounded = Physics.Raycast(transform.position, -transform.up, out hit, realLength, RaycastLayerMask);
+        Grounded = Physics.Raycast(transform.position, -transform.up, out hit, realLength, RaycastLayerMask.value);
         if (Grounded)
         {
-            Compression = realLength - hit.distance;
-            var springForce = transform.up*Compression*SpringConstant;
-            var dampingForce = -transform.up*(_previousCompression - Compression)*DampingConstant;
-
+            Compression = Mathf.Clamp01(realLength - hit.distance);
+            //Compression = hit.distance / realLength;
+            //Compression = -Compression + 1;
             
+            //var springForce = transform.up * Compression * SpringConstant;
+            //var dampingForce = -transform.up * (_previousCompression - Compression) * DampingConstant;
+            var springForce = -transform.up * -(_rigidbody.mass / (Time.deltaTime * Time.deltaTime)) * SpringConstant * Compression;
+            var dampingForce = transform.up * -(_rigidbody.mass / Time.deltaTime) * DampingConstant * Mathf.Max(0, _previousCompression - Compression);
+
             var localVelocity = transform.InverseTransformVector(_rigidbody.GetPointVelocity(transform.position));
             var sideForce = -transform.right * localVelocity.x * SideForceAmount;
 
+            var accelerationForce = transform.forward * AccelerationForceMagnitude * Throttle;
+            var brakeForce = -transform.forward * BrakeForceMagnitude * Brake;
+
             _rigidbody.AddForceAtPosition(springForce + dampingForce + sideForce, transform.position);
+            _rigidbody.AddForceAtPosition(accelerationForce + brakeForce, transform.position -transform.up * realLength);
         }
         else
         {
             Compression = 0;
         }
-        
+
         _previousCompression = Compression;
     }
 
     void LateUpdate()
     {
+        if (WheelGraphic == null)
+            return;
         var pos = WheelGraphic.localPosition;
         pos.y = -(Length - Compression);
         WheelGraphic.localPosition = pos;
