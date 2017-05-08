@@ -9,6 +9,7 @@ public class Suspension : MonoBehaviour
     public float SpringConstant;
     public float DampingConstant;
     public float SideForceAmount = 10;
+    public AnimationCurve SideForceOverVelocity;
     public LayerMask RaycastLayerMask;
 
     public float Compression;
@@ -57,20 +58,20 @@ public class Suspension : MonoBehaviour
             Compression = Mathf.Clamp01(realLength - hit.distance);
             //Compression = hit.distance / realLength;
             //Compression = -Compression + 1;
-            
+
             //var springForce = transform.up * Compression * SpringConstant;
             //var dampingForce = -transform.up * (_previousCompression - Compression) * DampingConstant;
             var springForce = -transform.up * -(_rigidbody.mass / (Time.deltaTime * Time.deltaTime)) * SpringConstant * Compression;
             var dampingForce = transform.up * -(_rigidbody.mass / Time.deltaTime) * DampingConstant * Mathf.Max(0, _previousCompression - Compression);
 
             var localVelocity = transform.InverseTransformVector(_rigidbody.GetPointVelocity(transform.position));
-            var sideForce = -transform.right * localVelocity.x * SideForceAmount;
+            var sideForce = -transform.right * localVelocity.x * SideForceOverVelocity.Evaluate(Mathf.Abs(localVelocity.x));
 
             var accelerationForce = transform.forward * AccelerationForceMagnitude * Throttle;
             var brakeForce = -transform.forward * BrakeForceMagnitude * Brake;
 
-            _rigidbody.AddForceAtPosition(springForce + dampingForce + sideForce, transform.position);
-            _rigidbody.AddForceAtPosition(accelerationForce + brakeForce, transform.position -transform.up * realLength);
+            _rigidbody.AddForceAtPosition(springForce + dampingForce + sideForce + accelerationForce + brakeForce, transform.position);
+            //_rigidbody.AddForceAtPosition(accelerationForce + brakeForce, transform.position -transform.up * realLength);
         }
         else
         {

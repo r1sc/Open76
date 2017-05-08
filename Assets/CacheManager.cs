@@ -12,7 +12,8 @@ namespace Assets
     {
         public GameObject _3DObjectPrefab;
         public GameObject NoColliderPrefab;
-        public Suspension WheelPrefab;
+        public Suspension SteerWheelPrefab;
+        public Suspension DriveWheelPrefab;
         public GameObject CarBodyPrefab;
         public Raycar CarPrefab;
 
@@ -198,7 +199,7 @@ namespace Assets
             //ImportCarParts(carObject, vtf, vdf.PartsFirstPerson);
             //var destroyed = ImportCarParts(car, vtf, vdf.PartsThirdPerson[3]);
             //destroyed.gameObject.SetActive(false);
-            
+
             if (vcf.FrontWheelDef != null)
             {
                 var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef.Parts);
@@ -220,7 +221,7 @@ namespace Assets
         private Suspension[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
         {
             var wheel1Name = placement + "Right";
-            var wheel = Instantiate(WheelPrefab, car.transform);
+            var wheel = Instantiate(placement == "Front" ? SteerWheelPrefab : DriveWheelPrefab, car.transform);
             wheel.gameObject.name = wheel1Name;
             ImportCarParts(wheel.transform.Find("Mesh").gameObject, vtf, parts);
             wheel.transform.localPosition = vdf.WheelLoc[wheelIndex].Position;
@@ -228,9 +229,9 @@ namespace Assets
             var wheel2 = Instantiate(wheel, car.transform);
             wheel2.name = placement + "Left";
             wheel2.transform.localPosition = vdf.WheelLoc[wheelIndex + 1].Position;
-            wheel2.transform.Find("Mesh").localScale = new Vector3(-1,1,1);
-            
-            return new[] {wheel, wheel2};
+            wheel2.transform.Find("Mesh").localScale = new Vector3(-1, 1, 1);
+
+            return new[] { wheel, wheel2 };
         }
 
         private GameObject ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts)
