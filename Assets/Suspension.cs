@@ -43,7 +43,11 @@ public class Suspension : MonoBehaviour
 
     void Update()
     {
-        var steerAngle = SteerAmount * 40;
+        var localVelocity = _rigidbody.transform.InverseTransformVector(_rigidbody.velocity);
+        var maxSteerAngle = 45.0f;
+        maxSteerAngle = Mathf.Lerp(maxSteerAngle, 10, localVelocity.z/40.0f);
+
+        var steerAngle = SteerAmount*maxSteerAngle;
         transform.localRotation = Quaternion.AngleAxis(steerAngle, Vector3.up);
     }
 
@@ -56,22 +60,19 @@ public class Suspension : MonoBehaviour
         if (Grounded)
         {
             Compression = Mathf.Clamp01(realLength - hit.distance);
-            //Compression = hit.distance / realLength;
-            //Compression = -Compression + 1;
 
-            //var springForce = transform.up * Compression * SpringConstant;
-            //var dampingForce = -transform.up * (_previousCompression - Compression) * DampingConstant;
             var springForce = -transform.up * -(_rigidbody.mass / (Time.deltaTime * Time.deltaTime)) * SpringConstant * Compression;
             var dampingForce = transform.up * -(_rigidbody.mass / Time.deltaTime) * DampingConstant * Mathf.Max(0, _previousCompression - Compression);
 
             var localVelocity = transform.InverseTransformVector(_rigidbody.GetPointVelocity(transform.position));
-            var sideForce = -transform.right * localVelocity.x * SideForceOverVelocity.Evaluate(Mathf.Abs(localVelocity.x));
+            var sideForce = -transform.right*localVelocity.x* SideForceOverVelocity.Evaluate(Mathf.Abs(localVelocity.x));
+            
 
             var accelerationForce = transform.forward * AccelerationForceMagnitude * Throttle;
             var brakeForce = -transform.forward * BrakeForceMagnitude * Brake;
 
             _rigidbody.AddForceAtPosition(springForce + dampingForce + sideForce + accelerationForce + brakeForce, transform.position);
-            //_rigidbody.AddForceAtPosition(accelerationForce + brakeForce, transform.position -transform.up * realLength);
+            
         }
         else
         {

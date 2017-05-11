@@ -72,7 +72,9 @@ public class Raycar : MonoBehaviour
 
         _rigidbody.AddForce(downForce);
         //_rigidbody.AddForceAtPosition(downForce, transform.TransformPoint(forcePosition));
-        Debug.Log("Velocity: " + transform.InverseTransformVector(_rigidbody.velocity));
+        var velocity = transform.InverseTransformVector(_rigidbody.velocity);
+        _rigidbody.angularDrag = Mathf.Lerp(0.3f, 10, velocity.z/30.0f);
+        Debug.Log("Velocity: " + velocity);
     }
 
     void LateUpdate()

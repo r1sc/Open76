@@ -1,42 +1,35 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
-class Car : MonoBehaviour
+public class Car : MonoBehaviour
 {
-    public float SteerAngle;
-    public float Throttle;
+    public WheelCollider[] SteerWheels;
+    public WheelCollider[] DriveWheels;
 
-    public WheelCollider[] FrontWheels;
-    public WheelCollider[] BackWheels;
-    public float Torque;
-    private Rigidbody _rigidbody;
+    // Use this for initialization
+	void Start ()
+	{
+        
+	}
+	
+	// Update is called once per frame
+	void Update ()
+	{
+	    var throttle = Input.GetAxis("Throttle");
+	    var brake = -Mathf.Min(0, throttle);
+	    throttle = Mathf.Max(0, throttle);
 
-    void Start()
-    {
-        _rigidbody = GetComponent<Rigidbody>();
-        _rigidbody.centerOfMass += -Vector3.up * 0.5f;
-
-    }
-
-    void Update()
-    {
-        var horizontal = Input.GetAxis("Horizontal");
-        Throttle = Input.GetAxis("Throttle");
-        SteerAngle = horizontal*45;
-    }
-
-    void FixedUpdate()
-    {
-        foreach (var frontWheel in FrontWheels)
+	    var horizontal = Input.GetAxis("Horizontal");
+        
+        foreach (var steerWheel in SteerWheels)
         {
-            frontWheel.steerAngle = SteerAngle;
+            steerWheel.steerAngle = horizontal*40;
         }
-        foreach (var backWheel in BackWheels)
+        foreach (var driveWheel in DriveWheels)
         {
-            backWheel.motorTorque = Throttle*Torque;
+            driveWheel.motorTorque = throttle * 2000;
+            driveWheel.brakeTorque = brake * 1000;
         }
     }
 }

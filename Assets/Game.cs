@@ -34,6 +34,7 @@ public class Game : MonoBehaviour
 
         cacheManager.Palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
         SurfaceTexture = TextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, cacheManager.Palette);
+        SurfaceTexture.filterMode = FilterMode.Point;
 
         var skyTexture = TextureParser.ReadMapTexture(mdef.SkyTextureFilePath, cacheManager.Palette);
         SkyMaterial.mainTexture = skyTexture;
@@ -49,7 +50,7 @@ public class Game : MonoBehaviour
             new SplatPrototype
             {
                 texture = SurfaceTexture,
-                tileSize = new Vector2(SurfaceTexture.width, SurfaceTexture.height),
+                tileSize = new Vector2(32, 32),
                 metallic = 0,
                 smoothness = 0
             }
@@ -216,6 +217,8 @@ public class Game : MonoBehaviour
         var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
         importedVcf.transform.position = spawnPoint.transform.position;
         importedVcf.transform.rotation = spawnPoint.transform.rotation;
+
+        Camera.main.GetComponent<SmoothFollow>().Target = importedVcf.transform;
     }
 
 

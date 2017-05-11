@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-class Wheel : MonoBehaviour
+public class Wheel : MonoBehaviour
 {
     [HideInInspector]
     public WheelCollider WheelColider;
@@ -23,6 +23,8 @@ class Wheel : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (_meshTransform == null)
+            return;
         Vector3 position;
         Quaternion rotation;
         WheelColider.GetWorldPose(out position, out rotation);

@@ -12,10 +12,10 @@ namespace Assets
     {
         public GameObject _3DObjectPrefab;
         public GameObject NoColliderPrefab;
-        public Suspension SteerWheelPrefab;
-        public Suspension DriveWheelPrefab;
+        public ArcadeWheel SteerWheelPrefab;
+        public ArcadeWheel DriveWheelPrefab;
         public GameObject CarBodyPrefab;
-        public Raycar CarPrefab;
+        public ArcadeCar CarPrefab;
 
         public Material ColorMaterialPrefab;
         public Material TextureMaterialPrefab;
@@ -218,12 +218,12 @@ namespace Assets
             return carObject.gameObject;
         }
 
-        private Suspension[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
+        private ArcadeWheel[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
         {
             var wheel1Name = placement + "Right";
             var wheel = Instantiate(placement == "Front" ? SteerWheelPrefab : DriveWheelPrefab, car.transform);
             wheel.gameObject.name = wheel1Name;
-            ImportCarParts(wheel.transform.Find("Mesh").gameObject, vtf, parts);
+            ImportCarParts(wheel.transform.Find("Mesh").gameObject, vtf, parts, true);
             wheel.transform.localPosition = vdf.WheelLoc[wheelIndex].Position;
 
             var wheel2 = Instantiate(wheel, car.transform);
@@ -234,18 +234,18 @@ namespace Assets
             return new[] { wheel, wheel2 };
         }
 
-        private GameObject ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts)
+        private GameObject ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts, bool wheel = false)
         {
             var partDict = new Dictionary<string, GameObject> { { "WORLD", parent } };
             GameObject firstObject = null;
 
             foreach (var sdfPart in sdfParts)
             {
-                if (sdfPart.Name == "NULL" || sdfPart.Name.EndsWith("3"))
+                if (sdfPart.Name == "NULL")
                     continue;
 
                 GameObject prefab = NoColliderPrefab;
-                if (sdfPart.Name.Substring(0, sdfPart.Name.Length - 1).EndsWith("BDY"))
+                if (!wheel && sdfPart.Name.Substring(0, sdfPart.Name.Length - 1).EndsWith("BDY"))
                     prefab = CarBodyPrefab;
 
                 var partObj = ImportGeo(sdfPart.Name + ".geo", vtf, prefab);
