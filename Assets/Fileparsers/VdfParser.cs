@@ -15,6 +15,28 @@ namespace Assets.Fileparsers
         public Vector3 Position { get; set; }
     }
 
+    public class VLoc
+    {
+        public uint Number { get; set; }
+        public Vector3 Right { get; set; }
+        public Vector3 Up { get; set; }
+        public Vector3 Forward { get; set; }
+        public Vector3 Position { get; set; }
+    }
+
+    public class HLoc
+    {
+        public string Label { get; set; }
+        public Vector3 Right { get; set; }
+        public Vector3 Up { get; set; }
+        public Vector3 Forward { get; set; }
+        public Vector3 Position { get; set; }
+        public float Unk { get; set; }
+        public uint Num1 { get; set; }
+        public uint Num2 { get; set; }
+        public uint Num3 { get; set; }
+    }
+
     public class Vdf
     {
         public float Unk70f;
@@ -40,6 +62,9 @@ namespace Assets.Fileparsers
         public List<SdfPart[]> PartsThirdPerson { get; set; }
         public SdfPart[] PartsFirstPerson { get; set; }
         public WheelLoc[] WheelLoc { get; set; }
+        public List<VLoc> VLocs { get; set; }
+        public string SOBJGeoName { get; set; }
+        public List<HLoc> HLocs { get; set; }
     }
 
     public class VdfParser
@@ -48,9 +73,11 @@ namespace Assets.Fileparsers
         {
             using (var br = new Bwd2Reader(filename))
             {
+                var vdf = new Vdf();
+
                 br.FindNext("VDFC");
 
-                var vdf = new Vdf();
+                
                 vdf.Name = br.ReadCString(16);
                 vdf.Unk0 = br.ReadUInt32();
                 vdf.Unk1 = br.ReadUInt32();
@@ -73,6 +100,27 @@ namespace Assets.Fileparsers
 
 
                 vdf.Unk4 = br.ReadUInt32();
+
+                br.FindNext("SOBJ");
+                vdf.SOBJGeoName = br.ReadCString(8);
+
+                vdf.VLocs = new List<VLoc>();
+                br.FindNext("VLOC");
+                while (br.Current != null && br.Current.Name != "EXIT")
+                {
+                    var vloc = new VLoc
+                    {
+                        Number = br.ReadUInt32(),
+                        Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                        Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                        Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                        Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle())
+                    };
+                    vdf.VLocs.Add(vloc);
+
+                    br.Next();
+                }
+                
 
                 br.FindNext("VGEO");
                 var numParts = br.ReadUInt32();
@@ -123,6 +171,27 @@ namespace Assets.Fileparsers
                     wheelLoc.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     wheelLoc.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     var unk2 = br.ReadSingle();
+                }
+
+                vdf.HLocs = new List<HLoc>();
+                br.FindNext("HLOC");
+                while (br.Current != null && br.Current.Name != "EXIT")
+                {
+                    var hloc = new HLoc
+                    {
+                        Label = br.ReadCString(16),
+                        Num1 = br.ReadUInt32(),
+                        Num2 = br.ReadUInt32(),
+                        Num3 = br.ReadUInt32(),
+                        Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                        Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                        Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                        Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                        Unk = br.ReadSingle()
+                    };
+                    vdf.HLocs.Add(hloc);
+
+                    br.Next();
                 }
 
                 return vdf;

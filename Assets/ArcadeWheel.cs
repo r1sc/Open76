@@ -58,20 +58,7 @@ public class ArcadeWheel : MonoBehaviour
 
             var springForce = transform.up * SpringStiffness * _compression*SuspensionTarget;
             var dampingForce = -transform.up * (_previousCompression - _compression) * Damping;
-
-            //var localVelocity = transform.InverseTransformVector(_rigidbody.GetPointVelocity(transform.position));
-            //var sideForce = -transform.right * localVelocity.x * 1000;
-
-            //var longitudalForce = Vector3.zero;
-            //if (Throttle < 0)
-            //{
-            //    longitudalForce = Mathf.Sign(localVelocity.z) * transform.forward * BrakeForce * Throttle;
-            //}
-            //else if (Throttle > 0)
-            //{
-            //    longitudalForce = transform.forward * AccerationForce * Throttle;
-            //}
-
+            
             _rigidbody.AddForceAtPosition(springForce + dampingForce, transform.position);
         }
         else

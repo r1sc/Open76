@@ -50,7 +50,7 @@ public class Game : MonoBehaviour
             new SplatPrototype
             {
                 texture = SurfaceTexture,
-                tileSize = new Vector2(32, 32),
+                tileSize = new Vector2(SurfaceTexture.width, SurfaceTexture.height),
                 metallic = 0,
                 smoothness = 0
             }
@@ -96,7 +96,6 @@ public class Game : MonoBehaviour
                                 carObj = cacheManager.ImportVcf(odef.Label + ".vcf");
                                 break;
                         }
-                        
                         carObj.transform.parent = patchGameObject.transform;
                         carObj.transform.localPosition = odef.LocalPosition;
                         carObj.transform.localRotation = odef.LocalRotation;
@@ -212,13 +211,17 @@ public class Game : MonoBehaviour
         RenderSettings.fogColor = cacheManager.Palette[239];
         RenderSettings.ambientLight = cacheManager.Palette[247];
 
-        var importedVcf = cacheManager.ImportVcf(VcfToLoad);
+        if (MissionFile.ToLower().StartsWith("m"))
+        {
+            var importedVcf = cacheManager.ImportVcf(VcfToLoad);
+            importedVcf.AddComponent<InputCarController>();
 
-        var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
-        importedVcf.transform.position = spawnPoint.transform.position;
-        importedVcf.transform.rotation = spawnPoint.transform.rotation;
+            var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
+            importedVcf.transform.position = spawnPoint.transform.position;
+            importedVcf.transform.rotation = spawnPoint.transform.rotation;
 
-        Camera.main.GetComponent<SmoothFollow>().Target = importedVcf.transform;
+            Camera.main.GetComponent<SmoothFollow>().Target = importedVcf.transform;
+        }
     }
 
 

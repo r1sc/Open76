@@ -81,10 +81,10 @@
     <Compile Include="Assets\ArcadeCar.cs" />
     <Compile Include="Assets\ArcadeWheel.cs" />
     <Compile Include="Assets\BinaryReaderExtensions.cs" />
-    <Compile Include="Assets\BowlingPin.cs" />
     <Compile Include="Assets\CacheManager.cs" />
     <Compile Include="Assets\Car.cs" />
-    <Compile Include="Assets\CarCamera.cs" />
+    <Compile Include="Assets\Car2\Car2.cs" />
+    <Compile Include="Assets\Car2\RayWheel.cs" />
     <Compile Include="Assets\ExtendedFlycam.cs" />
     <Compile Include="Assets\Fileparsers\ActPaletteParser.cs" />
     <Compile Include="Assets\Fileparsers\Bwd2Reader.cs" />
@@ -97,17 +97,14 @@
     <Compile Include="Assets\Fileparsers\VtfParser.cs" />
     <Compile Include="Assets\Fileparsers\WdfParser.cs" />
     <Compile Include="Assets\Game.cs" />
+    <Compile Include="Assets\InCarCamera.cs" />
+    <Compile Include="Assets\InputCarController.cs" />
     <Compile Include="Assets\MoveSky.cs" />
-    <Compile Include="Assets\NormalEditor.cs" />
     <Compile Include="Assets\PartStream.cs" />
-    <Compile Include="Assets\Raycar.cs" />
     <Compile Include="Assets\SmoothFollow.cs" />
-    <Compile Include="Assets\Suspension.cs" />
-    <Compile Include="Assets\Swaybar.cs" />
     <Compile Include="Assets\TerrainSegment.cs" />
     <Compile Include="Assets\Utils.cs" />
     <Compile Include="Assets\VirtualFilesystem.cs" />
-    <Compile Include="Assets\Wheel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Shaders\UnlitSky.shader" />

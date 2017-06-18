@@ -22,6 +22,10 @@ public class ArcadeCar : MonoBehaviour
     public float WeightTransfer = 0.2f;
     public float AccelerationForce;
 
+    public float Throttle;
+    public float Brake;
+    public float Steering;
+
     // Use this for initialization
     void Start()
     {
@@ -31,7 +35,7 @@ public class ArcadeCar : MonoBehaviour
         _wheels = GetComponentsInChildren<ArcadeWheel>();
 
         _wheelBase = 2.0f;
-            //Mathf.Abs(SteerWheels[0].transform.localPosition.z - DriveWheels[0].transform.localPosition.z);
+        //Mathf.Abs(SteerWheels[0].transform.localPosition.z - DriveWheels[0].transform.localPosition.z);
     }
 
     // Update is called once per frame
@@ -51,65 +55,89 @@ public class ArcadeCar : MonoBehaviour
     {
         var velocity = transform.InverseTransformVector(_rigidbody.velocity);
 
-        var throttle = Input.GetAxis("Throttle");
-        var brake = -Mathf.Min(0, throttle);
-        throttle = Mathf.Max(0, throttle);
+        var steerDegrees = Mathf.Lerp(Steering * 30, Steering * 3, velocity.magnitude / 30.0f);
 
-        var steering = Input.GetAxis("Horizontal");
-        var steerDegrees = Mathf.Lerp(steering*40, steering * 5, velocity.magnitude / 30.0f);
-
-        MaxGripRear = velocity.z > 20.0f ? 30 : 5;
+        CornerStiffnessFront = velocity.z > 20.0f ? 20 : 10;
+        CornerStiffnessRear = velocity.z > 20.0f ? 20 : 7;
 
         foreach (var steerWheel in SteerWheels)
         {
-            steerWheel.SteerAngle = steering * 60;
+            steerWheel.SteerAngle = Steering * 60;
         }
 
         var steerangle = steerDegrees * Mathf.Deg2Rad;
 
         var cgToFrontAxle = 1f;//Mathf.Abs(_rigidbody.centerOfMass.z - SteerWheels[0].transform.localPosition.z);
         var cgToRearAxle = 1f;//Mathf.Abs(_rigidbody.centerOfMass.z - DriveWheels[0].transform.localPosition.z);
-        var axleWeightRatioFront = cgToRearAxle/_wheelBase;
-        var axleWeightRatioRear = cgToFrontAxle/_wheelBase;
+        var axleWeightRatioFront = cgToRearAxle / _wheelBase;
+        var axleWeightRatioRear = cgToFrontAxle / _wheelBase;
 
-        var axleWeightFront = _rigidbody.mass * (axleWeightRatioFront * 9.81f - WeightTransfer * throttle * 0.5f / _wheelBase);
-        var axleWeightRear = _rigidbody.mass * (axleWeightRatioRear * 9.81f + WeightTransfer * throttle * 0.5f / _wheelBase);
+        var axleWeightFront = _rigidbody.mass * (axleWeightRatioFront * 9.81f - WeightTransfer * Throttle * 0.5f / _wheelBase);
+        var axleWeightRear = _rigidbody.mass * (axleWeightRatioRear * 9.81f + WeightTransfer * Throttle * 0.5f / _wheelBase);
 
         var yawrate = _rigidbody.angularVelocity.y;
+
         var yawSpeedFront = 1.0f * yawrate;
         var yawSpeedRear = -1.0f * yawrate;
 
-        var slipAngleFront = Mathf.Atan2(velocity.x + yawSpeedFront, Mathf.Abs(velocity.z)) - Mathf.Sign(velocity.z) * steerangle;
-        var slipAngleRear = Mathf.Atan2(velocity.x + yawSpeedRear, Mathf.Abs(velocity.z));
+        var slipAngleFront = Mathf.Atan2(velocity.x + yawSpeedFront, velocity.z) - Mathf.Sign(velocity.z) * steerangle;
+        var slipAngleRear = Mathf.Atan2(velocity.x + yawSpeedRear, velocity.z);
 
         var tireGripFront = MaxGripFront;
         var tireGripRear = MaxGripRear;
 
         var frictionForceFront = Mathf.Clamp(-CornerStiffnessFront * slipAngleFront, -tireGripFront, tireGripFront) * axleWeightFront;
         var frictionForceRear = Mathf.Clamp(-CornerStiffnessRear * slipAngleRear, -tireGripRear, tireGripRear) * axleWeightRear;
+        if (FrontSlip)
+            frictionForceFront *= 0.5f;
+        if (RearSlip)
+            frictionForceRear *= 0.5f;
 
         var tractionForce = Vector3.zero;
-        if(DriveWheels.Any(x => x.Grounded))
-            tractionForce = transform.forward * (throttle - brake * Mathf.Sign(velocity.z)) * AccelerationForce;
-        
+        if (DriveWheels.Any(x => x.Grounded))
+            tractionForce = transform.forward * (Throttle - Brake * Mathf.Sign(velocity.z)) * AccelerationForce;
+        if (RearSlip)
+            tractionForce *= 0.5f;
+
         var sideForce = transform.right * (Mathf.Cos(steerangle) * frictionForceFront + frictionForceRear);
 
-        var downForce = -transform.up * DownForceAmount;
+        var downForce = -Vector3.up * DownForceAmount;
 
         var driveForce = DriveWheels.Any(x => x.Grounded) ? tractionForce : Vector3.zero;
         var actualSideForce = ((DriveWheels[0].Grounded && SteerWheels[0].Grounded) ||
                               (DriveWheels[1].Grounded && SteerWheels[1].Grounded)) ? sideForce : Vector3.zero;
 
-        
-        _rigidbody.AddForce(driveForce + actualSideForce + downForce);
-        //_rigidbody.AddForceAtPosition(downForce, transform.position - transform.forward * (DriveWheels.All(x => x.Grounded) ? (throttle-brake) * 0.5f : 0.0f));
-        
         var angularTorque = frictionForceFront - frictionForceRear;
+        if (Throttle == 0 && velocity.magnitude < 0.5f)
+        {
+            angularTorque = 0;
+            _rigidbody.angularVelocity = Vector3.zero;
+            velocity.x = 0;
+            _rigidbody.velocity = transform.TransformVector(velocity);
+
+            driveForce = Vector3.zero;
+            actualSideForce = Vector3.zero;
+        }
+
+        _rigidbody.AddForce(driveForce + actualSideForce + downForce);
+
+        foreach (var wheel in DriveWheels)
+        {
+            wheel.SuspensionTarget = Mathf.Lerp(0.5f, 0.3f, Throttle);
+        }
+        foreach (var wheel in SteerWheels)
+        {
+            wheel.SuspensionTarget = Mathf.Lerp(0.5f, 0.3f, Brake);
+        }
+
+        //_rigidbody.AddForceAtPosition(downForce, transform.position -transform.forward * (DriveWheels.All(x => x.Grounded) ? (Throttle - Brake) * 0.4f : 0.0f));
+        //_rigidbody.centerOfMass = -Vector3.forward * (DriveWheels.All(x => x.Grounded) ? (Throttle-Brake) * 0.4f : 0.0f);
 
         var angularAccel = angularTorque / _rigidbody.mass;
         if (SteerWheels.All(x => x.Grounded))
         {
-            _rigidbody.angularVelocity += transform.up*angularAccel*Time.deltaTime;
+            _rigidbody.angularVelocity += transform.up * angularAccel * Time.deltaTime;
         }
+
     }
 }

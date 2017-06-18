@@ -12,10 +12,10 @@ namespace Assets
     {
         public GameObject _3DObjectPrefab;
         public GameObject NoColliderPrefab;
-        public ArcadeWheel SteerWheelPrefab;
-        public ArcadeWheel DriveWheelPrefab;
+        public RayWheel SteerWheelPrefab;
+        public RayWheel DriveWheelPrefab;
         public GameObject CarBodyPrefab;
-        public ArcadeCar CarPrefab;
+        public Car2 CarPrefab;
 
         public Material ColorMaterialPrefab;
         public Material TextureMaterialPrefab;
@@ -193,17 +193,40 @@ namespace Assets
             var vdf = VdfParser.ParseVdf(vcf.VdfFilename);
             var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
 
-            var carObject = Instantiate(CarPrefab);
+            var carObject = Instantiate(CarPrefab); //ImportGeo(vdf.SOBJGeoName + ".geo", vtf, CarPrefab.gameObject).GetComponent<ArcadeCar>();
             carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
-            ImportCarParts(carObject.gameObject, vtf, vdf.PartsThirdPerson[0]);
-            //ImportCarParts(carObject, vtf, vdf.PartsFirstPerson);
+
+            foreach (var hLoc in vdf.HLocs)
+            {
+                var hlocGo = new GameObject("HLOC");
+                hlocGo.transform.parent = carObject.transform;
+                hlocGo.transform.localRotation = Quaternion.LookRotation(hLoc.Forward, hLoc.Up);
+                hlocGo.transform.localPosition = hLoc.Position;
+            }
+            foreach (var vLoc in vdf.VLocs)
+            {
+                var vlocGo = new GameObject("VLOC");
+                vlocGo.transform.parent = carObject.transform;
+                vlocGo.transform.localRotation = Quaternion.LookRotation(vLoc.Forward, vLoc.Up);
+                vlocGo.transform.localPosition = vLoc.Position;
+            }
+
+            var thirdPerson = new GameObject("ThirdPerson");
+            thirdPerson.transform.parent = carObject.transform;
+            var firstPerson = new GameObject("FirstPerson");
+            firstPerson.transform.parent = carObject.transform;
+            firstPerson.SetActive(false);
+
+            ImportCarParts(thirdPerson, vtf, vdf.PartsThirdPerson[0]);
+            ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson);
             //var destroyed = ImportCarParts(car, vtf, vdf.PartsThirdPerson[3]);
             //destroyed.gameObject.SetActive(false);
 
             if (vcf.FrontWheelDef != null)
             {
                 var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef.Parts);
-                carObject.SteerWheels = frontWheels;
+                carObject.SteeringWheels = frontWheels;
+                carObject.BrakeWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
@@ -218,7 +241,7 @@ namespace Assets
             return carObject.gameObject;
         }
 
-        private ArcadeWheel[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
+        private RayWheel[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
         {
             var wheel1Name = placement + "Right";
             var wheel = Instantiate(placement == "Front" ? SteerWheelPrefab : DriveWheelPrefab, car.transform);
