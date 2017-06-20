@@ -10,12 +10,14 @@ namespace Assets
 {
     class CacheManager : MonoBehaviour
     {
+
+        public string GamePath;
         public GameObject _3DObjectPrefab;
         public GameObject NoColliderPrefab;
-        public RayWheel SteerWheelPrefab;
-        public RayWheel DriveWheelPrefab;
+        public ArcadeWheel SteerWheelPrefab;
+        public ArcadeWheel DriveWheelPrefab;
         public GameObject CarBodyPrefab;
-        public Car2 CarPrefab;
+        public ArcadeCar CarPrefab;
 
         public Material ColorMaterialPrefab;
         public Material TextureMaterialPrefab;
@@ -26,6 +28,7 @@ namespace Assets
 
         void Awake()
         {
+            VirtualFilesystem.Instance.Init(GamePath);
             _materials["default"] = Instantiate(TextureMaterialPrefab);
         }
 
@@ -218,15 +221,15 @@ namespace Assets
             firstPerson.SetActive(false);
 
             ImportCarParts(thirdPerson, vtf, vdf.PartsThirdPerson[0]);
-            ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson);
+            // ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson);
             //var destroyed = ImportCarParts(car, vtf, vdf.PartsThirdPerson[3]);
             //destroyed.gameObject.SetActive(false);
 
             if (vcf.FrontWheelDef != null)
             {
                 var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef.Parts);
-                carObject.SteeringWheels = frontWheels;
-                carObject.BrakeWheels = frontWheels;
+                carObject.SteerWheels = frontWheels;
+                // carObject.BrakeWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
@@ -241,7 +244,7 @@ namespace Assets
             return carObject.gameObject;
         }
 
-        private RayWheel[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
+        private ArcadeWheel[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
         {
             var wheel1Name = placement + "Right";
             var wheel = Instantiate(placement == "Front" ? SteerWheelPrefab : DriveWheelPrefab, car.transform);

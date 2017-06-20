@@ -9,48 +9,45 @@ using Random = UnityEngine.Random;
 
 public class Game : MonoBehaviour
 {
-    public Texture2D SurfaceTexture;
     public Material TerrainMaterial;
-    public Material SkyMaterial;
     public GameObject SpawnPrefab, RegenPrefab;
 
-    public string GamePath;
     public string MissionFile;
     public string VcfToLoad;
-
-    void Awake()
-    {
-
-    }
 
     // Use this for initialization
     void Start()
     {
-        VirtualFilesystem.Instance.Init(GamePath);
+        LoadLevel(MissionFile);
+    }
+
+    void LoadLevel(string msnFilename)
+    {
         var cacheManager = FindObjectOfType<CacheManager>();
-        
+
         var terrainPatches = new Terrain[80, 80];
-        var mdef = MsnMissionParser.ReadMsnMission(MissionFile);
+        var mdef = MsnMissionParser.ReadMsnMission(msnFilename);
 
         cacheManager.Palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
-        SurfaceTexture = TextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, cacheManager.Palette);
-        SurfaceTexture.filterMode = FilterMode.Point;
+        var _surfaceTexture = TextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, cacheManager.Palette);
+        _surfaceTexture.filterMode = FilterMode.Point;
 
-        var skyTexture = TextureParser.ReadMapTexture(mdef.SkyTextureFilePath, cacheManager.Palette);
-        SkyMaterial.mainTexture = skyTexture;
+        FindObjectOfType<Sky>().TextureFilename = mdef.SkyTextureFilePath;
+        // var skyTexture = TextureParser.ReadMapTexture(mdef.SkyTextureFilePath, cacheManager.Palette);
+        // SkyMaterial.mainTexture = skyTexture;
 
         var worldGameObject = GameObject.Find("World");
-        if(worldGameObject != null)
+        if (worldGameObject != null)
             Destroy(worldGameObject);
         worldGameObject = new GameObject("World");
 
-        
+
         var splatPrototypes = new[]
         {
             new SplatPrototype
             {
-                texture = SurfaceTexture,
-                tileSize = new Vector2(SurfaceTexture.width, SurfaceTexture.height),
+                texture = _surfaceTexture,
+                tileSize = new Vector2(_surfaceTexture.width, _surfaceTexture.height),
                 metallic = 0,
                 smoothness = 0
             }
@@ -109,7 +106,7 @@ public class Game : MonoBehaviour
                 terrainPatches[x, z] = terrain;
             }
         }
-        
+
         foreach (var road in mdef.Roads)
         {
             var roadGo = new GameObject("Road");
@@ -156,7 +153,7 @@ public class Game : MonoBehaviour
 
             var indices = new List<int>();
             var idx = 0;
-            for (int i = 0; i < (vertices.Count - 2)/2; i++)
+            for (int i = 0; i < (vertices.Count - 2) / 2; i++)
             {
                 indices.Add(idx + 2);
                 indices.Add(idx + 1);
@@ -203,8 +200,8 @@ public class Game : MonoBehaviour
             }
         }
 
-        worldGameObject.transform.position = new Vector3(-mdef.Middle.x*640, 0, -mdef.Middle.y*640);
-        
+        worldGameObject.transform.position = new Vector3(-mdef.Middle.x * 640, 0, -mdef.Middle.y * 640);
+
 
         FindObjectOfType<Light>().color = cacheManager.Palette[176];
         Camera.main.backgroundColor = cacheManager.Palette[239];
@@ -228,6 +225,6 @@ public class Game : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-      
+
     }
 }

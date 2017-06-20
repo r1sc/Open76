@@ -6,16 +6,16 @@ using UnityEngine;
 
 class InputCarController : MonoBehaviour
 {
-    private Car2 _car;
+    private ArcadeCar _car;
 
     void Start()
     {
-        _car = GetComponent<Car2>();
+        _car = GetComponent<ArcadeCar>();
     }
 
     void Update()
     {
-        var throttle = Input.GetAxis("Throttle");
+        var throttle = Input.GetAxis("Vertical");
         var brake = -Mathf.Min(0, throttle);
         throttle = Mathf.Max(0, throttle);
 

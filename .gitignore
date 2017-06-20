@@ -1,3 +1,7 @@
 Library/ 
 .vs/
 Temp/
+*.csproj
+*.sln
+*.userprefs
+.vscode/
