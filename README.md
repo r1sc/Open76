@@ -9,6 +9,14 @@ In my opinion, Interstate '76 is one of the best games ever made. It suffers fro
 The primary goal of this project is to provide the same playing experience in a modern engine while conforming to the original data file specifications.
 A long term goal is to extend the engine with various modern features, such as HMD and VR support.
 
+![Screenshot 1](Screenshots/sc1.png)
+![Screenshot 2](Screenshots/sc2.png)
+![Screenshot 3](Screenshots/sc3.png)
+![Screenshot 4](Screenshots/sc4.png)
+![Screenshot 5](Screenshots/sc5.png)
+![Screenshot 6](Screenshots/sc6.png)
+![Screenshot 7](Screenshots/sc7.png)
+
 ## What works?
 * Parsing of mission files (*.msn), parsing and rendering of sky, terrains (*.ter), roads and the objects therein (*.scf).
 * Parsing and rendering of cars (*.vcf, *.vdf)
@@ -18,6 +26,11 @@ Some features of the above are not yet fully implemented, see Issues.
 
 ## What needs to be done?
 A lot of things! Take a look at the issues list.
+
+## How do I run it?
+Set the path to your Interstate '76 install directory on the "Game" gameobject in the "Level"-scene.
+
+For now, Open76 requires the uncompressed ZFS of version 1.0 as delivered on the original CD. It cannot parse the compressed ZFS present in later versions.
 
 ## How do I contribute?
 Fork this repository. Look in the Issues list. Communicate that you're committing to fixing an issue and finally submit a pull request.
