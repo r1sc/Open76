@@ -6,11 +6,11 @@ using UnityEngine;
 
 class InputCarController : MonoBehaviour
 {
-    private ArcadeCar _car;
+    private NewCar _car;
 
     void Start()
     {
-        _car = GetComponent<ArcadeCar>();
+        _car = GetComponent<NewCar>();
     }
 
     void Update()
@@ -23,12 +23,11 @@ class InputCarController : MonoBehaviour
         _car.Brake = brake;
         
         var steering = Input.GetAxis("Horizontal");
-        _car.Steering = steering;
+        _car.SteerAngle = steering * 60 * Mathf.Deg2Rad;
 
-        var ebrake = Input.GetButton("E-brake");
+        _car.EBrake = Input.GetButton("E-brake");
         // _car.RearSlip = ebrake;
-        if(ebrake)
-            _car.Brake = 1;
+            
     }
 }
 

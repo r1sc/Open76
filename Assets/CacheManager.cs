@@ -14,10 +14,10 @@ namespace Assets
         public string GamePath;
         public GameObject _3DObjectPrefab;
         public GameObject NoColliderPrefab;
-        public ArcadeWheel SteerWheelPrefab;
-        public ArcadeWheel DriveWheelPrefab;
+        public RaySusp SteerWheelPrefab;
+        public RaySusp DriveWheelPrefab;
         public GameObject CarBodyPrefab;
-        public ArcadeCar CarPrefab;
+        public NewCar CarPrefab;
 
         public Material ColorMaterialPrefab;
         public Material TextureMaterialPrefab;
@@ -221,14 +221,14 @@ namespace Assets
             firstPerson.SetActive(false);
 
             ImportCarParts(thirdPerson, vtf, vdf.PartsThirdPerson[0]);
-            // ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson);
+            ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson);
             //var destroyed = ImportCarParts(car, vtf, vdf.PartsThirdPerson[3]);
             //destroyed.gameObject.SetActive(false);
 
             if (vcf.FrontWheelDef != null)
             {
                 var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef.Parts);
-                carObject.SteerWheels = frontWheels;
+                carObject.FrontWheels = frontWheels;
                 // carObject.BrakeWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
@@ -237,14 +237,15 @@ namespace Assets
             }
             if (vcf.BackWheelDef != null)
             {
-                var backWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef.Parts);
-                carObject.DriveWheels = backWheels;
+                var rearWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef.Parts);
+                carObject.RearWheels = rearWheels;
             }
+            carObject.Chassis = thirdPerson.transform;
 
             return carObject.gameObject;
         }
 
-        private ArcadeWheel[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
+        private RaySusp[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, SdfPart[] parts)
         {
             var wheel1Name = placement + "Right";
             var wheel = Instantiate(placement == "Front" ? SteerWheelPrefab : DriveWheelPrefab, car.transform);
