@@ -23,11 +23,11 @@ class InputCarController : MonoBehaviour
         _car.Brake = brake;
         
         var steering = Input.GetAxis("Horizontal");
-        _car.SteerAngle = steering * 60 * Mathf.Deg2Rad;
+        _car.SteerAngle = steering * 20 * Mathf.Deg2Rad;
 
         _car.EBrake = Input.GetButton("E-brake");
         // _car.RearSlip = ebrake;
-            
+                    
     }
 }
 

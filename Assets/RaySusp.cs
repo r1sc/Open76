@@ -11,8 +11,8 @@ public class RaySusp : MonoBehaviour {
 	private float _lastSpringLength;
     private Rigidbody _rigidbody;
 	private Transform _wheelGraphic;
-
-	public float Pressure;
+    
+    public float TargetAngle;
 
     // Use this for initialization
     void Start () {
@@ -23,6 +23,10 @@ public class RaySusp : MonoBehaviour {
 	// Update is called once per frame
 	void FixedUpdate () {
 		SpringPhysics();
+
+        var euler = transform.localRotation.eulerAngles;
+        euler.y = TargetAngle; // Mathf.Lerp(euler.y, TargetAngle, Time.deltaTime * 2);
+        transform.localRotation = Quaternion.Euler(euler);
 	}
 
 	
@@ -32,7 +36,7 @@ public class RaySusp : MonoBehaviour {
         var springNow = SpringLength;
         if (Physics.Raycast(transform.position, -transform.up, out rayHit, SpringLength))
         {
-            springNow = rayHit.distance;
+            springNow = rayHit.distance; // * Random.Range(0.7f, 1.0f);  //for rough terrain
             Grounded = true;
         }
         else

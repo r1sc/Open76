@@ -49,7 +49,12 @@ public class NewCar : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        UpdateCar();
+        foreach (var wheel in FrontWheels)
+        {
+            wheel.TargetAngle = (SteerAngle * Mathf.Rad2Deg) * 2;
+        }
+
+        UpdateCar();       
 	}
 
     void UpdateCar()
@@ -63,12 +68,15 @@ public class NewCar : MonoBehaviour {
 
         _speed = _carVelocity.magnitude;
                 
-        if(Mathf.Abs(Throttle) < 0.1 && Mathf.Abs(_speed) < 0.1f)
+        if(Mathf.Abs(Throttle) < 0.1 && Mathf.Abs(_speed) < 0.5f)
         {
             _rigidbody.velocity = Vector3.zero;
             _carVelocity = Vector2.zero;
             _speed = 0;
+            _rigidbody.angularVelocity = Vector3.zero;
         }
+        if (_speed == 0)
+            SteerAngle = 0;
 
         var rotAngle = 0.0f;
         var sideslip = 0.0f;
@@ -87,17 +95,21 @@ public class NewCar : MonoBehaviour {
         var weightDiff = _heightRatio * _rigidbody.mass * _carAcceleration.x; // --weight distribution between axles(stored to animate body)
         _weightFront = weight - weightDiff;
         _weightRear = weight + weightDiff;
-        
-        _percentFront = _weightFront / weight - 1.0f;
-        var weightShiftAngle = Mathf.Clamp(_percentFront * 45, -20, 20);
-        var euler = Chassis.localRotation.eulerAngles;
-        euler.x = weightShiftAngle;
-        Chassis.localRotation = Quaternion.Euler(euler);
 
-        var fLateralFront = new Vector2(0, Mathf.Clamp(CorneringStiffnessFront * slipAngleFront, -MaxGrip, MaxGrip)) * weight;
-        var fLateralRear = new Vector2(0, Mathf.Clamp(CorneringStiffnessRear * slipAngleRear, -MaxGrip, MaxGrip)) * weight;
+        var slipFront = Mathf.Clamp(CorneringStiffnessFront * slipAngleFront, -MaxGrip, MaxGrip);
+        var slipRear = Mathf.Clamp(CorneringStiffnessRear * slipAngleRear, -MaxGrip, MaxGrip);
+
+        var fLateralFront = new Vector2(0, slipFront) * weight;
+        var fLateralRear = new Vector2(0, slipRear) * weight;
         if (EBrake)
             fLateralRear *= 0.5f;
+
+        _percentFront = _weightFront / weight - 1.0f;
+        var weightShiftAngle = Mathf.Clamp(_percentFront * 45, -45, 45);
+        var euler = Chassis.localRotation.eulerAngles;
+        euler.x = weightShiftAngle;
+        euler.z = Mathf.Clamp(((slipFront + slipRear) / (MaxGrip * 2)) * 8, -8, 8);
+        Chassis.localRotation = Quaternion.Euler(euler);
 
         //_wheelAngularVelocity = _speed / WheelRadius;
         //_slipLongitudal = _speed == 0 ? 0.1f : (_wheelAngularVelocity * WheelRadius - _speed) / Mathf.Abs(_speed);

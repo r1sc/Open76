@@ -99,7 +99,11 @@ public class Game : MonoBehaviour
                     }
                     else if (odef.ClassId != MsnMissionParser.ClassId.Special)
                     {
-                        cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
+                        var go = cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
+                        if(odef.ClassId == MsnMissionParser.ClassId.Sign)
+                        {                            
+                            go.AddComponent<FlyOffOnImpact>();
+                        }
                     }
                 }
 
