@@ -106,6 +106,32 @@ namespace Assets
             }
         }
 
+        public void ExtractAllMW2(string path)
+        {
+            var filename = Path.Combine(Gamepath, "DATABASE.MW2");
+            using (var br = new BinaryReader(new FileStream(filename, FileMode.Open)))
+            {
+                var numFiles = br.ReadUInt32();
+                var offsets = new UInt32[numFiles];
+
+                for (int i = 0; i < numFiles; i++)
+                {                    
+                    offsets[i] = br.ReadUInt32();
+                }
+
+                for (int i = 0; i < offsets.Length; i++)
+                {
+                    var length = (i == (offsets.Length - 1)) ? br.BaseStream.Length - offsets[i] : offsets[i + 1] - offsets[i];
+                    br.BaseStream.Seek(offsets[i], SeekOrigin.Begin);
+                    var buffer = new byte[length];
+                    var bytesRead = br.Read(buffer, 0, buffer.Length);
+                    if (bytesRead != length)
+                        throw new Exception("Wtf");
+                    File.WriteAllBytes(Path.Combine(path, i.ToString()), buffer);
+                }
+            }
+        }
+
         public void ExtractAll(string path)
         {
             foreach (var zfsFileInfo in _files)

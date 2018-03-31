@@ -24,17 +24,20 @@ namespace Assets
         public Material TransparentMaterialPrefab;
         public Color32[] Palette;
 
-        private readonly Dictionary<string, Material> _materials = new Dictionary<string, Material>();
+
+        private static readonly Dictionary<string, GeoMeshCacheEntry> _meshCache = new Dictionary<string, GeoMeshCacheEntry>();
+        private readonly Dictionary<string, GameObject> _sdfCache = new Dictionary<string, GameObject>();
+        private readonly Dictionary<string, Material> _materialCache = new Dictionary<string, Material>();
 
         void Awake()
         {
             VirtualFilesystem.Instance.Init(GamePath);
-            _materials["default"] = Instantiate(TextureMaterialPrefab);
+            _materialCache["default"] = Instantiate(TextureMaterialPrefab);
         }
 
         public Material GetTextureMaterial(string textureName, bool transparent)
         {
-            if (!_materials.ContainsKey(textureName))
+            if (!_materialCache.ContainsKey(textureName))
             {
                 Texture2D texture;
                 if (VirtualFilesystem.Instance.FileExists(textureName + ".vqm"))
@@ -52,20 +55,20 @@ namespace Assets
                 var material = Instantiate(transparent ? TransparentMaterialPrefab : TextureMaterialPrefab);
                 material.mainTexture = texture;
                 material.name = textureName;
-                _materials[textureName] = material;
+                _materialCache[textureName] = material;
             }
 
-            return _materials[textureName];
+            return _materialCache[textureName];
         }
 
         public Material GetColorMaterial(string materialName, Color32 color)
         {
-            if (_materials.ContainsKey(materialName))
-                return _materials[materialName];
+            if (_materialCache.ContainsKey(materialName))
+                return _materialCache[materialName];
 
             var material = Instantiate(ColorMaterialPrefab);
             material.color = color;
-            _materials[materialName] = material;
+            _materialCache[materialName] = material;
 
             return material;
         }
@@ -100,8 +103,18 @@ namespace Assets
             return GetColorMaterial("color" + geoFace.Color, geoFace.Color);
         }
 
-        public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab)
+        class GeoMeshCacheEntry
         {
+            public GeoMesh GeoMesh { get; set; }
+            public Mesh Mesh { get; set; }
+            public Material[] Materials { get; set; }
+        }
+
+        private GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf)
+        {
+            if (_meshCache.ContainsKey(filename))
+                return _meshCache[filename];
+
             var geoMesh = GeoParser.ReadGeoMesh(filename);
 
             var mesh = new Mesh();
@@ -143,21 +156,40 @@ namespace Assets
                 mesh.SetTriangles(submeshTriangles[submeshTriangle.Key].ToArray(), i);
                 i++;
             }
+            mesh.RecalculateBounds();
+
+            var cacheEntry = new GeoMeshCacheEntry
+            {
+                GeoMesh = geoMesh,
+                Mesh = mesh,
+                Materials = facesGroupedByMaterial.Select(x => x.Key).ToArray()
+            };
+            _meshCache.Add(filename, cacheEntry);
+
+            return cacheEntry;
+        }
+
+        public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab)
+        {
+            var meshCacheEntry = ImportMesh(filename, vtf);
 
             var obj = Instantiate(prefab);
-            obj.gameObject.name = geoMesh.Name;
+            obj.gameObject.name = meshCacheEntry.GeoMesh.Name;
 
-            obj.GetComponent<MeshFilter>().sharedMesh = mesh;
-            obj.GetComponent<MeshRenderer>().materials = facesGroupedByMaterial.Select(x => x.Key).ToArray();
+            var meshFilter = obj.GetComponent<MeshFilter>();
+            if (meshFilter != null)
+            {
+                meshFilter.sharedMesh = meshCacheEntry.Mesh;
+                obj.GetComponent<MeshRenderer>().materials = meshCacheEntry.Materials;
+            }
             var collider = obj.GetComponent<MeshCollider>();
             if (collider != null)
-                collider.sharedMesh = mesh;
+                collider.sharedMesh = meshCacheEntry.Mesh;
 
             return obj.gameObject;
         }
 
 
-        private readonly Dictionary<string, GameObject> _sdfCache = new Dictionary<string, GameObject>();
         public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation)
         {
             if (_sdfCache.ContainsKey(filename))
@@ -220,8 +252,25 @@ namespace Assets
             firstPerson.transform.parent = carObject.transform;
             firstPerson.SetActive(false);
 
-            ImportCarParts(thirdPerson, vtf, vdf.PartsThirdPerson[0]);
-            ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson);
+            
+            ImportCarParts(thirdPerson, vtf, vdf.PartsThirdPerson[0], NoColliderPrefab);
+            ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab);
+                        
+            var meshFilters = thirdPerson.GetComponentsInChildren<MeshFilter>();
+            var bounds = new Bounds();
+            bounds.SetMinMax(Vector3.one * float.MaxValue, Vector3.one * float.MinValue);
+            foreach (var meshFilter in meshFilters)
+            {
+                var min = Vector3.Min(bounds.min, meshFilter.transform.position + meshFilter.sharedMesh.bounds.min) - thirdPerson.transform.position;
+                var max = Vector3.Max(bounds.max, meshFilter.transform.position + meshFilter.sharedMesh.bounds.max) - thirdPerson.transform.position;
+                bounds.SetMinMax(min, max);
+            }
+            
+            var chassisCollider = new GameObject("ChassisCollider");
+            chassisCollider.transform.parent = carObject.transform;
+            ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[3], CarBodyPrefab);
+            chassisCollider.transform.localPosition = new Vector3(0, bounds.center.y - (chassisCollider.GetComponentInChildren<MeshCollider>().sharedMesh.bounds.size.y / 2.0f), 0);
+            
             //var destroyed = ImportCarParts(car, vtf, vdf.PartsThirdPerson[3]);
             //destroyed.gameObject.SetActive(false);
 
@@ -229,7 +278,6 @@ namespace Assets
             {
                 var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef.Parts);
                 carObject.FrontWheels = frontWheels;
-                // carObject.BrakeWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
@@ -250,7 +298,7 @@ namespace Assets
             var wheel1Name = placement + "Right";
             var wheel = Instantiate(placement == "Front" ? SteerWheelPrefab : DriveWheelPrefab, car.transform);
             wheel.gameObject.name = wheel1Name;
-            ImportCarParts(wheel.transform.Find("Mesh").gameObject, vtf, parts, true);
+            ImportCarParts(wheel.transform.Find("Mesh").gameObject, vtf, parts, NoColliderPrefab, true);
             wheel.transform.localPosition = vdf.WheelLoc[wheelIndex].Position;
 
             var wheel2 = Instantiate(wheel, car.transform);
@@ -261,19 +309,18 @@ namespace Assets
             return new[] { wheel, wheel2 };
         }
 
-        private GameObject ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts, bool wheel = false)
+        private void ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts, GameObject prefab, bool wheel = false)
         {
             var partDict = new Dictionary<string, GameObject> { { "WORLD", parent } };
-            GameObject firstObject = null;
 
             foreach (var sdfPart in sdfParts)
             {
                 if (sdfPart.Name == "NULL")
                     continue;
 
-                GameObject prefab = NoColliderPrefab;
-                if (!wheel && sdfPart.Name.Substring(0, sdfPart.Name.Length - 1).EndsWith("BDY"))
-                    prefab = CarBodyPrefab;
+                //GameObject prefab = NoColliderPrefab;
+                //if (!wheel && sdfPart.Name.Substring(0, sdfPart.Name.Length - 1).EndsWith("BDY"))
+                //    prefab = CarBodyPrefab;
 
                 var partObj = ImportGeo(sdfPart.Name + ".geo", vtf, prefab);
                 var parentName = sdfPart.ParentName;
@@ -288,15 +335,14 @@ namespace Assets
                 partObj.transform.forward = sdfPart.Forward;
                 partObj.transform.localPosition = sdfPart.Position;
                 partDict.Add(sdfPart.Name, partObj);
-                firstObject = partObj;
             }
-
-            return firstObject;
         }
 
         public void ClearCache()
         {
-            _materials.Clear();
+            _materialCache.Clear();
+            _sdfCache.Clear();
+            _meshCache.Clear();
         }
     }
 }
