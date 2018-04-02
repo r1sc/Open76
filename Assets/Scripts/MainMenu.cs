@@ -19,7 +19,7 @@ namespace Assets
             levelLoader.LoadLevel(MissionFile);
 
             var cacheManager = FindObjectOfType<CacheManager>();
-            var importedVcf = cacheManager.ImportVcf(VcfToLoad);
+            var importedVcf = cacheManager.ImportVcf(VcfToLoad, false);
             importedVcf.transform.position = new Vector3(339, 0.2f, 325);
             importedVcf.transform.localRotation = Quaternion.Euler(0, 96, 0);
 

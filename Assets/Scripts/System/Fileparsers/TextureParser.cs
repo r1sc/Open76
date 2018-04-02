@@ -41,7 +41,12 @@ namespace Assets.Fileparsers
                         texture.SetPixel(x, y, color);
                     }
                 }
-                texture.alphaIsTransparency = hasTransparency;
+                
+                if(hasTransparency)
+                {
+                    texture.alphaIsTransparency = true;
+                    texture.wrapMode = TextureWrapMode.Clamp;
+                }
                 texture.Apply(true);
                 TextureCache.Add(filename, texture);
                 return texture;
@@ -121,7 +126,11 @@ namespace Assets.Fileparsers
                         }
                     }
                 }
-                texture.alphaIsTransparency = hasTransparency;
+                if (hasTransparency)
+                {
+                    texture.alphaIsTransparency = true;
+                    texture.wrapMode = TextureWrapMode.Clamp;
+                }
                 texture.Apply(true);
 
                 TextureCache.Add(filename, texture);

@@ -17,7 +17,7 @@ namespace Assets
             if (MissionFile.ToLower().StartsWith("m"))
             {
                 var cacheManager = FindObjectOfType<CacheManager>();
-                var importedVcf = cacheManager.ImportVcf(VcfToLoad);
+                var importedVcf = cacheManager.ImportVcf(VcfToLoad, true);
                 importedVcf.AddComponent<InputCarController>();
 
                 var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];

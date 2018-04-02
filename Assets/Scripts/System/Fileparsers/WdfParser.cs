@@ -65,6 +65,9 @@ namespace Assets.Fileparsers
                     wdf.Parts[i] = sdfPart;
                 }
 
+                br.BaseStream.Seek(-16, SeekOrigin.Current);
+                wdf.Radius = br.ReadSingle();
+
                 return wdf;
             }
         }

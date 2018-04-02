@@ -120,10 +120,10 @@ namespace Assets.Car
                 fLateralRear *= 0.5f;
 
             _percentFront = _weightFront / weight - 1.0f;
-            var weightShiftAngle = Mathf.Clamp(_percentFront * 45, -45, 45);
+            var weightShiftAngle = Mathf.Clamp(_percentFront * 50, -50, 50);
             var euler = Chassis.localRotation.eulerAngles;
             euler.x = weightShiftAngle;
-            euler.z = Mathf.Clamp(((slipFront + slipRear) / (MaxGrip * 2)) * 8, -8, 8);
+            euler.z = Mathf.Clamp(((slipFront + slipRear) / (MaxGrip * 2)) * 5, -5, 5);
             Chassis.localRotation = Quaternion.Slerp(Chassis.localRotation, Quaternion.Euler(euler), Time.deltaTime * 5);
 
             _fTraction = Vector2.right * EngineForce * Throttle;
@@ -149,13 +149,13 @@ namespace Assets.Car
             _rigidbody.velocity += worldAcceleration;
         }
 
-        private void OnGUI()
-        {
-            GUILayout.Label("Local velocity: " + _carVelocity + ", acceleration: " + _carAcceleration);
-            GUILayout.Label("Speed: " + _speed);
-            GUILayout.Label("Half weight: " + (_totalWeight * 0.5f) + ", Weight front: " + _weightFront + ", rear: " + _weightRear + ", percent front: " + _percentFront * 100 + "%");
-            GUILayout.Label("Traction: " + _fTraction + ", max: " + _fTractionMax);
-            GUILayout.Label("Wheel angvel: " + _wheelAngularVelocity + ", slip longitudal: " + _slipLongitudal);
-        }
+        //private void OnGUI()
+        //{
+        //    GUILayout.Label("Local velocity: " + _carVelocity + ", acceleration: " + _carAcceleration);
+        //    GUILayout.Label("Speed: " + _speed);
+        //    GUILayout.Label("Half weight: " + (_totalWeight * 0.5f) + ", Weight front: " + _weightFront + ", rear: " + _weightRear + ", percent front: " + _percentFront * 100 + "%");
+        //    GUILayout.Label("Traction: " + _fTraction + ", max: " + _fTractionMax);
+        //    GUILayout.Label("Wheel angvel: " + _wheelAngularVelocity + ", slip longitudal: " + _slipLongitudal);
+        //}
     }
 }

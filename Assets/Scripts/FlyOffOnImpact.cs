@@ -48,7 +48,7 @@ namespace Assets
                     c.gameObject.layer = 0;
                 }
                 _rigidbody.isKinematic = false;
-                _rigidbody.AddForce(Vector3.up * 1000);
+                _rigidbody.AddForce(Vector3.up * 500);
             }
         }
     }

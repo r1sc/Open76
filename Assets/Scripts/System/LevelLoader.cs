@@ -1,4 +1,5 @@
 ﻿using Assets;
+using Assets.Car;
 using Assets.Fileparsers;
 using System;
 using System.Collections.Generic;
@@ -40,7 +41,7 @@ namespace Assets.System
             new SplatPrototype
             {
                 texture = _surfaceTexture,
-                tileSize = new Vector2(_surfaceTexture.width, _surfaceTexture.height),
+                tileSize = new Vector2(_surfaceTexture.width / 10, _surfaceTexture.height / 10),
                 metallic = 0,
                 smoothness = 0
             }
@@ -83,7 +84,7 @@ namespace Assets.System
                                     carObj.tag = "Regen";
                                     break;
                                 default:
-                                    carObj = cacheManager.ImportVcf(odef.Label + ".vcf");
+                                    carObj = cacheManager.ImportVcf(odef.Label + ".vcf", odef.TeamId == 1);
                                     break;
                             }
                             carObj.transform.parent = patchGameObject.transform;
@@ -205,7 +206,11 @@ namespace Assets.System
             RenderSettings.fogColor = cacheManager.Palette[239];
             RenderSettings.ambientLight = cacheManager.Palette[247];
 
-
+            var cars = FindObjectsOfType<NewCar>();
+            foreach (var car in cars)
+            {
+                car.transform.parent = null;
+            }
         }
     }
 }

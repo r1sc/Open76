@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,9 +30,9 @@ namespace Assets.Car
         {
             SpringPhysics();
 
-            var euler = transform.localRotation.eulerAngles;
+            var euler = _wheelGraphic.localRotation.eulerAngles;
             euler.y = TargetAngle; // Mathf.Lerp(euler.y, TargetAngle, Time.deltaTime * 2);
-            transform.localRotation = Quaternion.Euler(euler);
+            _wheelGraphic.localRotation = Quaternion.Euler(euler);
         }
 
 
@@ -67,6 +68,11 @@ namespace Assets.Car
             var pos = _wheelGraphic.localPosition;
             pos.y = -_lastSpringLength + WheelRadius;
             _wheelGraphic.localPosition = pos;
+        }
+
+        public void SetWheelVisibile(bool visible)
+        {
+            _wheelGraphic.gameObject.SetActive(visible);
         }
     }
 }
