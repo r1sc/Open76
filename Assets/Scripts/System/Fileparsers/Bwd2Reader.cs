@@ -18,6 +18,7 @@ namespace Assets.Fileparsers
             public Tag Next { get; set; }
         }
 
+        private bool _isChildReader = false;
         private readonly Tag _root;
         public Tag Current;
         
@@ -44,6 +45,7 @@ namespace Assets.Fileparsers
 
         public Bwd2Reader(Bwd2Reader parentReader) : this(new PartStream(parentReader.BaseStream, parentReader.Current.DataPosition, parentReader.Current.DataLength))
         {
+            _isChildReader = true;
         }
 
         public Bwd2Reader(string path) : this(VirtualFilesystem.Instance.GetFileStream(path))
@@ -71,6 +73,12 @@ namespace Assets.Fileparsers
                 throw new Exception("EOF");
             }
             BaseStream.Position = Current.DataPosition;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if(!_isChildReader)
+                base.Dispose(disposing);
         }
     }
 }

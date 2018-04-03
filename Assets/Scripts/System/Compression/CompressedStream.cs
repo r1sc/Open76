@@ -1,19 +1,19 @@
 ﻿using System;
 using System.IO;
 
-namespace Assets.System
+namespace Assets.System.Compression
 {
-    public class PartStream : Stream
+    public class CompressedStream : Stream
     {
-        private readonly Stream _baseStream;
-        private readonly long _startOffset;
+        private readonly byte[] _decompressedData;
         private readonly long _length;
 
-        public PartStream(Stream baseStream, long startOffset, long length)
+        public CompressedStream(byte[] compressedData, uint decompressedLength, CompressionAlgorithm algorithm)
         {
-            _baseStream = baseStream;
-            _startOffset = startOffset;
-            _length = length;
+            _decompressedData = new byte[decompressedLength];
+            _length = LZO.Decompress(compressedData, _decompressedData, decompressedLength, algorithm);
+            if (_length != decompressedLength)
+                throw new Exception("Decompressed length does not match expected decompressed length");
         }
 
         public override void Flush()
@@ -23,12 +23,10 @@ namespace Assets.System
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var oldPos = _baseStream.Position;
-            _baseStream.Position = _startOffset + Position;
-            var bytesRead = _baseStream.Read(buffer, offset, count);
-            _baseStream.Position = oldPos;
+            var bytesRead = Math.Min(count, _length - Position);
+            Array.Copy(_decompressedData, (int)Position, buffer, offset, bytesRead);
             Position += bytesRead;
-            return bytesRead;
+            return (int)bytesRead;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -36,13 +34,13 @@ namespace Assets.System
             switch (origin)
             {
                 case SeekOrigin.Begin:
-                    Position = _startOffset + offset;
+                    Position = offset;
                     break;
                 case SeekOrigin.Current:
                     Position += offset;
                     break;
                 case SeekOrigin.End:
-                    Position = _startOffset + _length - offset;
+                    Position = _length - offset;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("origin", origin, null);
@@ -81,10 +79,5 @@ namespace Assets.System
         }
 
         public override long Position { get; set; }
-
-        protected override void Dispose(bool disposing)
-        {
-            _baseStream.Dispose();
-        }
     }
 }

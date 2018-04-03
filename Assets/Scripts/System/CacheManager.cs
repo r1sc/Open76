@@ -37,7 +37,7 @@ namespace Assets.System
         private readonly Dictionary<string, GameObject> _sdfCache = new Dictionary<string, GameObject>();
         private readonly Dictionary<string, Material> _materialCache = new Dictionary<string, Material>();
 
-        void Awake()
+        void Start()
         {
             VirtualFilesystem.Instance.Init(GamePath);
             _materialCache["default"] = Instantiate(TextureMaterialPrefab);
