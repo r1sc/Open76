@@ -1,6 +1,7 @@
 ﻿using System;
 using Assets.Car;
 using UnityEngine;
+using UnityEngine.XR;
 
 namespace Assets
 {
@@ -24,7 +25,7 @@ namespace Assets
         // Use this for initialization
         void Start()
         {
-            _camera = GetComponent<Camera>();
+            _camera = GetComponentInChildren<Camera>();
             _smoothFollow = GetComponent<SmoothFollow>();
         }
 
@@ -71,6 +72,11 @@ namespace Assets
                 SetCameraAtWheelIndex(3);
                 SetVisibleChassisModel(ChassisView.ThirdPerson);
                 _firstPerson = false;
+            }
+
+            if(Input.GetKeyDown(KeyCode.R))
+            {
+                InputTracking.Recenter();
             }
 
             if (_firstPerson)

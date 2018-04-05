@@ -24,7 +24,7 @@ namespace Assets
                 importedVcf.transform.position = spawnPoint.transform.position;
                 importedVcf.transform.rotation = spawnPoint.transform.rotation;
 
-                Camera.main.GetComponent<SmoothFollow>().Target = importedVcf.transform;
+                FindObjectOfType<SmoothFollow>().Target = importedVcf.transform;
             }
         }
 
