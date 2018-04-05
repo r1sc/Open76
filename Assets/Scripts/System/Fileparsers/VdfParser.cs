@@ -40,28 +40,23 @@ namespace Assets.Fileparsers
 
     public class Vdf
     {
-        public float Unk70f;
-        public float Unk35f;
-        public float Unk30f;
-        public float Unk25f;
-        public byte Unk255b;
-        public byte Unk255b2;
-        public byte Unk127b;
-        public byte Unk127b2;
-        public float Unk1320f;
-        public float Unk1f;
-        public byte Unk63b;
-        public byte Unk82b;
-        public byte Unk73b;
-        public byte Unk157b;
-        public byte Unk57b;
+        public float LODDistance2;
+        public float LODDistance3;
+        public float LODDistance4;
+        public float LODDistance5;
+        public float Mass;
+        public float CollisionMultiplier;
+        public float DragCoefficient;
+        public uint Unknown;
         public string Name { get; set; }
-        public uint Unk0 { get; set; }
-        public uint Unk1 { get; set; }
-        public uint Unk2 { get; set; }
+        public uint VehicleType { get; set; }
+        public uint VehicleSize { get; set; }
+        public float LODDistance1 { get; set; }
         public uint Unk4 { get; set; }
         public List<SdfPart[]> PartsThirdPerson { get; set; }
         public SdfPart[] PartsFirstPerson { get; set; }
+        public Bounds BoundsInner { get; internal set; }
+        public Bounds BoundsOuter { get; internal set; }
         public WheelLoc[] WheelLoc { get; set; }
         public List<VLoc> VLocs { get; set; }
         public string SOBJGeoName { get; set; }
@@ -79,28 +74,18 @@ namespace Assets.Fileparsers
                 br.FindNext("VDFC");
 
                 
-                vdf.Name = br.ReadCString(16);
-                vdf.Unk0 = br.ReadUInt32();
-                vdf.Unk1 = br.ReadUInt32();
-                vdf.Unk2 = br.ReadUInt32();
-                vdf.Unk70f = br.ReadSingle();
-                vdf.Unk35f = br.ReadSingle();
-                vdf.Unk30f = br.ReadSingle();
-                vdf.Unk25f = br.ReadSingle();
-                vdf.Unk255b = br.ReadByte();
-                vdf.Unk255b2 = br.ReadByte();
-                vdf.Unk127b = br.ReadByte();
-                vdf.Unk127b2 = br.ReadByte();
-                vdf.Unk1320f = br.ReadSingle();
-                vdf.Unk1f = br.ReadSingle();
-                vdf.Unk63b = br.ReadByte();
-                vdf.Unk82b = br.ReadByte();
-                vdf.Unk73b = br.ReadByte();
-                vdf.Unk157b = br.ReadByte();
-                vdf.Unk57b = br.ReadByte();
-
-
-                vdf.Unk4 = br.ReadUInt32();
+                vdf.Name = br.ReadCString(20);
+                vdf.VehicleType = br.ReadUInt32();
+                vdf.VehicleSize = br.ReadUInt32();
+                vdf.LODDistance1 = br.ReadSingle();
+                vdf.LODDistance2 = br.ReadSingle();
+                vdf.LODDistance3 = br.ReadSingle();
+                vdf.LODDistance4 = br.ReadSingle();
+                vdf.LODDistance5 = br.ReadSingle();
+                vdf.Mass = br.ReadSingle();
+                vdf.CollisionMultiplier = br.ReadSingle();
+                vdf.DragCoefficient = br.ReadSingle();
+                vdf.Unknown = br.ReadUInt32();
 
                 br.FindNext("SOBJ");
                 vdf.SOBJGeoName = br.ReadCString(8);
@@ -160,6 +145,32 @@ namespace Assets.Fileparsers
 
                     vdf.PartsFirstPerson[i] = sdfPart;
                 }
+
+                br.FindNext("COLP");
+
+                var zMaxOuter = br.ReadSingle();
+                var zMaxInner = br.ReadSingle();
+                var zMinInner = br.ReadSingle();
+                var zMinOuter = br.ReadSingle();
+
+                var xMaxOuter = br.ReadSingle();
+                var xMaxInner = br.ReadSingle();
+                var xMinInner = br.ReadSingle();
+                var xMinOuter = br.ReadSingle();
+
+                var yMaxOuter = br.ReadSingle();
+                var yMaxInner = br.ReadSingle();
+                var yMinInner = br.ReadSingle();
+                var yMinOuter = br.ReadSingle();
+
+
+                var innerBounds = new Bounds();
+                innerBounds.SetMinMax(new Vector3(xMinInner, yMinInner, zMinInner), new Vector3(xMaxInner, yMaxInner, zMaxInner));
+                vdf.BoundsInner = innerBounds;
+
+                var outerBounds = new Bounds();
+                outerBounds.SetMinMax(new Vector3(xMinOuter, yMinOuter, zMinOuter), new Vector3(xMaxOuter, yMaxOuter, zMaxOuter));
+                vdf.BoundsOuter = outerBounds;
 
                 br.FindNext("WLOC");
                 vdf.WheelLoc = new WheelLoc[6];

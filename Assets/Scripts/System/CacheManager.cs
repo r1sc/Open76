@@ -291,13 +291,16 @@ namespace Assets.System
             chassisCollider.transform.parent = carObject.transform;
             ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[0], CarBodyPrefab, true);
 
+            // Note: The following is probably how I76 does collision detection. Two large boxes that encapsulate the entire vehicle.
+            // Right now this won't work with Open76's raycast suspension, so I'm leaving this off for now. Investigate in the future.
+            //var innerBox = chassisCollider.AddComponent<BoxCollider>();
+            //innerBox.center = vdf.BoundsInner.center;
+            //innerBox.size = vdf.BoundsInner.size;
 
-            //ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[3], CarBodyPrefab);
-            //chassisCollider.transform.localPosition = new Vector3(0, bounds.center.y - (chassisCollider.GetComponentInChildren<MeshCollider>().sharedMesh.bounds.size.y / 2.0f), 0);
-
-            //var destroyed = ImportCarParts(car, vtf, vdf.PartsThirdPerson[3]);
-            //destroyed.gameObject.SetActive(false);
-
+            //var outerBox = chassisCollider.AddComponent<BoxCollider>();
+            //outerBox.center = vdf.BoundsOuter.center;
+            //outerBox.size = vdf.BoundsOuter.size;
+            
             if (vcf.FrontWheelDef != null)
             {
                 var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
