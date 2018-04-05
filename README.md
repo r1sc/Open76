@@ -2,6 +2,8 @@
 
 Open76 is an engine reimplementation of Activision's Interstate '76 on the Unity platform.
 
+![Screenshot 1](Screenshots/sc1.png)
+
 ## What works?
 Parsing and rendering of pretty much everything contained in a level (including cars).
 
@@ -30,8 +32,7 @@ A long term goal is to extend the engine with various modern features, such as H
 ## Acknowledgements
 Without "That Tony"'s wonderful blog (http://hackingonspace.blogspot.se) and reverse engineering skills, this project would never have gotten anywhere. Tony reverse-engineered most of the formats used by I76.
 
-## Screenshots
-![Screenshot 1](Screenshots/sc1.png)
+## More screenshots
 ![Screenshot 2](Screenshots/sc2.png)
 ![Screenshot 3](Screenshots/sc3.png)
 ![Screenshot 4](Screenshots/sc4.png)
