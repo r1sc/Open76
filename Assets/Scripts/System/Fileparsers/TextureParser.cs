@@ -20,6 +20,14 @@ namespace Assets.Fileparsers
             if (TextureCache.ContainsKey(filename))
                 return TextureCache[filename];
 
+            if (!VirtualFilesystem.Instance.FileExists(filename))
+            {
+                Debug.LogWarning("MAP Texture not found: " + filename);
+                return Texture2D.blackTexture;
+            }
+
+            Debug.Log("Loading texture: " + filename);
+
             var hasTransparency = false;
             using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
             {
@@ -39,6 +47,11 @@ namespace Assets.Fileparsers
                             hasTransparency = true;
                         var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
                         texture.SetPixel(x, y, color);
+
+                        if (br.BaseStream.Position == br.BaseStream.Length - 1)
+                        {
+                            break;
+                        }
                     }
                 }
                 
@@ -59,6 +72,12 @@ namespace Assets.Fileparsers
             if (TextureCache.ContainsKey(filename))
                 return TextureCache[filename];
 
+            if (!VirtualFilesystem.Instance.FileExists(filename))
+            {
+                Debug.LogWarning("VQM Texture not found: " + filename);
+                return Texture2D.blackTexture;
+            }
+
             using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
             {
                 var width = br.ReadInt32();
@@ -72,60 +91,68 @@ namespace Assets.Fileparsers
                 var unk1 = br.ReadInt32();
                 bool hasTransparency = false;
 
-                using (var cbkBr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(cbkFile)))
+                if (VirtualFilesystem.Instance.FileExists(cbkFile))
                 {
-                    var x = 0;
-                    var y = 0;
-                    while (br.BaseStream.Position < br.BaseStream.Length)
+                    using (var cbkBr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(cbkFile)))
                     {
-                        var index = br.ReadUInt16();
-                        if ((index & 0x8000) == 0)
+                        var x = 0;
+                        var y = 0;
+                        while (br.BaseStream.Position < br.BaseStream.Length)
                         {
-                            cbkBr.BaseStream.Position = 4 + index * 16;
-                            for (int sy = 0; sy < 4; sy++)
+                            var index = br.ReadUInt16();
+                            if ((index & 0x8000) == 0)
                             {
-                                for (int sx = 0; sx < 4; sx++)
+                                cbkBr.BaseStream.Position = 4 + index * 16;
+                                for (int sy = 0; sy < 4; sy++)
                                 {
-                                    var paletteIndex = cbkBr.ReadByte();
-                                    if (paletteIndex == 0xFF)
-                                        hasTransparency = true;
-                                    var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
-                                    if (x + sx < width && y + sy < height)
+                                    for (int sx = 0; sx < 4; sx++)
                                     {
-                                        texture.SetPixel(x + sx, y + sy, color);
+                                        var paletteIndex = cbkBr.ReadByte();
+                                        if (paletteIndex == 0xFF)
+                                            hasTransparency = true;
+                                        var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
+                                        if (x + sx < width && y + sy < height)
+                                        {
+                                            texture.SetPixel(x + sx, y + sy, color);
+                                        }
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
-                            var paletteIndex = index & 0xFF;
-                            if (paletteIndex == 0xFF)
-                                hasTransparency = true;
-                            var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
-                            for (int sy = 0; sy < 4; sy++)
+                            else
                             {
-                                for (int sx = 0; sx < 4; sx++)
+                                var paletteIndex = index & 0xFF;
+                                if (paletteIndex == 0xFF)
+                                    hasTransparency = true;
+                                var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
+                                for (int sy = 0; sy < 4; sy++)
                                 {
-                                    if (x + sx < width && y + sy < height)
+                                    for (int sx = 0; sx < 4; sx++)
                                     {
-                                        texture.SetPixel(x + sx, y + sy, color);
+                                        if (x + sx < width && y + sy < height)
+                                        {
+                                            texture.SetPixel(x + sx, y + sy, color);
+                                        }
                                     }
                                 }
                             }
-                        }
-                        x += 4;
-                        if (x >= width)
-                        {
-                            x = 0;
-                            y += 4;
-                        }
-                        if (y >= height)
-                        {
-                            break;
+                            x += 4;
+                            if (x >= width)
+                            {
+                                x = 0;
+                                y += 4;
+                            }
+                            if (y >= height)
+                            {
+                                break;
+                            }
                         }
                     }
                 }
+                else
+                {
+                    Debug.LogWarning("CBK file not found: " + cbkFile);
+                }
+
                 if (hasTransparency)
                 {
                     texture.alphaIsTransparency = true;

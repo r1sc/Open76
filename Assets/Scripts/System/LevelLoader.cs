@@ -27,8 +27,6 @@ namespace Assets.System
             _surfaceTexture.filterMode = FilterMode.Point;
 
             FindObjectOfType<Sky>().TextureFilename = mdef.SkyTextureFilePath;
-            // var skyTexture = TextureParser.ReadMapTexture(mdef.SkyTextureFilePath, cacheManager.Palette);
-            // SkyMaterial.mainTexture = skyTexture;
 
             var worldGameObject = GameObject.Find("World");
             if (worldGameObject != null)
@@ -38,14 +36,14 @@ namespace Assets.System
 
             var splatPrototypes = new[]
             {
-            new SplatPrototype
-            {
-                texture = _surfaceTexture,
-                tileSize = new Vector2(_surfaceTexture.width / 10, _surfaceTexture.height / 10),
-                metallic = 0,
-                smoothness = 0
-            }
-        };
+                new SplatPrototype
+                {
+                    texture = _surfaceTexture,
+                    tileSize = new Vector2(_surfaceTexture.width / 10, _surfaceTexture.height / 10),
+                    metallic = 0,
+                    smoothness = 0
+                }
+            };
             for (int z = 0; z < 80; z++)
             {
                 for (int x = 0; x < 80; x++)
@@ -109,6 +107,7 @@ namespace Assets.System
             {
                 var roadGo = new GameObject("Road");
                 roadGo.transform.parent = worldGameObject.transform;
+                var meshCollider = roadGo.AddComponent<MeshCollider>();
                 var meshFilter = roadGo.AddComponent<MeshFilter>();
                 var meshRenderer = roadGo.AddComponent<MeshRenderer>();
                 meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
@@ -144,6 +143,7 @@ namespace Assets.System
                 {
                     vertices.Add(roadSegment.Left);
                     vertices.Add(roadSegment.Right);
+
                     uvs.Add(new Vector2(0, uvIdx));
                     uvs.Add(new Vector2(1, uvIdx));
                     uvIdx += 1;
@@ -168,6 +168,7 @@ namespace Assets.System
                 mesh.uv = uvs.ToArray();
                 mesh.RecalculateNormals();
                 meshFilter.sharedMesh = mesh;
+                meshCollider.sharedMesh = mesh;
             }
 
             foreach (var ldef in mdef.StringObjects)

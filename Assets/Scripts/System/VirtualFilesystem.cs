@@ -35,7 +35,7 @@ namespace Assets.System
             public uint Id { get; set; }
             public uint Length { get; set; }
             public byte Compression { get; set; }
-            public ushort DecompressedLength { get; set; }
+            public uint DecompressedLength { get; set; }
             public string ContainingPakFilename { get; set; }
         }
 
@@ -73,8 +73,8 @@ namespace Assets.System
                         br.ReadUInt32(); // Unk
                         zfsFileInfo.Compression = br.ReadByte();
                         zfsFileInfo.DecompressedLength = br.ReadUInt16();
-                        br.ReadByte(); // Unk perhaps decompressed length is 3 bytes
-                        
+                        zfsFileInfo.DecompressedLength = (uint)(br.ReadByte() << 16) | zfsFileInfo.DecompressedLength; // Unk perhaps decompressed length is 3 bytes
+
                         _files.Add(zfsFileInfo.Filename, zfsFileInfo);
                         if (zfsFileInfo.Filename.EndsWith(".pix"))
                         {
@@ -184,15 +184,16 @@ namespace Assets.System
             var file = _files[filename.ToLower()];
             if (file.ContainingPakFilename != null)
             {
-                var pakFile = _files[file.ContainingPakFilename];               
-                return GetDataStream(ZFSFilepath, pakFile.Offset + file.Offset, file.Length, pakFile);
+                var pakFile = _files[file.ContainingPakFilename];
+                var pakStream = GetDataStream(ZFSFilepath, pakFile.Offset, pakFile.Length, pakFile);
+                return new PartStream(pakStream, file.Offset, file.Length);
             }
             return GetDataStream(ZFSFilepath, file.Offset, file.Length, file);
         }
 
         private Stream GetDataStream(string path, long offset, long length, ZFSFileInfo fileInfo)
         {
-            if(fileInfo.Compression == 0)
+            if (fileInfo.Compression == 0)
                 return new PartStream(new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read), offset, length);
 
             CompressionAlgorithm compressionAlgorithm;

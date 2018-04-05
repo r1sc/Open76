@@ -6,6 +6,7 @@ using Assets.Fileparsers;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Assets.Car;
+using System.IO;
 
 namespace Assets.System
 {
@@ -47,21 +48,22 @@ namespace Assets.System
         {
             if (!_materialCache.ContainsKey(textureName))
             {
-                Texture2D texture;
-                if (VirtualFilesystem.Instance.FileExists(textureName + ".vqm"))
+                var filename = Path.GetFileNameWithoutExtension(textureName);
+                Texture2D texture = null;
+                if (VirtualFilesystem.Instance.FileExists(filename + ".vqm"))
                 {
-                    texture = TextureParser.ReadVqmTexture(textureName + ".vqm", Palette);
+                    texture = TextureParser.ReadVqmTexture(filename + ".vqm", Palette);
                 }
-                else if (VirtualFilesystem.Instance.FileExists(textureName + ".map"))
+                else if (VirtualFilesystem.Instance.FileExists(filename + ".map"))
                 {
-                    texture = TextureParser.ReadMapTexture(textureName + ".map", Palette);
+                    texture = TextureParser.ReadMapTexture(filename + ".map", Palette);
                 }
                 else
                 {
-                    throw new Exception("Texture not found: " + textureName);
+                    Debug.LogWarning("Texture not found: " + textureName);
                 }
                 var material = Instantiate(transparent ? TransparentMaterialPrefab : TextureMaterialPrefab);
-                material.mainTexture = texture;
+                material.mainTexture = texture ?? Texture2D.blackTexture;
                 material.name = textureName;
                 _materialCache[textureName] = material;
             }
@@ -86,16 +88,16 @@ namespace Assets.System
 
             if (geoFace.TextureName != null)
             {
-                var textureName = geoFace.TextureName;
-                if (vtf != null && geoFace.TextureName.StartsWith("V"))
+                var textureName = Path.GetFileNameWithoutExtension(geoFace.TextureName);
+                if (vtf != null && textureName.StartsWith("V"))
                 {
-                    if (geoFace.TextureName.EndsWith("BO DY"))
+                    if (textureName.EndsWith("BO DY"))
                     {
                         textureName = vtf.Maps[12];
                     }
                     else
                     {
-                        var key = geoFace.TextureName.Substring(1).Replace(" ", "").Replace("LF", "LT") + ".TMT";
+                        var key = textureName.Substring(1).Replace(" ", "").Replace("LF", "LT") + ".TMT";
 
                         if (vtf.Tmts.ContainsKey(key))
                         {
@@ -219,7 +221,14 @@ namespace Assets.System
 
             foreach (var sdfPart in sdf.Parts)
             {
-                var partObj = ImportGeo(sdfPart.Name + ".geo", null, _3DObjectPrefab);
+                var geoFilename = sdfPart.Name + ".geo";
+                if (!VirtualFilesystem.Instance.FileExists(geoFilename))
+                {
+                    Debug.LogWarning("File does not exist: " + geoFilename);
+                    continue;
+                }
+
+                var partObj = ImportGeo(geoFilename, null, _3DObjectPrefab);
                 partObj.transform.parent = partDict[sdfPart.ParentName].transform;
                 partObj.transform.localPosition = sdfPart.Position;
                 partObj.transform.localRotation = Quaternion.identity;
@@ -343,7 +352,14 @@ namespace Assets.System
                 if (justChassis && !(sdfPart.Name.Contains("BDY") || sdfPart.Name.EndsWith("CHAS")))
                     continue;
 
-                var partObj = ImportGeo(sdfPart.Name + ".geo", vtf, prefab);
+                var geoFilename = sdfPart.Name + ".geo";
+                if(!VirtualFilesystem.Instance.FileExists(geoFilename))
+                {
+                    Debug.LogWarning("File does not exist: " + geoFilename);
+                    continue;
+                }
+
+                var partObj = ImportGeo(geoFilename, vtf, prefab);
 
                 var parentName = sdfPart.ParentName;
                 if (!partDict.ContainsKey(parentName))
