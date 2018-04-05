@@ -48,7 +48,7 @@ namespace Assets.Fileparsers
                         var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
                         texture.SetPixel(x, y, color);
 
-                        if (br.BaseStream.Position == br.BaseStream.Length - 1)
+                        if (br.BaseStream.Position == br.BaseStream.Length)
                         {
                             break;
                         }
