@@ -1,4 +1,5 @@
-﻿using Assets.System;
+﻿using Assets.Scripts.System;
+using Assets.System;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -96,6 +97,7 @@ namespace Assets.Fileparsers
             public List<Ldef> StringObjects { get; set; }
             public List<Road> Roads { get; set; }
             public Vector2 Middle { get; set; }
+            public FSM FSM { get; set; }
 
             public MissonDefinition()
             {
@@ -148,7 +150,7 @@ namespace Assets.Fileparsers
                                 for (int x = 0; x < 128; x++)
                                 {
                                     var tpoint = terr.ReadUInt16();
-                                    var height = (tpoint & 0x0FFF) / 4096.0f;
+                                    var height = (tpoint & 0xFFF) / 4096.0f;
                                     h[z, x] = height;
                                 }
                             }
@@ -342,6 +344,82 @@ namespace Assets.Fileparsers
                         });
 
                         ldef.Next();
+                    }
+                }
+
+                msn.FindNext("ADEF");
+                using (var adef = new Bwd2Reader(msn))
+                {
+                    adef.FindNext("FSM");
+                    mdef.FSM = new FSM();
+
+                    mdef.FSM.ActionTable = new string[adef.ReadUInt32()];
+                    for (int i = 0; i < mdef.FSM.ActionTable.Length; i++)
+                    {
+                        mdef.FSM.ActionTable[i] = adef.ReadCString(40);
+                    }
+
+                    var numEntities = adef.ReadUInt32();
+                    mdef.FSM.EntityTable = new Dictionary<string, string>();
+                    for (int i = 0; i < numEntities; i++)
+                    {
+                        mdef.FSM.EntityTable.Add(adef.ReadCString(40), adef.ReadCString(8));
+                    }
+
+                    mdef.FSM.SoundClipTable = new string[adef.ReadUInt32()];
+                    for (int i = 0; i < mdef.FSM.SoundClipTable.Length; i++)
+                    {
+                        mdef.FSM.SoundClipTable[i] = adef.ReadCString(40);
+                    }
+
+                    var numPaths = adef.ReadUInt32();
+                    mdef.FSM.Paths = new Dictionary<string, Vector3[]>();
+                    for (int i = 0; i < numPaths; i++)
+                    {
+                        var name = adef.ReadCString(40);
+                        var paths = new Vector3[adef.ReadUInt32()];
+                        for (int p = 0; p < paths.Length; p++)
+                        {
+                            paths[p] = new Vector3(adef.ReadSingle(), adef.ReadSingle(), adef.ReadSingle());
+                        }
+                        mdef.FSM.Paths.Add(name, paths);
+                    }
+
+                    mdef.FSM.StackMachines = new List<StackMachine>();
+                    var numMachines = adef.ReadUInt32();
+                    for (int i = 0; i < numMachines; i++)
+                    {
+                        var next = adef.BaseStream.Position + 168;
+
+                        var machine = new StackMachine();
+                        machine.StartAddress = adef.ReadUInt32();
+                        machine.InitialArguments = new int[adef.ReadUInt32()];
+                        for (int j = 0; j < machine.InitialArguments.Length; j++)
+                        {
+                            machine.InitialArguments[j] = adef.ReadInt32();
+                        }
+                        adef.BaseStream.Position = next;
+
+                        mdef.FSM.StackMachines.Add(machine);
+                    }
+
+                    mdef.FSM.Variables = new int[adef.ReadUInt32()];
+                    for (int i = 0; i < mdef.FSM.Variables.Length; i++)
+                    {
+                        mdef.FSM.Variables[i] = adef.ReadInt32();
+                    }
+
+                    using (var sw = new StreamWriter(@"E:\I76\" + filename + ".txt"))
+                    {
+                        mdef.FSM.ByteCode = new ByteCode[adef.ReadUInt32()];
+                        for (int i = 0; i < mdef.FSM.ByteCode.Length; i++)
+                        {
+                            var byteCode = mdef.FSM.ByteCode[i] = new ByteCode();
+                            byteCode.OpCode = (OpCode)adef.ReadUInt32();
+                            byteCode.Value = adef.ReadInt32();
+
+                            sw.WriteLine(byteCode.ToString());
+                        }
                     }
                 }
             }
