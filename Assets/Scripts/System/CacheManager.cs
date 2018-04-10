@@ -44,24 +44,30 @@ namespace Assets.System
             _materialCache["default"] = Instantiate(TextureMaterialPrefab);
         }
 
+        public Texture2D GetTexture(string textureName)
+        {
+            var filename = Path.GetFileNameWithoutExtension(textureName);
+            Texture2D texture = null;
+            if (VirtualFilesystem.Instance.FileExists(filename + ".vqm"))
+            {
+                texture = TextureParser.ReadVqmTexture(filename + ".vqm", Palette);
+            }
+            else if (VirtualFilesystem.Instance.FileExists(filename + ".map"))
+            {
+                texture = TextureParser.ReadMapTexture(filename + ".map", Palette);
+            }
+            else
+            {
+                Debug.LogWarning("Texture not found: " + textureName);
+            }
+            return texture;
+        }
+
         public Material GetTextureMaterial(string textureName, bool transparent)
         {
             if (!_materialCache.ContainsKey(textureName))
             {
-                var filename = Path.GetFileNameWithoutExtension(textureName);
-                Texture2D texture = null;
-                if (VirtualFilesystem.Instance.FileExists(filename + ".vqm"))
-                {
-                    texture = TextureParser.ReadVqmTexture(filename + ".vqm", Palette);
-                }
-                else if (VirtualFilesystem.Instance.FileExists(filename + ".map"))
-                {
-                    texture = TextureParser.ReadMapTexture(filename + ".map", Palette);
-                }
-                else
-                {
-                    Debug.LogWarning("Texture not found: " + textureName);
-                }
+                var texture = GetTexture(textureName);
                 var material = Instantiate(transparent ? TransparentMaterialPrefab : TextureMaterialPrefab);
                 material.mainTexture = texture ?? Texture2D.blackTexture;
                 material.name = textureName;
