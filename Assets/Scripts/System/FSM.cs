@@ -11,7 +11,7 @@ namespace Assets.Scripts.System
         public string[] ActionTable { get; set; }
         public Dictionary<string, string> EntityTable { get; set; }
         public string[] SoundClipTable { get; set; }
-        public Dictionary<string, Vector3[]> Paths { get; set; }
+        public List<FSMPath> Paths { get; set; }
 
         public List<StackMachine> StackMachines { get; set; }
         public int[] Variables { get; set; }
@@ -53,5 +53,10 @@ namespace Assets.Scripts.System
     {
         public uint StartAddress { get; set; }
         public int[] InitialArguments { get; set; }
+    }
+
+    public class FSMPath {
+        public string Name { get; set; }
+        public Vector3[] Nodes { get; set; }
     }
 }

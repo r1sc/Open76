@@ -39,7 +39,7 @@ namespace Assets.System
                 new SplatPrototype
                 {
                     texture = _surfaceTexture,
-                    tileSize = new Vector2(_surfaceTexture.width / 10, _surfaceTexture.height / 10),
+                    tileSize = new Vector2(_surfaceTexture.width, _surfaceTexture.height),
                     metallic = 0,
                     smoothness = 0
                 }

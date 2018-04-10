@@ -373,16 +373,19 @@ namespace Assets.Fileparsers
                     }
 
                     var numPaths = adef.ReadUInt32();
-                    mdef.FSM.Paths = new Dictionary<string, Vector3[]>();
+                    mdef.FSM.Paths = new List<FSMPath>();
                     for (int i = 0; i < numPaths; i++)
                     {
                         var name = adef.ReadCString(40);
-                        var paths = new Vector3[adef.ReadUInt32()];
-                        for (int p = 0; p < paths.Length; p++)
+                        var nodes = new Vector3[adef.ReadUInt32()];
+                        for (int p = 0; p < nodes.Length; p++)
                         {
-                            paths[p] = new Vector3(adef.ReadSingle(), adef.ReadSingle(), adef.ReadSingle());
+                            nodes[p] = new Vector3(adef.ReadSingle(), adef.ReadSingle(), adef.ReadSingle());
                         }
-                        mdef.FSM.Paths.Add(name, paths);
+                        mdef.FSM.Paths.Add(new FSMPath {
+                            Name = name,
+                            Nodes = nodes
+                        });
                     }
 
                     mdef.FSM.StackMachines = new List<StackMachine>();
@@ -409,7 +412,7 @@ namespace Assets.Fileparsers
                         mdef.FSM.Variables[i] = adef.ReadInt32();
                     }
 
-                    using (var sw = new StreamWriter(@"E:\I76\" + filename + ".txt"))
+                    using (var sw = new StreamWriter(Path.Combine(VirtualFilesystem.Instance.Gamepath, filename + ".txt")))
                     {
                         mdef.FSM.ByteCode = new ByteCode[adef.ReadUInt32()];
                         for (int i = 0; i < mdef.FSM.ByteCode.Length; i++)
