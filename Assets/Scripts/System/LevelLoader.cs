@@ -39,11 +39,12 @@ namespace Assets.System
                 new SplatPrototype
                 {
                     texture = _surfaceTexture,
-                    tileSize = new Vector2(_surfaceTexture.width, _surfaceTexture.height),
+                    tileSize = new Vector2(_surfaceTexture.width, _surfaceTexture.height) / 10.0f,
                     metallic = 0,
                     smoothness = 0
                 }
             };
+            
             for (int z = 0; z < 80; z++)
             {
                 for (int x = 0; x < 80; x++)

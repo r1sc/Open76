@@ -26,7 +26,7 @@ namespace Assets.Fileparsers
                 return Texture2D.blackTexture;
             }
 
-            Debug.Log("Loading texture: " + filename);
+            //Debug.Log("Loading texture: " + filename);
 
             var hasTransparency = false;
             using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))

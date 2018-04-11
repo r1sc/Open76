@@ -42,6 +42,7 @@ namespace Assets.System
         {
             VirtualFilesystem.Instance.Init(GamePath);
             _materialCache["default"] = Instantiate(TextureMaterialPrefab);
+            Palette = ActPaletteParser.ReadActPalette("p02.act");
         }
 
         public Texture2D GetTexture(string textureName)
