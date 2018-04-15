@@ -397,6 +397,7 @@ namespace Assets.Fileparsers
                         var machine = new StackMachine();
                         machine.StartAddress = adef.ReadUInt32();
                         machine.InitialArguments = new int[adef.ReadUInt32()];
+
                         for (int j = 0; j < machine.InitialArguments.Length; j++)
                         {
                             machine.InitialArguments[j] = adef.ReadInt32();
@@ -414,6 +415,36 @@ namespace Assets.Fileparsers
 
                     using (var sw = new StreamWriter(Path.Combine(VirtualFilesystem.Instance.Gamepath, filename + ".txt")))
                     {
+                        sw.WriteLine("// Action table");
+                        for (int i = 0; i < mdef.FSM.ActionTable.Length; i++)
+                        {
+                            sw.WriteLine(i.ToString() + ": " + mdef.FSM.ActionTable[i]);
+                        }
+                        sw.WriteLine();
+
+                        sw.WriteLine("// Entity list");
+                        foreach (var entityKeyValue in mdef.FSM.EntityTable)
+                        {
+                            sw.WriteLine(entityKeyValue.Key + " = " + entityKeyValue.Value);
+                        }
+                        sw.WriteLine();
+
+                        sw.WriteLine("// Base data");
+                        for(var i = 0; i < mdef.FSM.Variables.Length; i++)
+                        {
+                            sw.WriteLine(i.ToString() + ": " + mdef.FSM.Variables[i]);
+                        }
+                        sw.WriteLine();
+
+                        sw.WriteLine("// Machines");
+                        for(var i = 0; i < mdef.FSM.StackMachines.Count; i++)
+                        {
+                            var sm = mdef.FSM.StackMachines[i];
+                            sw.WriteLine("Machine " + i + ". Startaddr: " + sm.StartAddress + ", initial values: " + string.Join(", ", sm.InitialArguments.Select(x => x.ToString()).ToArray()));
+                        }
+                        sw.WriteLine();
+
+                        sw.WriteLine("// Byte code");
                         mdef.FSM.ByteCode = new ByteCode[adef.ReadUInt32()];
                         for (int i = 0; i < mdef.FSM.ByteCode.Length; i++)
                         {
@@ -421,7 +452,11 @@ namespace Assets.Fileparsers
                             byteCode.OpCode = (OpCode)adef.ReadUInt32();
                             byteCode.Value = adef.ReadInt32();
 
-                            sw.WriteLine(byteCode.ToString());
+                            sw.Write(i.ToString() + ": ");
+                            if (byteCode.OpCode == OpCode.ACTION)
+                                sw.WriteLine("ACTION(" + mdef.FSM.ActionTable[byteCode.Value] + ")");
+                            else
+                                sw.WriteLine(byteCode.ToString());
                         }
                     }
                 }

@@ -24,10 +24,10 @@ namespace Assets.Scripts.System
         PUSH = 1,
         Unused1 = 2,
         Unused2 = 3,
-        COPY_S = 4,
-        COPY_B = 5,
-        STACK_MOD = 6, // Adjust by arg
-        POP = 7, // Set stack pointer to SP-arg
+        ARGPUSH_S = 4,
+        ARGPUSH_B = 5,
+        ADJUST = 6, // Adjust by arg
+        DROP = 7, // Set stack pointer to SP-arg
         JMP = 8,
         JZ = 9,
         JMP_I = 10,
@@ -53,6 +53,16 @@ namespace Assets.Scripts.System
     {
         public uint StartAddress { get; set; }
         public int[] InitialArguments { get; set; }
+        public int[] Constants { get; set; }
+
+        public uint IP { get; set; }
+        public IndexableStack<int> Stack { get; set; }
+        
+        public void Reset()
+        {
+            IP = StartAddress;
+            Stack = new IndexableStack<int>();
+        }
     }
 
     public class FSMPath {

@@ -1,6 +1,7 @@
 ﻿using Assets;
 using Assets.Car;
 using Assets.Fileparsers;
+using Assets.Scripts.System;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -213,6 +214,19 @@ namespace Assets.System
             {
                 car.transform.parent = null;
             }
+
+            foreach (var machine in mdef.FSM.StackMachines)
+            {
+                machine.Reset();
+                machine.Constants = new int[machine.InitialArguments.Length];
+                for (int i = 0; i < machine.Constants.Length; i++)
+                {
+                    var stackValue = machine.InitialArguments[i];
+                    machine.Constants[i] = mdef.FSM.Variables[stackValue];
+                }
+            }
+            var fsmRunner = FindObjectOfType<FSMRunner>();
+            fsmRunner.FSM = mdef.FSM;
         }
     }
 }
