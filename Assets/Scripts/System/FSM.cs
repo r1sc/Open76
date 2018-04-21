@@ -1,21 +1,29 @@
-﻿using System;
+﻿using Assets.Scripts.I76Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UnityEngine;
 
 namespace Assets.Scripts.System
 {
     public class FSM
     {
         public string[] ActionTable { get; set; }
-        public Dictionary<string, string> EntityTable { get; set; }
+        public List<FSMEntity> EntityTable { get; set; }
+
         public string[] SoundClipTable { get; set; }
         public List<FSMPath> Paths { get; set; }
 
         public List<StackMachine> StackMachines { get; set; }
-        public int[] Variables { get; set; }
+        public int[] Constants { get; set; }
         public ByteCode[] ByteCode { get; set; }
+    }
+
+    public class FSMEntity
+    {
+        public string Label { get; set; }
+        public string UniqueValue { get; set; }
+        public string Value { get; set; }
     }
     
     public enum OpCode : uint
@@ -45,7 +53,7 @@ namespace Assets.Scripts.System
 
         public override string ToString()
         {
-            return Enum.GetName(typeof(OpCode), OpCode) + ": " + Value;
+            return Enum.GetName(typeof(OpCode), OpCode).ToLower();
         }
     }
 
@@ -57,16 +65,20 @@ namespace Assets.Scripts.System
 
         public uint IP { get; set; }
         public IndexableStack<int> Stack { get; set; }
-        
+        public int ResultReg { get; set; }
+        public Queue<int> ArgumentQueue { get; set; }
+
         public void Reset()
         {
             IP = StartAddress;
             Stack = new IndexableStack<int>();
+            ArgumentQueue = new Queue<int>();
+            ResultReg = 0;
         }
     }
 
     public class FSMPath {
         public string Name { get; set; }
-        public Vector3[] Nodes { get; set; }
+        public I76Vector3[] Nodes { get; set; }
     }
 }

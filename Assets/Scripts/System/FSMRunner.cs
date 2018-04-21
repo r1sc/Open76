@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,38 +9,43 @@ namespace Assets.Scripts.System
 {
     class FSMRunner : MonoBehaviour
     {
+        public float[] Timers { get; set; }
         public float FPSDelay = 0.5f; // Run twice every second
         private float _nextUpdate = 0;
 
         public FSM FSM;
-        private int _resultReg = 0;
-        private Stack<int> _argumentStack = new Stack<int>();
 
         private void Start()
         {
+            Timers = new float[10];
+            StartCoroutine(RunMachines());
         }
 
         public void Update()
         {
-            if (FSM == null)
-                return;
 
-            if (Time.unscaledTime >= _nextUpdate)
-            {
-                RunMachines();
-                _nextUpdate = Time.unscaledTime + FPSDelay;
-            }
         }
 
-        private void RunMachines()
+        private IEnumerator RunMachines()
         {
-            var currentMachineIndex = 0;
-            //while (currentMachineIndex < FSM.StackMachines.Count)
-            //{
-            var machine = FSM.StackMachines[currentMachineIndex];
-            if (Step(machine) == StepResult.DoNextMachine)
-                currentMachineIndex++;
-            //}            
+            while (true)
+            {
+                if (FSM == null)
+                    yield return null;
+
+                var currentMachineIndex = 0;
+                while (currentMachineIndex < FSM.StackMachines.Count)
+                {
+                    var machine = FSM.StackMachines[currentMachineIndex];
+                    if (Step(machine) == StepResult.DoNextMachine)
+                    {
+                        //currentMachineIndex++;
+                        yield return null;
+                    }
+                }
+                yield return new WaitForSecondsRealtime(0.5f);
+            }
+
         }
 
         private StepResult Step(StackMachine machine)
@@ -51,15 +57,15 @@ namespace Assets.Scripts.System
                     machine.Stack.Push(byteCode.Value);
                     break;
                 case OpCode.ARGPUSH_S:
-                    var sVal = machine.Stack[byteCode.Value];
+                    var sVal = machine.Stack[byteCode.Value - 1];
 
-                    _argumentStack.Push(sVal);
+                    machine.ArgumentQueue.Enqueue(sVal);
                     break;
                 case OpCode.ARGPUSH_B:
-                    var idx = machine.Constants.Length - byteCode.Value;
+                    var idx = machine.Constants.Length + (byteCode.Value + 1);
                     var bVal = machine.Constants[idx];
 
-                    _argumentStack.Push(bVal);
+                    machine.ArgumentQueue.Enqueue(bVal);
                     break;
                 case OpCode.ADJUST:
                     var addToSP = byteCode.Value;
@@ -87,7 +93,7 @@ namespace Assets.Scripts.System
                     machine.IP = (uint)byteCode.Value;
                     break;
                 case OpCode.JZ:
-                    if (_resultReg == 0)
+                    if (machine.ResultReg == 0)
                         machine.IP = (uint)byteCode.Value;
                     break;
                 case OpCode.JMP_I:
@@ -97,10 +103,17 @@ namespace Assets.Scripts.System
                     machine.Reset();
                     break;
                 case OpCode.ACTION:
-                    _resultReg = 0; // Just for now, all return 0
+                    var actionName = FSM.ActionTable[byteCode.Value];
+
+                    machine.ResultReg = FSMActionDelegator.DoAction(actionName, machine, this);
+                    if(machine.ArgumentQueue.Count != 0)
+                    {
+                        int hej = 2;
+                    }
+                    machine.ArgumentQueue.Clear();
                     break;
                 case OpCode.NEG:
-                    _resultReg = -_resultReg; // Verify
+                    machine.ResultReg = -machine.ResultReg; // Verify
                     break;
                 default:
                     throw new NotImplementedException("Unimplemented bytecode " + byteCode.OpCode);

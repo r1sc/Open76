@@ -13,11 +13,13 @@ namespace Assets.System
 {
     class LevelLoader : MonoBehaviour
     {
+        public Dictionary<string, GameObject> LevelObjects;
         public Material TerrainMaterial;
         public GameObject SpawnPrefab, RegenPrefab;
 
         public void LoadLevel(string msnFilename)
         {
+            LevelObjects = new Dictionary<string, GameObject>();
             var cacheManager = FindObjectOfType<CacheManager>();
 
             var terrainPatches = new Terrain[80, 80];
@@ -68,36 +70,43 @@ namespace Assets.System
 
                     foreach (var odef in mdef.TerrainPatches[x, z].Objects)
                     {
+                        GameObject go = null;
                         if (odef.ClassId == MsnMissionParser.ClassId.Car)
                         {
                             var lblUpper = odef.Label.ToUpper();
-
-                            GameObject carObj;
+                            
                             switch (lblUpper)
                             {
                                 case "SPAWN":
-                                    carObj = Instantiate(SpawnPrefab);
-                                    carObj.tag = "Spawn";
+                                    go = Instantiate(SpawnPrefab);
+                                    go.tag = "Spawn";
                                     break;
                                 case "REGEN":
-                                    carObj = Instantiate(RegenPrefab);
-                                    carObj.tag = "Regen";
+                                    go = Instantiate(RegenPrefab);
+                                    go.tag = "Regen";
                                     break;
                                 default:
-                                    carObj = cacheManager.ImportVcf(odef.Label + ".vcf", odef.TeamId == 1);
+                                    go = cacheManager.ImportVcf(odef.Label + ".vcf", odef.TeamId == 1);
                                     break;
                             }
-                            carObj.transform.parent = patchGameObject.transform;
-                            carObj.transform.localPosition = odef.LocalPosition;
-                            carObj.transform.localRotation = odef.LocalRotation;
+
+                            go.transform.parent = patchGameObject.transform;
+                            go.transform.localPosition = odef.LocalPosition;
+                            go.transform.localRotation = odef.LocalRotation;
                         }
                         else if (odef.ClassId != MsnMissionParser.ClassId.Special)
                         {
-                            var go = cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
+                            go = cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
                             if (odef.ClassId == MsnMissionParser.ClassId.Sign)
                             {
                                 go.AddComponent<FlyOffOnImpact>();
                             }
+                        }
+
+                        if(go != null)
+                        {
+                            go.name = odef.Label + "_" + odef.Id;
+                            LevelObjects.Add(go.name, go);
                         }
                     }
 
@@ -222,7 +231,7 @@ namespace Assets.System
                 for (int i = 0; i < machine.Constants.Length; i++)
                 {
                     var stackValue = machine.InitialArguments[i];
-                    machine.Constants[i] = mdef.FSM.Variables[stackValue];
+                    machine.Constants[i] = mdef.FSM.Constants[stackValue];
                 }
             }
             var fsmRunner = FindObjectOfType<FSMRunner>();

@@ -166,5 +166,16 @@ namespace Assets
                 suspension.SetWheelVisibile(chassisView == ChassisView.ThirdPerson);
             }            
         }
+
+        public void SetCameraPositionAndLookAt(Vector3 position, Vector3 lookat)
+        {
+            //var world = GameObject.Find("World");
+            //var worldPos = world.transform.position;
+            //position += worldPos;
+            //lookat += worldPos;
+
+            transform.position = position;
+            transform.LookAt(lookat);
+        }
     }
 }

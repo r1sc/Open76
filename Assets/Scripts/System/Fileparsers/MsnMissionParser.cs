@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.System;
+﻿using Assets.Scripts.I76Types;
+using Assets.Scripts.System;
 using Assets.System;
 using System;
 using System.Collections.Generic;
@@ -159,7 +160,7 @@ namespace Assets.Fileparsers
                         }
                     }
 
-                    var botLeft = new Vector2(80,80);
+                    var botLeft = new Vector2(80, 80);
                     var topRight = new Vector2(0, 0);
 
                     var defaultHeights = new float[129, 129];
@@ -212,7 +213,7 @@ namespace Assets.Fileparsers
                         }
                     }
                     mdef.Middle = (topRight + botLeft) / 2.0f;
-                    
+
                 }
 
                 msn.FindNext("RDEF");
@@ -296,6 +297,7 @@ namespace Assets.Fileparsers
                         var upwards = new Vector3(odef.ReadSingle(), odef.ReadSingle(), odef.ReadSingle());
                         var forward = new Vector3(odef.ReadSingle(), odef.ReadSingle(), odef.ReadSingle());
                         var pos = new Vector3(odef.ReadSingle(), odef.ReadSingle(), odef.ReadSingle());
+
                         odef.BaseStream.Position += 36;
                         var classId = (ClassId)odef.ReadUInt32();
                         odef.ReadUInt16();
@@ -360,10 +362,29 @@ namespace Assets.Fileparsers
                     }
 
                     var numEntities = adef.ReadUInt32();
-                    mdef.FSM.EntityTable = new Dictionary<string, string>();
+                    mdef.FSM.EntityTable = new List<FSMEntity>();
+                    var uniqueValues = new Dictionary<string, int>();
+
                     for (int i = 0; i < numEntities; i++)
                     {
-                        mdef.FSM.EntityTable.Add(adef.ReadCString(40), adef.ReadCString(8));
+                        var label = adef.ReadCString(40);
+                        var value = adef.ReadCString(8);
+
+                        var valueIndex = 0;
+                        if (uniqueValues.ContainsKey(value))
+                        {
+                            valueIndex = uniqueValues[value] + 1;
+                        }
+                        uniqueValues[value] = valueIndex;
+
+                        var uniqueValue = value + "_" + valueIndex;
+
+                        mdef.FSM.EntityTable.Add(new FSMEntity
+                        {
+                            Label = label,
+                            Value = value,
+                            UniqueValue = uniqueValue
+                        });
                     }
 
                     mdef.FSM.SoundClipTable = new string[adef.ReadUInt32()];
@@ -377,12 +398,13 @@ namespace Assets.Fileparsers
                     for (int i = 0; i < numPaths; i++)
                     {
                         var name = adef.ReadCString(40);
-                        var nodes = new Vector3[adef.ReadUInt32()];
+                        var nodes = new I76Vector3[adef.ReadUInt32()];
                         for (int p = 0; p < nodes.Length; p++)
                         {
-                            nodes[p] = new Vector3(adef.ReadSingle(), adef.ReadSingle(), adef.ReadSingle());
+                            nodes[p] = new I76Vector3(adef.ReadSingle(), adef.ReadSingle(), adef.ReadSingle());
                         }
-                        mdef.FSM.Paths.Add(new FSMPath {
+                        mdef.FSM.Paths.Add(new FSMPath
+                        {
                             Name = name,
                             Nodes = nodes
                         });
@@ -407,57 +429,18 @@ namespace Assets.Fileparsers
                         mdef.FSM.StackMachines.Add(machine);
                     }
 
-                    mdef.FSM.Variables = new int[adef.ReadUInt32()];
-                    for (int i = 0; i < mdef.FSM.Variables.Length; i++)
+                    mdef.FSM.Constants = new int[adef.ReadUInt32()];
+                    for (int i = 0; i < mdef.FSM.Constants.Length; i++)
                     {
-                        mdef.FSM.Variables[i] = adef.ReadInt32();
+                        mdef.FSM.Constants[i] = adef.ReadInt32();
                     }
 
-                    using (var sw = new StreamWriter(Path.Combine(VirtualFilesystem.Instance.Gamepath, filename + ".txt")))
+                    mdef.FSM.ByteCode = new ByteCode[adef.ReadUInt32()];
+                    for (int i = 0; i < mdef.FSM.ByteCode.Length; i++)
                     {
-                        sw.WriteLine("// Action table");
-                        for (int i = 0; i < mdef.FSM.ActionTable.Length; i++)
-                        {
-                            sw.WriteLine(i.ToString() + ": " + mdef.FSM.ActionTable[i]);
-                        }
-                        sw.WriteLine();
-
-                        sw.WriteLine("// Entity list");
-                        foreach (var entityKeyValue in mdef.FSM.EntityTable)
-                        {
-                            sw.WriteLine(entityKeyValue.Key + " = " + entityKeyValue.Value);
-                        }
-                        sw.WriteLine();
-
-                        sw.WriteLine("// Base data");
-                        for(var i = 0; i < mdef.FSM.Variables.Length; i++)
-                        {
-                            sw.WriteLine(i.ToString() + ": " + mdef.FSM.Variables[i]);
-                        }
-                        sw.WriteLine();
-
-                        sw.WriteLine("// Machines");
-                        for(var i = 0; i < mdef.FSM.StackMachines.Count; i++)
-                        {
-                            var sm = mdef.FSM.StackMachines[i];
-                            sw.WriteLine("Machine " + i + ". Startaddr: " + sm.StartAddress + ", initial values: " + string.Join(", ", sm.InitialArguments.Select(x => x.ToString()).ToArray()));
-                        }
-                        sw.WriteLine();
-
-                        sw.WriteLine("// Byte code");
-                        mdef.FSM.ByteCode = new ByteCode[adef.ReadUInt32()];
-                        for (int i = 0; i < mdef.FSM.ByteCode.Length; i++)
-                        {
-                            var byteCode = mdef.FSM.ByteCode[i] = new ByteCode();
-                            byteCode.OpCode = (OpCode)adef.ReadUInt32();
-                            byteCode.Value = adef.ReadInt32();
-
-                            sw.Write(i.ToString() + ": ");
-                            if (byteCode.OpCode == OpCode.ACTION)
-                                sw.WriteLine("ACTION(" + mdef.FSM.ActionTable[byteCode.Value] + ")");
-                            else
-                                sw.WriteLine(byteCode.ToString());
-                        }
+                        var byteCode = mdef.FSM.ByteCode[i] = new ByteCode();
+                        byteCode.OpCode = (OpCode)adef.ReadUInt32();
+                        byteCode.Value = adef.ReadInt32();
                     }
                 }
             }

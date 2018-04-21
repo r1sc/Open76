@@ -21,7 +21,9 @@ namespace Assets.Scripts.System
             if (_pos < 0)
                 throw new Exception("Stack underflow, attempt to pop an empty stack");
 
-            return _values[_pos];
+            var val = _values[_pos];
+            _values.RemoveAt(_pos);
+            return val;
         }
 
         public void Push(T value)

@@ -6,3 +6,9 @@ obj/
 *.sln
 *.userprefs
 .vscode/
+
+bin/
+obj/
+*.exe
+*.pdb
+*.user
