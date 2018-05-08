@@ -37,13 +37,13 @@ namespace Assets.Scripts.System
                 while (currentMachineIndex < FSM.StackMachines.Count)
                 {
                     var machine = FSM.StackMachines[currentMachineIndex];
-                    if (Step(machine) == StepResult.DoNextMachine)
+                    if (machine.Halted || (Step(machine) == StepResult.DoNextMachine))
                     {
-                        //currentMachineIndex++;
+                        currentMachineIndex++;
                         yield return null;
                     }
                 }
-                yield return new WaitForSecondsRealtime(0.5f);
+                yield return null;
             }
 
         }
@@ -100,8 +100,8 @@ namespace Assets.Scripts.System
                     machine.IP = (uint)byteCode.Value;
                     return StepResult.DoNextMachine;
                 case OpCode.RST:
-                    machine.Reset();
-                    break;
+                    machine.Halted = true;
+                    return StepResult.DoNextMachine;
                 case OpCode.ACTION:
                     var actionName = FSM.ActionTable[byteCode.Value];
 

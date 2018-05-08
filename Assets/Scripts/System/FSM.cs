@@ -67,6 +67,7 @@ namespace Assets.Scripts.System
         public IndexableStack<int> Stack { get; set; }
         public int ResultReg { get; set; }
         public Queue<int> ArgumentQueue { get; set; }
+        public bool Halted { get; set; }
 
         public void Reset()
         {
