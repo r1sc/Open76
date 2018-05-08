@@ -7,6 +7,8 @@ Open76 is an engine reimplementation of Activision's Interstate '76 on the Unity
 ## What works?
 Parsing and rendering of pretty much everything contained in a level (including cars).
 
+The mission stack machines are now underway; Open76 can parse and run the stack machines. However, there's still a lot of machine actions that needs implementation.
+
 The simulation does not work yet. Driving around works as well as the various camera modes. The car simulation needs a lot of work (engine simulation, gearbox, etc.).
 
 Some features of the above are not yet fully implemented or have problems - see Issues.
