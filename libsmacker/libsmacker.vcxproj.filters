@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="smacker.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smk_bitstream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="smk_hufftree.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UnityInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="driver.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="smacker.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="smk_bitstream.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="smk_hufftree.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="smk_malloc.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UnityInterface.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
