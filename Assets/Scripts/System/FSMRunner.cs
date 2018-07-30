@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Assets.Scripts.I76Types;
 using UnityEngine;
 
 namespace Assets.Scripts.System
@@ -24,6 +25,25 @@ namespace Assets.Scripts.System
         public void Update()
         {
 
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.yellow;
+            GameObject world = GameObject.Find("World");
+            if (world == null) return;
+
+            Vector3 worldPos = world.transform.position;
+
+            FSMPath[] paths = FSM.Paths;
+            for (int i = 0; i < paths.Length; ++i)
+            {
+                FSMPath path = paths[i];
+                for (int j = 0; j < path.Nodes.Length - 1; ++j)
+                {
+                    Gizmos.DrawLine(worldPos + path.Nodes[j].ToVector3(), worldPos + path.Nodes[j + 1].ToVector3());
+                }
+            }
         }
 
         private IEnumerator RunMachines()
