@@ -9,12 +9,12 @@ namespace Assets.Scripts.System
     public class FSM
     {
         public string[] ActionTable { get; set; }
-        public List<FSMEntity> EntityTable { get; set; }
+        public FSMEntity[] EntityTable { get; set; }
 
         public string[] SoundClipTable { get; set; }
-        public List<FSMPath> Paths { get; set; }
+        public FSMPath[] Paths { get; set; }
 
-        public List<StackMachine> StackMachines { get; set; }
+        public StackMachine[] StackMachines { get; set; }
         public int[] Constants { get; set; }
         public ByteCode[] ByteCode { get; set; }
     }
@@ -22,8 +22,8 @@ namespace Assets.Scripts.System
     public class FSMEntity
     {
         public string Label { get; set; }
-        public string UniqueValue { get; set; }
         public string Value { get; set; }
+        public int Id { get; set; }
     }
     
     public enum OpCode : uint

@@ -13,13 +13,13 @@ namespace Assets.System
 {
     class LevelLoader : MonoBehaviour
     {
-        public Dictionary<string, GameObject> LevelObjects;
+        public Dictionary<int, GameObject> LevelObjects;
         public Material TerrainMaterial;
         public GameObject SpawnPrefab, RegenPrefab;
 
         public void LoadLevel(string msnFilename)
         {
-            LevelObjects = new Dictionary<string, GameObject>();
+            LevelObjects = new Dictionary<int, GameObject>();
             var cacheManager = FindObjectOfType<CacheManager>();
 
             var terrainPatches = new Terrain[80, 80];
@@ -106,7 +106,17 @@ namespace Assets.System
                         if(go != null)
                         {
                             go.name = odef.Label + "_" + odef.Id;
-                            LevelObjects.Add(go.name, go);
+                            LevelObjects.Add(go.GetInstanceID(), go);
+
+                            FSMEntity[] entities = mdef.FSM.EntityTable;
+                            for (int i = 0; i < entities.Length; ++i)
+                            {
+                                if (entities[i].Value == odef.Label && entities[i].Id == odef.Id)
+                                {
+                                    entities[i].Object = go;
+                                    break;
+                                }
+                            }
                         }
                     }
 
@@ -186,7 +196,7 @@ namespace Assets.System
             {
                 var sdfObj = cacheManager.ImportSdf(ldef.Label + ".sdf", null, Vector3.zero, Quaternion.identity);
 
-                for (int i = 0; i < ldef.StringPositions.Count; i++)
+                for (int i = 0; i < ldef.StringPositions.Length; i++)
                 {
                     var pos = ldef.StringPositions[i];
                     var localPosition = new Vector3(pos.x % 640, pos.y, pos.z % 640);
@@ -195,7 +205,7 @@ namespace Assets.System
                     sdfObj.name = ldef.Label + " " + i;
                     sdfObj.transform.parent = terrainPatches[patchPosX, patchPosZ].transform;
                     sdfObj.transform.localPosition = localPosition;
-                    if (i < ldef.StringPositions.Count - 1)
+                    if (i < ldef.StringPositions.Length - 1)
                     {
                         sdfObj.transform.LookAt(ldef.StringPositions[i + 1], Vector3.up);
                     }
@@ -205,7 +215,7 @@ namespace Assets.System
                         sdfObj.transform.localRotation *= Quaternion.AngleAxis(180, Vector3.up);
                     }
 
-                    if (i < ldef.StringPositions.Count - 1)
+                    if (i < ldef.StringPositions.Length - 1)
                         sdfObj = Instantiate(sdfObj);
                 }
             }

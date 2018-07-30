@@ -34,7 +34,7 @@ namespace Assets.Scripts.System
                     yield return null;
 
                 var currentMachineIndex = 0;
-                while (currentMachineIndex < FSM.StackMachines.Count)
+                while (currentMachineIndex < FSM.StackMachines.Length)
                 {
                     var machine = FSM.StackMachines[currentMachineIndex];
                     if (machine.Halted || (Step(machine) == StepResult.DoNextMachine))
