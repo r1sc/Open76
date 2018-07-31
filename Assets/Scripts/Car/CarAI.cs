@@ -68,7 +68,7 @@ public class CarAI : MonoBehaviour
         // Check for the closest road and it's closest segment.
         _targetRoadSegment = _targetPos;
 
-        const float minRoadDistance = 10f; // If roads are not closer than this this then we should prefer to drive off-road instead.
+        const float minRoadDistance = Constants.PathMinDistanceTreshold; // If roads are not closer than this this then we should prefer to drive off-road instead.
 
         float currentClosestSegmentDistance = minRoadDistance;
         float nextClosestSegmentDistance = minRoadDistance;
