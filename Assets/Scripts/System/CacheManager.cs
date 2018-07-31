@@ -25,6 +25,8 @@ namespace Assets.System
         public Material TransparentMaterialPrefab;
         public Color32[] Palette;
 
+        public static CacheManager Instance { get; private set; }
+
         private readonly string[] _bannedNames =
         {
             "51CMP3",
@@ -43,6 +45,7 @@ namespace Assets.System
             VirtualFilesystem.Instance.Init(GamePath);
             _materialCache["default"] = Instantiate(TextureMaterialPrefab);
             Palette = ActPaletteParser.ReadActPalette("p02.act");
+            Instance = this;
         }
 
         public Texture2D GetTexture(string textureName)

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.VR;
 
 namespace Assets.Scripts.System
 {
@@ -83,5 +84,11 @@ namespace Assets.Scripts.System
     public class FSMPath {
         public string Name { get; set; }
         public I76Vector3[] Nodes { get; set; }
+
+        public Vector3 GetWorldPosition(int nodeIndex)
+        {
+            Transform world = GameObject.Find("World").transform;
+            return world.position + Nodes[nodeIndex].ToVector3();
+        }
     }
 }

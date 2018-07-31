@@ -1,25 +1,23 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Assets.Scripts.I76Types;
 using UnityEngine;
 
 namespace Assets.Scripts.System
 {
-    class FSMRunner : MonoBehaviour
+    public class FSMRunner : MonoBehaviour
     {
         public float[] Timers { get; set; }
         public float FPSDelay = 0.5f; // Run twice every second
         private float _nextUpdate = 0;
 
         public FSM FSM;
+        private FSMActionDelegator _actionDelegator;
 
         private void Start()
         {
             Timers = new float[10];
-            StartCoroutine(RunMachines());
+            _actionDelegator = new FSMActionDelegator();
         }
 
         public void Update()
@@ -46,26 +44,22 @@ namespace Assets.Scripts.System
             }
         }
 
-        private IEnumerator RunMachines()
+        private void FixedUpdate()
         {
-            while (true)
+            if (FSM == null)
             {
-                if (FSM == null)
-                    yield return null;
-
-                var currentMachineIndex = 0;
-                while (currentMachineIndex < FSM.StackMachines.Length)
-                {
-                    var machine = FSM.StackMachines[currentMachineIndex];
-                    if (machine.Halted || (Step(machine) == StepResult.DoNextMachine))
-                    {
-                        currentMachineIndex++;
-                        yield return null;
-                    }
-                }
-                yield return null;
+                return;
             }
 
+            var currentMachineIndex = 0;
+            while (currentMachineIndex < FSM.StackMachines.Length)
+            {
+                var machine = FSM.StackMachines[currentMachineIndex];
+                if (machine.Halted || (Step(machine) == StepResult.DoNextMachine))
+                {
+                    currentMachineIndex++;
+                }
+            }
         }
 
         private StepResult Step(StackMachine machine)
@@ -125,7 +119,7 @@ namespace Assets.Scripts.System
                 case OpCode.ACTION:
                     var actionName = FSM.ActionTable[byteCode.Value];
 
-                    machine.ResultReg = FSMActionDelegator.DoAction(actionName, machine, this);
+                    machine.ResultReg = _actionDelegator.DoAction(actionName, machine, this);
                     if(machine.ArgumentQueue.Count != 0)
                     {
                         int hej = 2;

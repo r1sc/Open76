@@ -1,20 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Assets.Scripts.I76Types;
+﻿using Assets.System;
 using UnityEngine;
 
 namespace Assets.Scripts.System
 {
-    class FSMActionDelegator
+    public class FSMActionDelegator
     {
-        private static void LogUnhandledEntity(string actionName, int entityIndex, FSMEntity entity, StackMachine machine)
+        private Transform _worldTransform;
+
+        public FSMActionDelegator()
+        {
+            _worldTransform = GameObject.Find("World").transform;
+        }
+
+        private void LogUnhandledEntity(string actionName, int entityIndex, FSMEntity entity, StackMachine machine)
         {
             Debug.LogWarning("FSM action '" + actionName + "' not implemented for entity " + entityIndex + " (" + entity.Value + ") @ " + (machine.IP - 1));
         }
-        
-        public static int DoAction(string actionName, StackMachine machine, FSMRunner fsmRunner)
+
+        public int DoAction(string actionName, StackMachine machine, FSMRunner fsmRunner)
         {
             var args = machine.ArgumentQueue;
             switch (actionName)
@@ -64,13 +67,15 @@ namespace Assets.Scripts.System
                         var pathIndex = args.Dequeue();
                         var height = args.Dequeue();
                         var watchTarget = args.Dequeue();
-
-                        var world = GameObject.Find("World");
-
-                        var path = fsmRunner.FSM.Paths[pathIndex];
-                        var camera = GameObject.FindObjectOfType<CameraController>();
-                        camera.transform.position = world.transform.position + new Vector3(path.Nodes[0].x, path.Nodes[0].y + height, path.Nodes[1].z);
                         
+                        var path = fsmRunner.FSM.Paths[pathIndex];
+                        var camera = Object.FindObjectOfType<CameraController>();
+                        
+                        Vector3 nodePos = path.GetWorldPosition(0);
+                        float worldHeight = Utils.GroundHeightAtPoint(nodePos);
+                        nodePos.y = worldHeight + height * 0.01f;
+                        camera.transform.position = nodePos;
+
                         var entity = fsmRunner.FSM.EntityTable[watchTarget].Object;
                         camera.transform.LookAt(entity.transform, Vector3.up);
                     }
@@ -99,17 +104,17 @@ namespace Assets.Scripts.System
                         var entityIndex = args.Dequeue();
                         var pathIndex = args.Dequeue();
                         var targetSpeed = args.Dequeue();
-                        var unknown = args.Dequeue(); // Possibly height?
+                        var height = args.Dequeue();
                         
                         var path = fsmRunner.FSM.Paths[pathIndex];
-                        var world = GameObject.Find("World");
-
+                       
                         var entity = fsmRunner.FSM.EntityTable[entityIndex];
 
                         Vector3 pos = entity.Object.transform.position;
-                        Vector3 worldPos = world.transform.position;
+                        Vector3 worldPos = _worldTransform.position;
                         pos.x = worldPos.x + path.Nodes[0].x;
                         pos.z = worldPos.z + path.Nodes[0].z;
+                        pos.y = Utils.GroundHeightAtPoint(pos) + height * 0.01f;
                         entity.Object.transform.position = pos;
 
                         CarAI car = entity.Object.GetComponent<CarAI>();

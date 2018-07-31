@@ -56,6 +56,7 @@ namespace Assets.System
                         continue;
 
                     var patchGameObject = new GameObject("Ter " + x + ", " + z);
+                    patchGameObject.layer = LayerMask.NameToLayer("Terrain");
                     patchGameObject.transform.position = new Vector3(x * 640, 0, z * 640);
                     patchGameObject.transform.parent = worldGameObject.transform;
 
@@ -126,72 +127,10 @@ namespace Assets.System
                 }
             }
 
+            RoadManager roadManager = RoadManager.Instance;
             foreach (var road in mdef.Roads)
             {
-                var roadGo = new GameObject("Road");
-                roadGo.transform.parent = worldGameObject.transform;
-                var meshCollider = roadGo.AddComponent<MeshCollider>();
-                var meshFilter = roadGo.AddComponent<MeshFilter>();
-                var meshRenderer = roadGo.AddComponent<MeshRenderer>();
-                meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-
-
-                string roadTextureFilename;
-                switch (road.SegmentType)
-                {
-                    case MsnMissionParser.RoadSegmentType.PavedHighway:
-                        roadTextureFilename = "r2ayr_51";
-                        break;
-                    case MsnMissionParser.RoadSegmentType.DirtTrack:
-                        roadTextureFilename = "r2dnr_37";
-                        break;
-                    case MsnMissionParser.RoadSegmentType.RiverBed:
-                        roadTextureFilename = "r2wnr_39";
-                        break;
-                    case MsnMissionParser.RoadSegmentType.FourLaneHighway:
-                        roadTextureFilename = "r2ayr_51";
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-                var roadMaterial = cacheManager.GetTextureMaterial(roadTextureFilename, false);
-                meshRenderer.material = roadMaterial;
-
-                var mesh = new Mesh();
-                var vertices = new List<Vector3>();
-                var uvs = new List<Vector2>();
-
-                var uvIdx = 0;
-                foreach (var roadSegment in road.RoadSegments)
-                {
-                    vertices.Add(roadSegment.Left);
-                    vertices.Add(roadSegment.Right);
-
-                    uvs.Add(new Vector2(0, uvIdx));
-                    uvs.Add(new Vector2(1, uvIdx));
-                    uvIdx += 1;
-                }
-
-                var indices = new List<int>();
-                var idx = 0;
-                for (int i = 0; i < (vertices.Count - 2) / 2; i++)
-                {
-                    indices.Add(idx + 2);
-                    indices.Add(idx + 1);
-                    indices.Add(idx);
-
-                    indices.Add(idx + 2);
-                    indices.Add(idx + 3);
-                    indices.Add(idx + 1);
-                    idx += 2;
-                }
-
-                mesh.vertices = vertices.ToArray();
-                mesh.triangles = indices.ToArray();
-                mesh.uv = uvs.ToArray();
-                mesh.RecalculateNormals();
-                meshFilter.sharedMesh = mesh;
-                meshCollider.sharedMesh = mesh;
+                roadManager.CreateRoadObject(road, mdef.Middle * 640);
             }
 
             foreach (var ldef in mdef.StringObjects)
