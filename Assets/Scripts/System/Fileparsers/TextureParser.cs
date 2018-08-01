@@ -33,26 +33,43 @@ namespace Assets.Fileparsers
             {
                 var width = br.ReadInt32();
                 var height = br.ReadInt32();
+                int pixelSize = width * height;
                 var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
                 {
                     filterMode = FilterMode,
                     wrapMode = TextureWrapMode.Repeat
                 };
 
-                int readLimit = (int)Math.Min(br.BaseStream.Length - br.BaseStream.Position, width * height);
+                int readLimit = (int)Math.Min(br.BaseStream.Length - br.BaseStream.Position, pixelSize);
                 if (readLimit > 0)
                 {
-                    byte[] paletteBytes = br.ReadBytes(width * height);
-                    Color32[] pixelBuffer = new Color32[width * height];
-                    for (int y = 0; y < height; y++)
+                    byte[] paletteBytes = br.ReadBytes(readLimit);
+                    Color32[] pixelBuffer = new Color32[readLimit];
+                    
+                    for (int x = 0; x < width; ++x)
                     {
-                        for (int x = 0; x < width; x++)
+                        for (int y = 0; y < height; ++y)
                         {
-                            var paletteIndex = paletteBytes[x * height + y];
-                            if (paletteIndex == 0xFF)
+                            int colorIndex = x * height + y;
+                            if (colorIndex == readLimit)
+                            {
+                                break;
+                            }
+
+                            var paletteIndex = paletteBytes[colorIndex];
+
+                            Color32 color;
+                            if (paletteIndex == 0xFF || paletteIndex == 1)
+                            {
                                 hasTransparency = true;
-                            var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
-                            pixelBuffer[x * height + y] = color;
+                                color = transparent;
+                            }
+                            else
+                            {
+                                color = palette[paletteIndex];
+                            }
+
+                            pixelBuffer[colorIndex] = color;
                         }
                     }
 

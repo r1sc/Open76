@@ -39,7 +39,13 @@ namespace Assets
 
         void OnTriggerEnter(Collider collider)
         {
-            if (!_dead && collider.gameObject.GetComponentInParent<Rigidbody>().velocity.magnitude > 2)
+            if (_dead)
+            {
+                return;
+            }
+
+            Rigidbody rigidBody = collider.gameObject.GetComponentInParent<Rigidbody>();
+            if (rigidBody != null && rigidBody.velocity.magnitude > 2)
             {
                 _dead = true;
                 foreach (var c in _colliders)

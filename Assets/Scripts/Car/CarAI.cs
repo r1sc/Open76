@@ -166,7 +166,7 @@ public class CarAI : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (Arrived)
+        if (_currentPath == null)
         {
             return;
         }
