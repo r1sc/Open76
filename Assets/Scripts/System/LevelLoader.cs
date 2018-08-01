@@ -111,13 +111,16 @@ namespace Assets.System
                             go.name = odef.Label + "_" + odef.Id;
                             LevelObjects.Add(go.GetInstanceID(), go);
 
-                            FSMEntity[] entities = mdef.FSM.EntityTable;
-                            for (int i = 0; i < entities.Length; ++i)
+                            if (mdef.FSM != null)
                             {
-                                if (entities[i].Value == odef.Label && entities[i].Id == odef.Id)
+                                FSMEntity[] entities = mdef.FSM.EntityTable;
+                                for (int i = 0; i < entities.Length; ++i)
                                 {
-                                    entities[i].Object = go;
-                                    break;
+                                    if (entities[i].Value == odef.Label && entities[i].Id == odef.Id)
+                                    {
+                                        entities[i].Object = go;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -175,18 +178,22 @@ namespace Assets.System
                 car.transform.parent = null;
             }
 
-            foreach (var machine in mdef.FSM.StackMachines)
+            if (mdef.FSM != null)
             {
-                machine.Reset();
-                machine.Constants = new int[machine.InitialArguments.Length];
-                for (int i = 0; i < machine.Constants.Length; i++)
+                foreach (var machine in mdef.FSM.StackMachines)
                 {
-                    var stackValue = machine.InitialArguments[i];
-                    machine.Constants[i] = mdef.FSM.Constants[stackValue];
+                    machine.Reset();
+                    machine.Constants = new int[machine.InitialArguments.Length];
+                    for (int i = 0; i < machine.Constants.Length; i++)
+                    {
+                        var stackValue = machine.InitialArguments[i];
+                        machine.Constants[i] = mdef.FSM.Constants[stackValue];
+                    }
                 }
+
+                var fsmRunner = FindObjectOfType<FSMRunner>();
+                fsmRunner.FSM = mdef.FSM;
             }
-            var fsmRunner = FindObjectOfType<FSMRunner>();
-            fsmRunner.FSM = mdef.FSM;
         }
     }
 }
