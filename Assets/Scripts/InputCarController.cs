@@ -7,14 +7,22 @@ namespace Assets
     class InputCarController : MonoBehaviour
     {
         private NewCar _car;
+        private CarAI _carAi;
 
         void Start()
         {
             _car = GetComponent<NewCar>();
+            _carAi = GetComponent<CarAI>();
         }
 
         void Update()
         {
+            if (Input.GetKeyDown(KeyCode.X))
+            {
+                CarAI car = GetComponent<CarAI>();
+                car.Kill();
+            }
+
             if (!CameraManager.Instance.IsMainCameraActive || !_carAi.Alive)
             {
                 return;
