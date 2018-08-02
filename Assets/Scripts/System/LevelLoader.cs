@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Assets.Scripts.Camera;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -96,6 +97,12 @@ namespace Assets.System
                             go.transform.parent = patchGameObject.transform;
                             go.transform.localPosition = odef.LocalPosition;
                             go.transform.localRotation = odef.LocalRotation;
+
+                            if (odef.TeamId == 1)
+                            {
+                                CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = go.transform;
+                                go.AddComponent<InputCarController>();
+                            }
                         }
                         else if (odef.ClassId != MsnMissionParser.ClassId.Special)
                         {

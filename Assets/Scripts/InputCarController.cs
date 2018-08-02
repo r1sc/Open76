@@ -1,8 +1,5 @@
 ﻿using Assets.Car;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Assets.Scripts.Camera;
 using UnityEngine;
 
 namespace Assets
@@ -18,6 +15,11 @@ namespace Assets
 
         void Update()
         {
+            if (!CameraManager.Instance.IsMainCameraActive || !_carAi.Alive)
+            {
+                return;
+            }
+
             var throttle = Input.GetAxis("Vertical");
             var brake = -Mathf.Min(0, throttle);
             throttle = Mathf.Max(0, throttle);

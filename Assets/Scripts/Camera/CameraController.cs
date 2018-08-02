@@ -1,5 +1,5 @@
-﻿using System;
-using Assets.Car;
+﻿using Assets.Car;
+using Assets.Scripts.Camera;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -8,12 +8,9 @@ namespace Assets
     [RequireComponent(typeof(SmoothFollow))]
     public class CameraController : MonoBehaviour
     {
-        public LayerMask FirstPersonLayers;
-        public LayerMask ThirdPersonLayers;
-
-        private Camera _camera;
         private SmoothFollow _smoothFollow;
         private bool _firstPerson = false;
+        private CarAI _player;
 
         private enum ChassisView
         {
@@ -25,13 +22,35 @@ namespace Assets
         // Use this for initialization
         void Start()
         {
-            _camera = GetComponentInChildren<Camera>();
             _smoothFollow = GetComponent<SmoothFollow>();
         }
 
         // Update is called once per frame
         void Update()
         {
+            if (!CameraManager.Instance.IsMainCameraActive)
+            {
+                return;
+            }
+
+            if (_player == null)
+            {
+                Transform target = _smoothFollow.Target;
+                if (target != null)
+                {
+                    _player = target.GetComponent<CarAI>();
+                }
+            }
+            else
+            {
+                if (!_player.Alive)
+                {
+                    SetCameraThirdPerson();
+                    _firstPerson = false;
+                    return;
+                }
+            }
+            
             if (Input.GetKeyDown(KeyCode.F1))
             {
                 SetCameraFirstPersonAtVLOCIndex(0);
@@ -97,8 +116,7 @@ namespace Assets
 
         private void SetCameraAtWheelIndex(int wheelIndex)
         {
-            var inputCarController = FindObjectOfType<InputCarController>();
-            var suspensions = inputCarController.GetComponentsInChildren<RaySusp>();
+            var suspensions = _player.GetComponentsInChildren<RaySusp>();
             if(wheelIndex < suspensions.Length)
             {
                 var wheel = suspensions[wheelIndex].transform;
@@ -113,8 +131,7 @@ namespace Assets
 
         private void SetCameraThirdPerson()
         {
-            var inputCarController = FindObjectOfType<InputCarController>();
-            _smoothFollow.Target = inputCarController.transform;
+            _smoothFollow.Target = _player.transform;
             _smoothFollow.enabled = true;
             transform.parent = null;
 
@@ -123,11 +140,9 @@ namespace Assets
 
         private void SetCameraFirstPersonAtVLOCIndex(int vlocIndex)
         {
-            var inputCarController = FindObjectOfType<InputCarController>();
-
             int i = 0;
             Transform vloc = null;
-            foreach (Transform child in inputCarController.transform)
+            foreach (Transform child in _player.transform)
             {
                 if (child.name == "VLOC")
                 {
@@ -153,14 +168,13 @@ namespace Assets
 
         private void SetVisibleChassisModel(ChassisView chassisView)
         {
-            var inputCarController = FindObjectOfType<InputCarController>();
-            var thirdPerson = inputCarController.transform.Find("Chassis/ThirdPerson");
+            var thirdPerson = _player.transform.Find("Chassis/ThirdPerson");
             thirdPerson.gameObject.SetActive(chassisView == ChassisView.ThirdPerson);
 
-            var firstPerson = inputCarController.transform.Find("Chassis/FirstPerson");
+            var firstPerson = _player.transform.Find("Chassis/FirstPerson");
             firstPerson.gameObject.SetActive(chassisView == ChassisView.FirstPerson);
 
-            var suspensions = inputCarController.GetComponentsInChildren<RaySusp>();
+            var suspensions = _player.GetComponentsInChildren<RaySusp>();
             foreach (var suspension in suspensions)
             {
                 suspension.SetWheelVisibile(chassisView == ChassisView.ThirdPerson);

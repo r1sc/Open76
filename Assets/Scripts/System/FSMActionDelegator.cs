@@ -1,4 +1,5 @@
-﻿using Assets.System;
+﻿using Assets.Scripts.Camera;
+using Assets.System;
 using UnityEngine;
 
 namespace Assets.Scripts.System
@@ -28,7 +29,10 @@ namespace Assets.Scripts.System
                 case "true":
                     return 1;
                 case "pushCam":
-                    // NO args
+                    CameraManager.Instance.PushCamera();
+                    break;
+                case "popCam":
+                    CameraManager.Instance.PopCamera();
                     break;
                 case "timeGreater":
                     var timerNo = args.Dequeue();
@@ -40,6 +44,12 @@ namespace Assets.Scripts.System
                     return Input.GetKeyDown(KeyCode.Space) ? 1 : 0;
                 case "camObjDir":
                     {
+                        if (CameraManager.Instance.IsMainCameraActive)
+                        {
+                            break;
+                        }
+
+                        var camera = CameraManager.Instance.ActiveCamera;
                         var whichEntity = args.Dequeue();
                         var origoEntity = fsmRunner.FSM.EntityTable[whichEntity];
                         var entity = origoEntity.Object;
@@ -52,7 +62,6 @@ namespace Assets.Scripts.System
 
                         var rotation = new Vector3(yaw, pitch, roll) / 100.0f;
 
-                        var camera = GameObject.FindObjectOfType<CameraController>();
                         var newPos = entity.transform.position + (entity.transform.rotation * relativePos);
 
                         if (newPos.y < entity.transform.position.y + 1)
@@ -64,13 +73,18 @@ namespace Assets.Scripts.System
                     break;
                 case "camPosObj":
                     {
+                        if (CameraManager.Instance.IsMainCameraActive)
+                        {
+                            break;
+                        }
+
+                        var camera = CameraManager.Instance.ActiveCamera;
                         var pathIndex = args.Dequeue();
                         var height = args.Dequeue();
                         var watchTarget = args.Dequeue();
                         
                         var path = fsmRunner.FSM.Paths[pathIndex];
-                        var camera = Object.FindObjectOfType<CameraController>();
-                        
+
                         Vector3 nodePos = path.GetWorldPosition(0);
                         float worldHeight = Utils.GroundHeightAtPoint(nodePos);
                         nodePos.y = worldHeight + height * 0.01f;
