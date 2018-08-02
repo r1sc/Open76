@@ -93,7 +93,7 @@ namespace Assets.System
             return material;
         }
 
-        private Material GetMaterial(GeoFace geoFace, Vtf vtf)
+        private Material GetMaterial(GeoFace geoFace, Vtf vtf, int textureGroup)
         {
 
             if (geoFace.TextureName != null)
@@ -113,7 +113,7 @@ namespace Assets.System
                         {
                             //Debug.Log("Vehicle tmt reference: " + geoFace.TextureName + " decoded: " + key);
                             var tmt = vtf.Tmts[key];
-                            textureName = tmt.TextureNames[0];
+                            textureName = tmt.TextureNames[textureGroup];
                         }
                     }
                 }
@@ -130,7 +130,7 @@ namespace Assets.System
             public Material[] Materials { get; set; }
         }
 
-        private GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf)
+        private GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf, int textureGroup)
         {
             if (_meshCache.ContainsKey(filename))
                 return _meshCache[filename];
@@ -142,7 +142,7 @@ namespace Assets.System
             var uvs = new List<Vector2>();
             var normals = new List<Vector3>();
 
-            var facesGroupedByMaterial = geoMesh.Faces.GroupBy(face => GetMaterial(face, vtf)).ToArray();
+            var facesGroupedByMaterial = geoMesh.Faces.GroupBy(face => GetMaterial(face, vtf, textureGroup)).ToArray();
             mesh.subMeshCount = facesGroupedByMaterial.Length;
             var submeshTriangles = new Dictionary<Material, List<int>>();
             foreach (var faceGroup in facesGroupedByMaterial)
@@ -189,9 +189,9 @@ namespace Assets.System
             return cacheEntry;
         }
 
-        public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab)
+        public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab, int textureGroup)
         {
-            var meshCacheEntry = ImportMesh(filename, vtf);
+            var meshCacheEntry = ImportMesh(filename, vtf, textureGroup);
 
             var obj = Instantiate(prefab);
             obj.SetActive(false);
@@ -239,7 +239,7 @@ namespace Assets.System
                     continue;
                 }
 
-                var partObj = ImportGeo(geoFilename, null, _3DObjectPrefab);
+                var partObj = ImportGeo(geoFilename, null, _3DObjectPrefab, 0);
                 partObj.transform.parent = partDict[sdfPart.ParentName].transform;
                 partObj.transform.localPosition = sdfPart.Position;
                 partObj.transform.localRotation = Quaternion.identity;
@@ -285,7 +285,17 @@ namespace Assets.System
             firstPerson.transform.parent = chassis.transform;
             firstPerson.SetActive(false);
 
-            ImportCarParts(thirdPerson, vtf, vdf.PartsThirdPerson[0], NoColliderPrefab, false);
+            for (int i = 0; i < vdf.PartsThirdPerson.Count; ++i)
+            {
+                GameObject healthObject = new GameObject("Health " + i);
+                healthObject.transform.SetParent(thirdPerson.transform);
+                ImportCarParts(healthObject, vtf, vdf.PartsThirdPerson[i], NoColliderPrefab, false, false, i);
+                if (i != 0)
+                {
+                    healthObject.SetActive(false);
+                }
+            }
+
             if (importFirstPerson)
                 ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true);
 
@@ -351,7 +361,7 @@ namespace Assets.System
             return new[] { wheel, wheel2 };
         }
 
-        private void ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts, GameObject prefab, bool justChassis, bool forgetParentPosition = false)
+        private void ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts, GameObject prefab, bool justChassis, bool forgetParentPosition = false, int textureGroup = 0)
         {
             var partDict = new Dictionary<string, GameObject> { { "WORLD", parent } };
 
@@ -374,7 +384,7 @@ namespace Assets.System
                     continue;
                 }
 
-                var partObj = ImportGeo(geoFilename, vtf, prefab);
+                var partObj = ImportGeo(geoFilename, vtf, prefab, textureGroup);
 
                 var parentName = sdfPart.ParentName;
                 if (!partDict.ContainsKey(parentName))
