@@ -198,6 +198,42 @@ namespace Assets.Scripts.System
                         LogUnhandledEntity(actionName, entityIndex, entity, machine);
                     }
                     break;
+                case "cbPrior":
+                    {
+                        int soundId = args.Dequeue();
+                        int queueFlag = args.Dequeue();
+                        bool endOfQueue;
+                        if (queueFlag == 1)
+                        {
+                            endOfQueue = false;
+                        }
+                        else if (queueFlag == 3)
+                        {
+                            endOfQueue = true;
+                        }
+                        else
+                        {
+                            endOfQueue = true;
+                            Debug.Log("Unknown value in cbPrior: " + queueFlag);
+                        }
+                        
+                        string soundName = fsmRunner.FSM.SoundClipTable[soundId];
+                        RadioManager.Instance.QueueRadioMessage(soundName, endOfQueue);
+                    }
+                    break;
+                case "rand":
+                    {
+                        int min = args.Dequeue();
+                        int max = args.Dequeue();
+                        return Random.Range(min, max);
+                    }
+                case "stopCB":
+                    RadioManager.Instance.Stop();
+                    break;
+                case "isCBEmpty":
+                    {
+                        return RadioManager.Instance.IsQueueEmpty() ? 1 : 0;
+                    }
                 case "startTimer":
                     var whichTimer = args.Dequeue();
                     fsmRunner.Timers[whichTimer] = Time.unscaledTime;
