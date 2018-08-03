@@ -169,7 +169,12 @@ namespace Assets.System
             string replacementFilePath;
             if (filename.EndsWith(".msn") || filename.EndsWith(".ter"))
             {
-                replacementFilePath = Path.Combine(Path.Combine(Gamepath, "MISSIONS"), filename);
+                string missionDir = Path.Combine(Gamepath, "MISSIONS");
+                if (!Directory.Exists(missionDir))
+                {
+                    missionDir = Path.Combine(Gamepath, "miss8");
+                }
+                replacementFilePath = Path.Combine(missionDir, filename);
             }
             else
                 replacementFilePath = Path.Combine(Path.Combine(Gamepath, "ADDON"), filename);

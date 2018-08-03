@@ -3,18 +3,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
+using UnityEngine.VR;
 
 namespace Assets.Scripts.System
 {
     public class FSM
     {
         public string[] ActionTable { get; set; }
-        public List<FSMEntity> EntityTable { get; set; }
+        public FSMEntity[] EntityTable { get; set; }
 
         public string[] SoundClipTable { get; set; }
-        public List<FSMPath> Paths { get; set; }
+        public FSMPath[] Paths { get; set; }
 
-        public List<StackMachine> StackMachines { get; set; }
+        public StackMachine[] StackMachines { get; set; }
         public int[] Constants { get; set; }
         public ByteCode[] ByteCode { get; set; }
     }
@@ -22,8 +24,9 @@ namespace Assets.Scripts.System
     public class FSMEntity
     {
         public string Label { get; set; }
-        public string UniqueValue { get; set; }
         public string Value { get; set; }
+        public int Id { get; set; }
+        public GameObject Object { get; set; }
     }
     
     public enum OpCode : uint
@@ -81,5 +84,11 @@ namespace Assets.Scripts.System
     public class FSMPath {
         public string Name { get; set; }
         public I76Vector3[] Nodes { get; set; }
+
+        public Vector3 GetWorldPosition(int nodeIndex)
+        {
+            Transform world = GameObject.Find("World").transform;
+            return world.position + Nodes[nodeIndex].ToVector3();
+        }
     }
 }

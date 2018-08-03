@@ -25,6 +25,8 @@ namespace Assets.System
         public Material TransparentMaterialPrefab;
         public Color32[] Palette;
 
+        public static CacheManager Instance { get; private set; }
+
         private readonly string[] _bannedNames =
         {
             "51CMP3",
@@ -43,6 +45,7 @@ namespace Assets.System
             VirtualFilesystem.Instance.Init(GamePath);
             _materialCache["default"] = Instantiate(TextureMaterialPrefab);
             Palette = ActPaletteParser.ReadActPalette("p02.act");
+            Instance = this;
         }
 
         public Texture2D GetTexture(string textureName)
@@ -191,6 +194,7 @@ namespace Assets.System
             var meshCacheEntry = ImportMesh(filename, vtf);
 
             var obj = Instantiate(prefab);
+            obj.SetActive(false);
             obj.gameObject.name = meshCacheEntry.GeoMesh.Name;
 
             var meshFilter = obj.GetComponent<MeshFilter>();
@@ -239,6 +243,7 @@ namespace Assets.System
                 partObj.transform.parent = partDict[sdfPart.ParentName].transform;
                 partObj.transform.localPosition = sdfPart.Position;
                 partObj.transform.localRotation = Quaternion.identity;
+                partObj.SetActive(true);
                 partDict.Add(sdfPart.Name, partObj);
             }
 
@@ -386,6 +391,7 @@ namespace Assets.System
                 partObj.transform.localPosition = sdfPart.Position;
                 if (forgetParentPosition)
                     partObj.transform.parent = partDict[parentName].transform;
+                partObj.SetActive(true);
                 partDict.Add(sdfPart.Name, partObj);
             }
         }

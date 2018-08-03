@@ -2,9 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace Assets.Scripts.I76Types
 {
+    public static class I76VectorExtensions
+    {
+        public static Vector3 ToVector3(this I76Vector3 vector3)
+        {
+            return new Vector3(vector3.x, vector3.y, vector3.z);
+        }
+
+        public static Vector4 ToVector4(this I76Vector4 vector4)
+        {
+            return new Vector4(vector4.x, vector4.y, vector4.z, vector4.w);
+        }
+    }
+
     public class I76Vector4 : I76Vector3
     {
         public float w;

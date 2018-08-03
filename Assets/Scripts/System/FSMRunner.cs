@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Assets.Scripts.I76Types;
 using UnityEngine;
 
 namespace Assets.Scripts.System
 {
-    class FSMRunner : MonoBehaviour
+    public class FSMRunner : MonoBehaviour
     {
         public float[] Timers { get; set; }
         public float FPSDelay = 0.5f; // Run twice every second
         private float _nextUpdate = 0;
 
         public FSM FSM;
+        private FSMActionDelegator _actionDelegator;
 
         private void Start()
         {
             Timers = new float[10];
-            StartCoroutine(RunMachines());
+            _actionDelegator = new FSMActionDelegator();
         }
 
         public void Update()
@@ -26,26 +25,41 @@ namespace Assets.Scripts.System
 
         }
 
-        private IEnumerator RunMachines()
+        private void OnDrawGizmos()
         {
-            while (true)
-            {
-                if (FSM == null)
-                    yield return null;
+            Gizmos.color = Color.yellow;
+            GameObject world = GameObject.Find("World");
+            if (world == null) return;
 
-                var currentMachineIndex = 0;
-                while (currentMachineIndex < FSM.StackMachines.Count)
+            Vector3 worldPos = world.transform.position;
+
+            FSMPath[] paths = FSM.Paths;
+            for (int i = 0; i < paths.Length; ++i)
+            {
+                FSMPath path = paths[i];
+                for (int j = 0; j < path.Nodes.Length - 1; ++j)
                 {
-                    var machine = FSM.StackMachines[currentMachineIndex];
-                    if (machine.Halted || (Step(machine) == StepResult.DoNextMachine))
-                    {
-                        currentMachineIndex++;
-                        yield return null;
-                    }
+                    Gizmos.DrawLine(worldPos + path.Nodes[j].ToVector3(), worldPos + path.Nodes[j + 1].ToVector3());
                 }
-                yield return null;
+            }
+        }
+
+        private void FixedUpdate()
+        {
+            if (FSM == null)
+            {
+                return;
             }
 
+            var currentMachineIndex = 0;
+            while (currentMachineIndex < FSM.StackMachines.Length)
+            {
+                var machine = FSM.StackMachines[currentMachineIndex];
+                if (machine.Halted || (Step(machine) == StepResult.DoNextMachine))
+                {
+                    currentMachineIndex++;
+                }
+            }
         }
 
         private StepResult Step(StackMachine machine)
@@ -105,7 +119,7 @@ namespace Assets.Scripts.System
                 case OpCode.ACTION:
                     var actionName = FSM.ActionTable[byteCode.Value];
 
-                    machine.ResultReg = FSMActionDelegator.DoAction(actionName, machine, this);
+                    machine.ResultReg = _actionDelegator.DoAction(actionName, machine, this);
                     if(machine.ArgumentQueue.Count != 0)
                     {
                         int hej = 2;

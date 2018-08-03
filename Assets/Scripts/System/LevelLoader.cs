@@ -13,13 +13,13 @@ namespace Assets.System
 {
     class LevelLoader : MonoBehaviour
     {
-        public Dictionary<string, GameObject> LevelObjects;
+        public Dictionary<int, GameObject> LevelObjects;
         public Material TerrainMaterial;
         public GameObject SpawnPrefab, RegenPrefab;
 
         public void LoadLevel(string msnFilename)
         {
-            LevelObjects = new Dictionary<string, GameObject>();
+            LevelObjects = new Dictionary<int, GameObject>();
             var cacheManager = FindObjectOfType<CacheManager>();
 
             var terrainPatches = new Terrain[80, 80];
@@ -56,6 +56,7 @@ namespace Assets.System
                         continue;
 
                     var patchGameObject = new GameObject("Ter " + x + ", " + z);
+                    patchGameObject.layer = LayerMask.NameToLayer("Terrain");
                     patchGameObject.transform.position = new Vector3(x * 640, 0, z * 640);
                     patchGameObject.transform.parent = worldGameObject.transform;
 
@@ -90,6 +91,8 @@ namespace Assets.System
                                     break;
                             }
 
+                            CarAI car = go.AddComponent<CarAI>();
+                            car.TeamId = odef.TeamId;
                             go.transform.parent = patchGameObject.transform;
                             go.transform.localPosition = odef.LocalPosition;
                             go.transform.localRotation = odef.LocalRotation;
@@ -106,7 +109,17 @@ namespace Assets.System
                         if(go != null)
                         {
                             go.name = odef.Label + "_" + odef.Id;
-                            LevelObjects.Add(go.name, go);
+                            LevelObjects.Add(go.GetInstanceID(), go);
+
+                            FSMEntity[] entities = mdef.FSM.EntityTable;
+                            for (int i = 0; i < entities.Length; ++i)
+                            {
+                                if (entities[i].Value == odef.Label && entities[i].Id == odef.Id)
+                                {
+                                    entities[i].Object = go;
+                                    break;
+                                }
+                            }
                         }
                     }
 
@@ -114,79 +127,17 @@ namespace Assets.System
                 }
             }
 
+            RoadManager roadManager = RoadManager.Instance;
             foreach (var road in mdef.Roads)
             {
-                var roadGo = new GameObject("Road");
-                roadGo.transform.parent = worldGameObject.transform;
-                var meshCollider = roadGo.AddComponent<MeshCollider>();
-                var meshFilter = roadGo.AddComponent<MeshFilter>();
-                var meshRenderer = roadGo.AddComponent<MeshRenderer>();
-                meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
-
-
-                string roadTextureFilename;
-                switch (road.SegmentType)
-                {
-                    case MsnMissionParser.RoadSegmentType.PavedHighway:
-                        roadTextureFilename = "r2ayr_51";
-                        break;
-                    case MsnMissionParser.RoadSegmentType.DirtTrack:
-                        roadTextureFilename = "r2dnr_37";
-                        break;
-                    case MsnMissionParser.RoadSegmentType.RiverBed:
-                        roadTextureFilename = "r2wnr_39";
-                        break;
-                    case MsnMissionParser.RoadSegmentType.FourLaneHighway:
-                        roadTextureFilename = "r2ayr_51";
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-                var roadMaterial = cacheManager.GetTextureMaterial(roadTextureFilename, false);
-                meshRenderer.material = roadMaterial;
-
-                var mesh = new Mesh();
-                var vertices = new List<Vector3>();
-                var uvs = new List<Vector2>();
-
-                var uvIdx = 0;
-                foreach (var roadSegment in road.RoadSegments)
-                {
-                    vertices.Add(roadSegment.Left);
-                    vertices.Add(roadSegment.Right);
-
-                    uvs.Add(new Vector2(0, uvIdx));
-                    uvs.Add(new Vector2(1, uvIdx));
-                    uvIdx += 1;
-                }
-
-                var indices = new List<int>();
-                var idx = 0;
-                for (int i = 0; i < (vertices.Count - 2) / 2; i++)
-                {
-                    indices.Add(idx + 2);
-                    indices.Add(idx + 1);
-                    indices.Add(idx);
-
-                    indices.Add(idx + 2);
-                    indices.Add(idx + 3);
-                    indices.Add(idx + 1);
-                    idx += 2;
-                }
-
-                mesh.vertices = vertices.ToArray();
-                mesh.triangles = indices.ToArray();
-                mesh.uv = uvs.ToArray();
-                mesh.RecalculateNormals();
-                meshFilter.sharedMesh = mesh;
-                meshCollider.sharedMesh = mesh;
+                roadManager.CreateRoadObject(road, mdef.Middle * 640);
             }
 
             foreach (var ldef in mdef.StringObjects)
             {
                 var sdfObj = cacheManager.ImportSdf(ldef.Label + ".sdf", null, Vector3.zero, Quaternion.identity);
 
-                for (int i = 0; i < ldef.StringPositions.Count; i++)
+                for (int i = 0; i < ldef.StringPositions.Length; i++)
                 {
                     var pos = ldef.StringPositions[i];
                     var localPosition = new Vector3(pos.x % 640, pos.y, pos.z % 640);
@@ -195,7 +146,7 @@ namespace Assets.System
                     sdfObj.name = ldef.Label + " " + i;
                     sdfObj.transform.parent = terrainPatches[patchPosX, patchPosZ].transform;
                     sdfObj.transform.localPosition = localPosition;
-                    if (i < ldef.StringPositions.Count - 1)
+                    if (i < ldef.StringPositions.Length - 1)
                     {
                         sdfObj.transform.LookAt(ldef.StringPositions[i + 1], Vector3.up);
                     }
@@ -205,7 +156,7 @@ namespace Assets.System
                         sdfObj.transform.localRotation *= Quaternion.AngleAxis(180, Vector3.up);
                     }
 
-                    if (i < ldef.StringPositions.Count - 1)
+                    if (i < ldef.StringPositions.Length - 1)
                         sdfObj = Instantiate(sdfObj);
                 }
             }

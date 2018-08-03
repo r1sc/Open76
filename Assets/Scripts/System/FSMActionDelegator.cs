@@ -1,15 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Assets.System;
 using UnityEngine;
 
 namespace Assets.Scripts.System
 {
-    class FSMActionDelegator
+    public class FSMActionDelegator
     {
-        
-        public static int DoAction(string actionName, StackMachine machine, FSMRunner fsmRunner)
+        private Transform _worldTransform;
+
+        public FSMActionDelegator()
+        {
+            _worldTransform = GameObject.Find("World").transform;
+        }
+
+        private void LogUnhandledEntity(string actionName, int entityIndex, FSMEntity entity, StackMachine machine)
+        {
+            Debug.LogWarning("FSM action '" + actionName + "' not implemented for entity " + entityIndex + " (" + entity.Value + ") @ " + (machine.IP - 1));
+        }
+
+        public int DoAction(string actionName, StackMachine machine, FSMRunner fsmRunner)
         {
             var args = machine.ArgumentQueue;
             switch (actionName)
@@ -34,7 +42,7 @@ namespace Assets.Scripts.System
                     {
                         var whichEntity = args.Dequeue();
                         var origoEntity = fsmRunner.FSM.EntityTable[whichEntity];
-                        var entity = GameObject.Find(origoEntity.UniqueValue);
+                        var entity = origoEntity.Object;
 
                         var relativePos = new Vector3(args.Dequeue(), args.Dequeue(), args.Dequeue()) / 100.0f;
 
@@ -59,15 +67,135 @@ namespace Assets.Scripts.System
                         var pathIndex = args.Dequeue();
                         var height = args.Dequeue();
                         var watchTarget = args.Dequeue();
-
-                        var world = GameObject.Find("World");
-
-                        var path = fsmRunner.FSM.Paths[pathIndex];
-                        var camera = GameObject.FindObjectOfType<CameraController>();
-                        camera.transform.position = world.transform.position + new Vector3(path.Nodes[0].x, path.Nodes[0].y + height, path.Nodes[1].z);
                         
-                        var entity = GameObject.Find(fsmRunner.FSM.EntityTable[watchTarget].UniqueValue);
+                        var path = fsmRunner.FSM.Paths[pathIndex];
+                        var camera = Object.FindObjectOfType<CameraController>();
+                        
+                        Vector3 nodePos = path.GetWorldPosition(0);
+                        float worldHeight = Utils.GroundHeightAtPoint(nodePos);
+                        nodePos.y = worldHeight + height * 0.01f;
+                        camera.transform.position = nodePos;
+
+                        var entity = fsmRunner.FSM.EntityTable[watchTarget].Object;
                         camera.transform.LookAt(entity.transform, Vector3.up);
+                    }
+                    break;
+                case "goto":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var pathIndex = args.Dequeue();
+                        var targetSpeed = args.Dequeue();
+
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        var path = fsmRunner.FSM.Paths[pathIndex];
+
+                        CarAI car = entity.Object.GetComponent<CarAI>();
+                        if (car != null)
+                        {
+                            car.SetTargetPath(path, targetSpeed);
+                            break;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "teleport":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var pathIndex = args.Dequeue();
+                        var targetSpeed = args.Dequeue();
+                        var height = args.Dequeue();
+                        
+                        var path = fsmRunner.FSM.Paths[pathIndex];
+                       
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+
+                        Vector3 pos = entity.Object.transform.position;
+                        Vector3 worldPos = _worldTransform.position;
+                        pos.x = worldPos.x + path.Nodes[0].x;
+                        pos.z = worldPos.z + path.Nodes[0].z;
+                        pos.y = Utils.GroundHeightAtPoint(pos) + height * 0.01f;
+                        entity.Object.transform.position = pos;
+
+                        CarAI car = entity.Object.GetComponent<CarAI>();
+                        if (car != null)
+                        {
+                            car.SetSpeed(targetSpeed);
+                            car.SetTargetPath(path, targetSpeed);
+                            break;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "isArrived":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var origoEntity = fsmRunner.FSM.EntityTable[entityIndex];
+                        var entity = origoEntity.Object;
+
+                        CarAI car = entity.GetComponent<CarAI>();
+                        if (car != null)
+                        {
+                            if (car.Arrived)
+                            {
+                                car.Arrived = false;
+                                return 1;
+                            }
+
+                            return 0;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, origoEntity, machine);
+                    }
+                    break;
+                case "sit":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+
+                        CarAI car = entity.Object.GetComponent<CarAI>();
+                        if (car != null)
+                        {
+                            car.Sit();
+                            break;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "isEqual":
+                    {
+                        var first = args.Dequeue();
+                        var second = args.Dequeue();
+                        return first == second ? 1 : 0;
+                    }
+                case "isAttacked":
+                {
+                    var entityIndex = args.Dequeue();
+                    var entity = fsmRunner.FSM.EntityTable[entityIndex];
+
+                    CarAI car = entity.Object.GetComponent<CarAI>();
+                    if (car != null)
+                    {
+                        return car.Attacked ? 1 : 0;
+                    }
+
+                    LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "isDead":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+
+                        CarAI car = entity.Object.GetComponent<CarAI>();
+                        if (car != null)
+                        {
+                            return car.Alive ? 0 : 1;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
                     }
                     break;
                 case "startTimer":

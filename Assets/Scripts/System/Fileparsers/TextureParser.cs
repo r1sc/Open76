@@ -33,26 +33,47 @@ namespace Assets.Fileparsers
             {
                 var width = br.ReadInt32();
                 var height = br.ReadInt32();
+                int pixelSize = width * height;
                 var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
                 {
                     filterMode = FilterMode,
                     wrapMode = TextureWrapMode.Repeat
                 };
-                for (int y = 0; y < height; y++)
-                {
-                    for (int x = 0; x < width; x++)
-                    {
-                        var paletteIndex = br.ReadByte();
-                        if (paletteIndex == 0xFF)
-                            hasTransparency = true;
-                        var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
-                        texture.SetPixel(x, y, color);
 
-                        if (br.BaseStream.Position == br.BaseStream.Length)
+                int readLimit = (int)Math.Min(br.BaseStream.Length - br.BaseStream.Position, pixelSize);
+                if (readLimit > 0)
+                {
+                    byte[] paletteBytes = br.ReadBytes(readLimit);
+                    Color32[] pixelBuffer = new Color32[readLimit];
+                    
+                    for (int x = 0; x < width; ++x)
+                    {
+                        for (int y = 0; y < height; ++y)
                         {
-                            break;
+                            int colorIndex = x * height + y;
+                            if (colorIndex == readLimit)
+                            {
+                                break;
+                            }
+
+                            var paletteIndex = paletteBytes[colorIndex];
+
+                            Color32 color;
+                            if (paletteIndex == 0xFF || paletteIndex == 1)
+                            {
+                                hasTransparency = true;
+                                color = transparent;
+                            }
+                            else
+                            {
+                                color = palette[paletteIndex];
+                            }
+
+                            pixelBuffer[colorIndex] = color;
                         }
                     }
+
+                    texture.SetPixels32(pixelBuffer);
                 }
                 
                 if(hasTransparency)
@@ -82,6 +103,7 @@ namespace Assets.Fileparsers
             {
                 var width = br.ReadInt32();
                 var height = br.ReadInt32();
+                var pixels = width * height;
                 var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
                 {
                     filterMode = FilterMode,
@@ -93,27 +115,36 @@ namespace Assets.Fileparsers
 
                 if (VirtualFilesystem.Instance.FileExists(cbkFile))
                 {
+                    Color32[] pixelBuffer = new Color32[pixels];
                     using (var cbkBr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(cbkFile)))
                     {
                         var x = 0;
                         var y = 0;
-                        while (br.BaseStream.Position < br.BaseStream.Length)
+
+                        var byteIndex = 0;
+                        var byteLength = cbkBr.BaseStream.Length - cbkBr.BaseStream.Position;
+                        byte[] data = br.ReadBytes((int)byteLength);
+                        while (byteIndex < byteLength)
                         {
-                            var index = br.ReadUInt16();
+                            var index = BitConverter.ToUInt16(data, byteIndex);
+                            byteIndex += sizeof(ushort);
+
                             if ((index & 0x8000) == 0)
                             {
                                 cbkBr.BaseStream.Position = 4 + index * 16;
+                                byte[] cbkData = cbkBr.ReadBytes(16);
                                 for (int sy = 0; sy < 4; sy++)
                                 {
                                     for (int sx = 0; sx < 4; sx++)
                                     {
-                                        var paletteIndex = cbkBr.ReadByte();
+                                        var paletteIndex = cbkData[sx * 4 + sy];
                                         if (paletteIndex == 0xFF)
                                             hasTransparency = true;
                                         var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
-                                        if (x + sx < width && y + sy < height)
+                                        int pixelIndex = y * width + sx * width + x + sy;
+                                        if (pixelIndex < pixels)
                                         {
-                                            texture.SetPixel(x + sx, y + sy, color);
+                                            pixelBuffer[pixelIndex] = color;
                                         }
                                     }
                                 }
@@ -128,9 +159,10 @@ namespace Assets.Fileparsers
                                 {
                                     for (int sx = 0; sx < 4; sx++)
                                     {
-                                        if (x + sx < width && y + sy < height)
+                                        int pixelIndex = y * width + sx * width + x + sy;
+                                        if (pixelIndex < pixels)
                                         {
-                                            texture.SetPixel(x + sx, y + sy, color);
+                                            pixelBuffer[pixelIndex] = color;
                                         }
                                     }
                                 }
@@ -147,6 +179,8 @@ namespace Assets.Fileparsers
                             }
                         }
                     }
+
+                    texture.SetPixels32(pixelBuffer);
                 }
                 else
                 {

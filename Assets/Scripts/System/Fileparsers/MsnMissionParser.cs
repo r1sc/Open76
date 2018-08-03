@@ -41,7 +41,7 @@ namespace Assets.Fileparsers
         public class Ldef
         {
             public string Label { get; set; }
-            public List<Vector3> StringPositions { get; set; }
+            public Vector3[] StringPositions { get; set; }
         }
 
         public class TerrainPatch
@@ -73,13 +73,8 @@ namespace Assets.Fileparsers
 
         public class Road
         {
-            public List<RoadSegment> RoadSegments { get; set; }
+            public RoadSegment[] RoadSegments { get; set; }
             public RoadSegmentType SegmentType { get; set; }
-
-            public Road()
-            {
-                RoadSegments = new List<RoadSegment>();
-            }
         }
 
         public class MissonDefinition
@@ -226,7 +221,8 @@ namespace Assets.Fileparsers
                         var segmentPieceCount = rdef.ReadUInt32();
                         var road = new Road
                         {
-                            SegmentType = (RoadSegmentType)segmentType
+                            SegmentType = (RoadSegmentType)segmentType,
+                            RoadSegments = new RoadSegment[segmentPieceCount]
                         };
 
                         for (int i = 0; i < segmentPieceCount; i++)
@@ -259,7 +255,7 @@ namespace Assets.Fileparsers
                             pos.y = y;
                             roadSegment.Right = pos;
 
-                            road.RoadSegments.Add(roadSegment);
+                            road.RoadSegments[i] = roadSegment;
                             //TODO: Figure out
                         }
                         mdef.Roads.Add(road);
@@ -332,11 +328,11 @@ namespace Assets.Fileparsers
                         ldef.ReadUInt32();
                         var numStrings = ldef.ReadUInt32();
 
-                        var stringPositions = new List<Vector3>();
+                        var stringPositions = new Vector3[numStrings];
                         for (int i = 0; i < numStrings; i++)
                         {
                             var stringPos = new Vector3(ldef.ReadSingle(), ldef.ReadSingle(), ldef.ReadSingle());
-                            stringPositions.Add(stringPos);
+                            stringPositions[i] = stringPos;
                         }
 
                         mdef.StringObjects.Add(new Ldef
@@ -362,29 +358,37 @@ namespace Assets.Fileparsers
                     }
 
                     var numEntities = adef.ReadUInt32();
-                    mdef.FSM.EntityTable = new List<FSMEntity>();
-                    var uniqueValues = new Dictionary<string, int>();
+                    mdef.FSM.EntityTable = new FSMEntity[numEntities];
 
                     for (int i = 0; i < numEntities; i++)
                     {
                         var label = adef.ReadCString(40);
-                        var value = adef.ReadCString(8);
+                        var rawlabel = adef.ReadBytes(8);
 
-                        var valueIndex = 0;
-                        if (uniqueValues.ContainsKey(value))
+                        int labelhigh = 0;
+                        StringBuilder labelBuilder = new StringBuilder();
+                        for (int j = 0; j < 8; j++)
                         {
-                            valueIndex = uniqueValues[value] + 1;
+                            var v = rawlabel[j];
+                            if (v > 0x7f)
+                            {
+                                labelhigh = (labelhigh << 1) | 0x01;
+                            }
+                            else
+                            {
+                                labelhigh = (labelhigh << 1) & 0xfe;
+                            }
+                            v = (byte)(v & 0x7f);
+                            if (v != 0)
+                                labelBuilder.Append((char)v);
                         }
-                        uniqueValues[value] = valueIndex;
 
-                        var uniqueValue = value + "_" + valueIndex;
-
-                        mdef.FSM.EntityTable.Add(new FSMEntity
+                        mdef.FSM.EntityTable[i] = new FSMEntity
                         {
                             Label = label,
-                            Value = value,
-                            UniqueValue = uniqueValue
-                        });
+                            Value = labelBuilder.ToString(),
+                            Id = labelhigh
+                        };
                     }
 
                     mdef.FSM.SoundClipTable = new string[adef.ReadUInt32()];
@@ -394,7 +398,7 @@ namespace Assets.Fileparsers
                     }
 
                     var numPaths = adef.ReadUInt32();
-                    mdef.FSM.Paths = new List<FSMPath>();
+                    mdef.FSM.Paths = new FSMPath[numPaths];
                     for (int i = 0; i < numPaths; i++)
                     {
                         var name = adef.ReadCString(40);
@@ -403,15 +407,15 @@ namespace Assets.Fileparsers
                         {
                             nodes[p] = new I76Vector3(adef.ReadSingle(), adef.ReadSingle(), adef.ReadSingle());
                         }
-                        mdef.FSM.Paths.Add(new FSMPath
+                        mdef.FSM.Paths[i] = new FSMPath
                         {
                             Name = name,
                             Nodes = nodes
-                        });
+                        };
                     }
 
-                    mdef.FSM.StackMachines = new List<StackMachine>();
                     var numMachines = adef.ReadUInt32();
+                    mdef.FSM.StackMachines = new StackMachine[numMachines];
                     for (int i = 0; i < numMachines; i++)
                     {
                         var next = adef.BaseStream.Position + 168;
@@ -426,7 +430,7 @@ namespace Assets.Fileparsers
                         }
                         adef.BaseStream.Position = next;
 
-                        mdef.FSM.StackMachines.Add(machine);
+                        mdef.FSM.StackMachines[i] = machine;
                     }
 
                     mdef.FSM.Constants = new int[adef.ReadUInt32()];
