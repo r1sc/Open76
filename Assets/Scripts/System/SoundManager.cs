@@ -301,6 +301,35 @@ namespace Assets.Scripts.System
             return _soundEffectLookup[soundEffect].Clip;
         }
 
+        public void PlaySoundAtObject(SoundEffect soundEffect, Transform transform)
+        {
+            AudioSource audioSource = transform.GetComponent<AudioSource>();
+            if (audioSource == null || audioSource.isPlaying)
+            {
+                audioSource = transform.gameObject.AddComponent<AudioSource>();
+            }
+
+            Gpw gpw = _soundEffectLookup[soundEffect];
+            audioSource.clip = gpw.Clip;
+            audioSource.dopplerLevel = 0f;
+            audioSource.volume = 0.8f;
+
+            if (gpw.AudioRange < 0)
+            {
+                audioSource.spatialize = false;
+                audioSource.spatialBlend = 0f;
+            }
+            else
+            {
+                audioSource.spatialize = true;
+                audioSource.spatialBlend = 1f;
+                audioSource.minDistance = gpw.AudioRange * 0.1f;
+                audioSource.maxDistance = gpw.AudioRange;
+            }
+
+            audioSource.Play();
+        }
+
         private Gpw LoadSoundFile(string fileName)
         {
             return GpwParser.ParseGpw(fileName);

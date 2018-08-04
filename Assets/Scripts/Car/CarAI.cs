@@ -55,7 +55,6 @@ public class CarAI : MonoBehaviour
 
     private const float SteeringSensitivity = 1.5f;
     private const int StartHealth = 100;
-    private const string CarExplodeSoundName = "";
 
     private void Awake()
     {
@@ -204,10 +203,7 @@ public class CarAI : MonoBehaviour
     {
         _rigidBody.AddForce(Vector3.up * _rigidBody.mass * 5f, ForceMode.Impulse);
 
-        // TODO: Find audio file name of explosion sound.
-        /*AudioSource source = GetComponent<AudioSource>();
-        source.clip = VirtualFilesystem.Instance.GetAudioClip("");
-        source.Play();*/
+        SoundManager.Instance.PlaySoundAtObject(SoundEffect.VehicleExplode, transform);
 
         InputCarController inputController = GetComponent<InputCarController>();
         if (inputController != null)

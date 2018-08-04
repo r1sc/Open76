@@ -13,6 +13,10 @@ namespace Assets.Scripts.System
         {
             _radioMessageQueue = new Queue<string>();
             _radioSource = gameObject.AddComponent<AudioSource>();
+            _radioSource.dopplerLevel = 0f;
+            _radioSource.spatialize = false;
+            _radioSource.priority = 0;
+            _radioSource.volume = 0.4f;
         }
 
         private static RadioManager _instance;

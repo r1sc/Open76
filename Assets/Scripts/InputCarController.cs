@@ -17,7 +17,7 @@ namespace Assets
 
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.X))
+            if (Input.GetKeyDown(KeyCode.K))
             {
                 CarAI car = GetComponent<CarAI>();
                 car.Kill();
