@@ -7,6 +7,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using Assets.Car;
 using System.IO;
+using Assets.Scripts.System;
 
 namespace Assets.System
 {
@@ -45,6 +46,7 @@ namespace Assets.System
             VirtualFilesystem.Instance.Init(GamePath);
             _materialCache["default"] = Instantiate(TextureMaterialPrefab);
             Palette = ActPaletteParser.ReadActPalette("p02.act");
+            SoundManager.Instance.PreloadSounds();
             Instance = this;
         }
 
