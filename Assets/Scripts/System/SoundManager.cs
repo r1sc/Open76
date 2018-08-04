@@ -22,7 +22,8 @@ namespace Assets.Scripts.System
         ObjectiveChanged,
         RadioMisc,
         Roger,
-        CriticalWeapon,
+        WeaponCritical,
+        WeaponMissing,
 
         // Drop weapons
         DropBlox,
@@ -97,6 +98,7 @@ namespace Assets.Scripts.System
 
         // Weapons
         Weapon30Cal,
+        Weapon50Cal,
         Weapon762mm,
         Weapon20mm,
         Weapon25mm,
@@ -110,10 +112,14 @@ namespace Assets.Scripts.System
         WeaponGasLauncher,
         WeaponNapalmHose,
         WeaponPyroTomic,
+        WeaponClusterBomb,
+        WeaponTank,
+        WeaponHowitzer,
+        WeaponEZKill,
         WeaponHEMortar,
         WeaponWPMortar,
-        WeaponClusterBomb,
-        WeaponEZKill,
+        WeaponMortar1,
+        WeaponMortar2,
 
         // Explosions
         ExplosionBridge,
@@ -128,14 +134,8 @@ namespace Assets.Scripts.System
         ExplosionMediumVehicle2,
         ExlosionSmallVehicle1,
         ExlosionSmallVehicle2,
-        WeaponTank,
-        WeaponMissing,
-        BulletRicochet2,
         BulletRicochet1,
-        WeaponHowitzer,
-        Weapon50Cal,
-        WeaponMortar1,
-        WeaponMortar2
+        BulletRicochet2
     }
 
     public class SoundManager
@@ -180,7 +180,8 @@ namespace Assets.Scripts.System
             _soundEffectLookup.Add(SoundEffect.ObjectiveChanged, LoadSoundFile("cnote.gpw"));
             _soundEffectLookup.Add(SoundEffect.RadioMisc, LoadSoundFile("cmike.gpw"));
             _soundEffectLookup.Add(SoundEffect.Roger, LoadSoundFile("croger.gpw"));
-            _soundEffectLookup.Add(SoundEffect.CriticalWeapon, LoadSoundFile("cwstat.gpw"));
+            _soundEffectLookup.Add(SoundEffect.WeaponCritical, LoadSoundFile("cwstat.gpw"));
+            _soundEffectLookup.Add(SoundEffect.WeaponMissing, LoadSoundFile("wmiss.gpw"));
 
             // Drop weapons
             _soundEffectLookup.Add(SoundEffect.DropBlox, LoadSoundFile("dblox.gpw"));
@@ -256,31 +257,30 @@ namespace Assets.Scripts.System
             // Weapons
             _soundEffectLookup.Add(SoundEffect.WeaponPyroTomic, LoadSoundFile("wbalflam.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponClusterBomb, LoadSoundFile("wcbl.gpw"));
-            _soundEffectLookup.Add(SoundEffect.WeaponMortar1, LoadSoundFile("wchem.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponCherub, LoadSoundFile("wcherub.gpw"));
-            _soundEffectLookup.Add(SoundEffect.WeaponMortar2, LoadSoundFile("wcvr.gpw"));
-            _soundEffectLookup.Add(SoundEffect.WeaponEZKill, LoadSoundFile("wezk.gpw"));
-            _soundEffectLookup.Add(SoundEffect.WeaponHEMortar, LoadSoundFile("wgl.gpw"));
-            _soundEffectLookup.Add(SoundEffect.WeaponHades, LoadSoundFile("whades.gpw"));
-            _soundEffectLookup.Add(SoundEffect.Weapon30mm, LoadSoundFile("whcan.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponNapalmHose, LoadSoundFile("whflame.gpw"));
+            _soundEffectLookup.Add(SoundEffect.Weapon762mm, LoadSoundFile("wlmgun.gpw"));
+            _soundEffectLookup.Add(SoundEffect.Weapon30Cal, LoadSoundFile("wmmgun.gpw"));
             _soundEffectLookup.Add(SoundEffect.Weapon50Cal, LoadSoundFile("whmgun.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponHowitzer, LoadSoundFile("whowitz.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponDrRadar, LoadSoundFile("whsm.gpw"));
-            _soundEffectLookup.Add(SoundEffect.Weapon20mm, LoadSoundFile("wlcan.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponFlamethrower, LoadSoundFile("wlflame.gpw"));
-            _soundEffectLookup.Add(SoundEffect.Weapon762mm, LoadSoundFile("wlmgun.gpw"));
+            _soundEffectLookup.Add(SoundEffect.Weapon20mm, LoadSoundFile("wlcan.gpw"));
             _soundEffectLookup.Add(SoundEffect.Weapon25mm, LoadSoundFile("wmcan.gpw"));
+            _soundEffectLookup.Add(SoundEffect.Weapon30mm, LoadSoundFile("whcan.gpw"));
+            _soundEffectLookup.Add(SoundEffect.WeaponHades, LoadSoundFile("whades.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponGasLauncher, LoadSoundFile("wmflame.gpw"));
             _soundEffectLookup.Add(SoundEffect.BulletRicochet1, LoadSoundFile("wmgr1.gpw"));
             _soundEffectLookup.Add(SoundEffect.BulletRicochet2, LoadSoundFile("wmgr2.gpw"));
-            _soundEffectLookup.Add(SoundEffect.WeaponMissing, LoadSoundFile("wmiss.gpw"));
-            _soundEffectLookup.Add(SoundEffect.Weapon30Cal, LoadSoundFile("wmmgun.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponAIM, LoadSoundFile("wrhm.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponFireRite, LoadSoundFile("wrock.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponTank, LoadSoundFile("wtank.gpw"));
+            _soundEffectLookup.Add(SoundEffect.WeaponEZKill, LoadSoundFile("wezk.gpw"));
+            _soundEffectLookup.Add(SoundEffect.WeaponHEMortar, LoadSoundFile("wgl.gpw"));
             _soundEffectLookup.Add(SoundEffect.WeaponWPMortar, LoadSoundFile("wwpgl.gpw"));
-            
+            _soundEffectLookup.Add(SoundEffect.WeaponMortar1, LoadSoundFile("wchem.gpw"));
+            _soundEffectLookup.Add(SoundEffect.WeaponMortar2, LoadSoundFile("wcvr.gpw"));
+
             // Explosions
             _soundEffectLookup.Add(SoundEffect.ExplosionBridge, LoadSoundFile("xbridge.gpw"));
             _soundEffectLookup.Add(SoundEffect.ExplosionBuilding, LoadSoundFile("xbuild.gpw"));
