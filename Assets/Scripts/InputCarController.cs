@@ -19,8 +19,7 @@ namespace Assets
         {
             if (Input.GetKeyDown(KeyCode.K))
             {
-                CarAI car = GetComponent<CarAI>();
-                car.Kill();
+                _carAi.Kill();
             }
 
             if (!CameraManager.Instance.IsMainCameraActive || !_carAi.Alive)

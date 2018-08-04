@@ -63,7 +63,11 @@ public class CarAI : MonoBehaviour
         _worldTransform = GameObject.Find("World").transform;
         _car = GetComponent<NewCar>();
         _rigidBody = GetComponent<Rigidbody>();
-        _healthGroups = transform.Find("Chassis/ThirdPerson").childCount;
+
+        if (_transform.childCount > 0)
+        {
+            _healthGroups = _transform.Find("Chassis/ThirdPerson").childCount;
+        }
     }
 
     private void Update()

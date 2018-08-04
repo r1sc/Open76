@@ -20,6 +20,7 @@ namespace Assets
                 var cacheManager = FindObjectOfType<CacheManager>();
                 var importedVcf = cacheManager.ImportVcf(VcfToLoad, true);
                 importedVcf.AddComponent<InputCarController>();
+                importedVcf.AddComponent<CarAI>();
 
                 var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
                 importedVcf.transform.position = spawnPoint.transform.position;
