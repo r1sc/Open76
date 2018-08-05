@@ -38,9 +38,9 @@ namespace Assets.Fileparsers
 
     public class GeoParser
     {
-        public static GeoMesh ReadGeoMesh(string filename)
+        public static GeoMesh ReadGeoMesh(string fileName)
         {
-            using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
+            using (var br = VirtualFilesystem.Instance.GetFileStream(fileName))
             {
                 var mesh = new GeoMesh();
                 var magic = br.ReadCString(4);
@@ -69,7 +69,7 @@ namespace Assets.Fileparsers
                 {
                     var face = new GeoFace();
                     face.Index = br.ReadUInt32();
-                    var numVerticesInFace  = br.ReadUInt32();
+                    var numVerticesInFace = br.ReadUInt32();
                     face.Color = new Color32(br.ReadByte(), br.ReadByte(), br.ReadByte(), 255);
                     face.SurfaceNormal = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     var unk3 = br.ReadUInt32();

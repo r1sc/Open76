@@ -61,7 +61,7 @@ namespace Assets.Fileparsers
                     sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.ParentName = br.ReadCString(8);
-                    br.BaseStream.Seek(56, SeekOrigin.Current);
+                    br.Position += 56;
 
                     sdf.Parts[i] = sdfPart;
                 }

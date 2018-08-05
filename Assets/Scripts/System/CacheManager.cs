@@ -93,7 +93,7 @@ namespace Assets.System
             if (geoFace.TextureName != null)
             {
                 var textureName = Path.GetFileNameWithoutExtension(geoFace.TextureName);
-                if (vtf != null && textureName.StartsWith("V"))
+                if (vtf != null && textureName[0] == 'V')
                 {
                     if (textureName.EndsWith("BO DY"))
                     {
@@ -103,10 +103,9 @@ namespace Assets.System
                     {
                         var key = textureName.Substring(1).Replace(" ", "").Replace("LF", "LT") + ".TMT";
 
-                        if (vtf.Tmts.ContainsKey(key))
+                        Tmt tmt;
+                        if (vtf.Tmts.TryGetValue(key, out tmt))
                         {
-                            //Debug.Log("Vehicle tmt reference: " + geoFace.TextureName + " decoded: " + key);
-                            var tmt = vtf.Tmts[key];
                             textureName = tmt.TextureNames[textureGroup];
                         }
                     }
@@ -126,8 +125,11 @@ namespace Assets.System
 
         private GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf, int textureGroup)
         {
-            if (_meshCache.ContainsKey(filename))
-                return _meshCache[filename];
+            GeoMeshCacheEntry cacheEntry;
+            if (_meshCache.TryGetValue(filename, out cacheEntry))
+            {
+                return cacheEntry;
+            }
 
             var geoMesh = GeoParser.ReadGeoMesh(filename);
 
@@ -135,14 +137,34 @@ namespace Assets.System
             var vertices = new List<Vector3>();
             var uvs = new List<Vector2>();
             var normals = new List<Vector3>();
+            
+            Dictionary<Material, List<GeoFace>> facesGroupedByMaterial = new Dictionary<Material, List<GeoFace>>();
+            GeoFace[] faces = geoMesh.Faces;
+            for (int i = 0; i < faces.Length; ++i)
+            {
+                Material material = GetMaterial(faces[i], vtf, textureGroup);
 
-            var facesGroupedByMaterial = geoMesh.Faces.GroupBy(face => GetMaterial(face, vtf, textureGroup)).ToArray();
-            mesh.subMeshCount = facesGroupedByMaterial.Length;
+                List<GeoFace> faceGroup;
+                if (facesGroupedByMaterial.TryGetValue(material, out faceGroup))
+                {
+                    faceGroup.Add(faces[i]);
+                }
+                else
+                {
+                    facesGroupedByMaterial.Add(material, new List<GeoFace>
+                    {
+                        faces[i]
+                    });
+                }
+            }
+
+            mesh.subMeshCount = facesGroupedByMaterial.Count;
             var submeshTriangles = new Dictionary<Material, List<int>>();
             foreach (var faceGroup in facesGroupedByMaterial)
             {
                 submeshTriangles[faceGroup.Key] = new List<int>();
-                foreach (var face in faceGroup)
+                List<GeoFace> faceGroupValues = faceGroup.Value;
+                foreach (var face in faceGroupValues)
                 {
                     var numTriangles = face.VertexRefs.Length - 3 + 1;
                     var viStart = vertices.Count;
@@ -161,18 +183,17 @@ namespace Assets.System
                 }
             }
 
-            mesh.vertices = vertices.ToArray();
-            mesh.uv = uvs.ToArray();
-            mesh.normals = normals.ToArray();
-            var i = 0;
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            mesh.SetNormals(normals);
+            var subMeshIndex = 0;
             foreach (var submeshTriangle in submeshTriangles)
             {
-                mesh.SetTriangles(submeshTriangles[submeshTriangle.Key].ToArray(), i);
-                i++;
+                mesh.SetTriangles(submeshTriangles[submeshTriangle.Key], subMeshIndex++);
             }
             mesh.RecalculateBounds();
 
-            var cacheEntry = new GeoMeshCacheEntry
+            cacheEntry = new GeoMeshCacheEntry
             {
                 GeoMesh = geoMesh,
                 Mesh = mesh,

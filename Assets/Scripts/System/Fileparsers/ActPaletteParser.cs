@@ -12,7 +12,7 @@ namespace Assets.Fileparsers
     {
         public static Color32[] ReadActPalette(string filename)
         {
-            using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
+            using (var br = VirtualFilesystem.Instance.GetFileStream(filename))
             {
                 var colors = new Color32[256];
                 for (int i = 0; i < 256; i++)
