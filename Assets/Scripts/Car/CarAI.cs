@@ -207,8 +207,6 @@ public class CarAI : MonoBehaviour
     {
         _rigidBody.AddForce(Vector3.up * _rigidBody.mass * 5f, ForceMode.Impulse);
 
-        SoundManager.Instance.PlaySoundAtObject(SoundEffect.VehicleExplode, transform);
-
         InputCarController inputController = GetComponent<InputCarController>();
         if (inputController != null)
         {

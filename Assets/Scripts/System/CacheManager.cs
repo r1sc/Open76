@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Assets.Fileparsers;
 using UnityEngine;
-using Object = UnityEngine.Object;
 using Assets.Car;
 using System.IO;
-using Assets.Scripts.System;
 
 namespace Assets.System
 {
@@ -25,9 +21,7 @@ namespace Assets.System
         public Material TextureMaterialPrefab;
         public Material TransparentMaterialPrefab;
         public Color32[] Palette;
-
-        public static CacheManager Instance { get; private set; }
-
+        
         private readonly string[] _bannedNames =
         {
             "51CMP3",
@@ -46,8 +40,6 @@ namespace Assets.System
             VirtualFilesystem.Instance.Init(GamePath);
             _materialCache["default"] = Instantiate(TextureMaterialPrefab);
             Palette = ActPaletteParser.ReadActPalette("p02.act");
-            SoundManager.Instance.PreloadSounds();
-            Instance = this;
         }
 
         public Texture2D GetTexture(string textureName)

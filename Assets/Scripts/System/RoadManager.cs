@@ -72,48 +72,53 @@ namespace Assets.Scripts.System
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            var roadMaterial = CacheManager.Instance.GetTextureMaterial(roadTextureFilename, false);
+
+            CacheManager cacheManager = UnityEngine.Object.FindObjectOfType<CacheManager>();
+            Material roadMaterial = cacheManager.GetTextureMaterial(roadTextureFilename, false);
             meshRenderer.material = roadMaterial;
 
             var mesh = new Mesh();
-            var vertices = new List<Vector3>();
-            var uvs = new List<Vector2>();
+            Vector3[] vertices = new Vector3[parsedRoad.RoadSegments.Length * 2];
+            Vector2[] uvs = new Vector2[parsedRoad.RoadSegments.Length * 2];
             Road roadEntity = roadGo.AddComponent<Road>();
             Vector3[] midPoints = new Vector3[parsedRoad.RoadSegments.Length];
             roadEntity.Segments = midPoints;
 
             var uvIdx = 0;
+            var vertexIndex = 0;
             foreach (var roadSegment in parsedRoad.RoadSegments)
             {
-                vertices.Add(roadSegment.Left);
-                vertices.Add(roadSegment.Right);
+                vertices[vertexIndex] = roadSegment.Left;
+                vertices[vertexIndex + 1] = roadSegment.Right;
 
-                uvs.Add(new Vector2(0, uvIdx));
-                uvs.Add(new Vector2(1, uvIdx));
+                uvs[vertexIndex] = new Vector2(0, uvIdx);
+                uvs[vertexIndex + 1] = new Vector2(1, uvIdx);
 
                 Vector3 midPoint = (roadSegment.Left + roadSegment.Right) * 0.5f;
                 roadEntity.Segments[uvIdx] = midPoint - new Vector3(worldMiddle.x, 0f, worldMiddle.y);
 
                 uvIdx += 1;
+                vertexIndex += 2;
             }
 
-            var indices = new List<int>();
+            int[] indices = new int[(vertices.Length - 2) * 3];
             var idx = 0;
-            for (int i = 0; i < (vertices.Count - 2) / 2; i++)
+            var indexCount = 0;
+            for (int i = 0; i < indices.Length; i += 6)
             {
-                indices.Add(idx + 2);
-                indices.Add(idx + 1);
-                indices.Add(idx);
+                indices[i] = idx + 2;
+                indices[i + 1] = idx + 1;
+                indices[i + 2] = idx;
 
-                indices.Add(idx + 2);
-                indices.Add(idx + 3);
-                indices.Add(idx + 1);
+                indices[i + 3] = idx + 2;
+                indices[i + 4] = idx + 3;
+                indices[i + 5] = idx + 1;
                 idx += 2;
             }
 
-            mesh.vertices = vertices.ToArray();
-            mesh.triangles = indices.ToArray();
-            mesh.uv = uvs.ToArray();
+            mesh.vertices = vertices;
+            mesh.triangles = indices;
+            mesh.uv = uvs;
             mesh.RecalculateNormals();
             meshFilter.sharedMesh = mesh;
             meshCollider.sharedMesh = mesh;
