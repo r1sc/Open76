@@ -2,14 +2,6 @@
 
 #include "smacker.h"
 
-struct Color32
-{
-	unsigned char R;
-	unsigned char G;
-	unsigned char B;
-	unsigned char A;
-};
-
 const int MaxAudioTracks = 7;
 
 struct SmkAudioData
@@ -31,7 +23,7 @@ extern "C"
 	__declspec(dllexport) void DisposeFile(smk smkFileHandle);
 
 	// Fill Color32 buffer with current frame's data.
-	__declspec(dllexport) void GetFrameData(smk smkFileHandle, Color32* buffer, unsigned int bufferSize);
+	__declspec(dllexport) void GetFrameData(smk smkFileHandle, unsigned char* buffer, unsigned int bufferSize);
 
 	// Attempt to advance to the next frame, returns false if there are no more frames.
 	__declspec(dllexport) bool AdvanceFrame(smk smkFileHandle);

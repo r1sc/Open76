@@ -33,7 +33,7 @@ public class VideoPlayer : MonoBehaviour
     [DllImport("libsmacker")]
     private static extern void DisposeAudioData(IntPtr audioDataHandle);
     [DllImport("libsmacker")]
-    private static extern unsafe void GetFrameData(IntPtr smkFileHandle, Color32* buffer, uint bufferSize);
+    private static extern void GetFrameData(IntPtr smkFileHandle, [In, Out] byte[] buffer, uint bufferSize);
     [DllImport("libsmacker")]
     private static extern bool AdvanceFrame(IntPtr smkFileHandle);
 
@@ -41,7 +41,8 @@ public class VideoPlayer : MonoBehaviour
     public RawImage OutputImage;
 
     private IntPtr _videoFileHandle;
-    private Color32[] _frameBuffer;
+    private byte[] _frameBuffer;
+    private Color32[] _frameColors;
     private Texture2D _outputTexture;
     private int _width;
     private int _height;
@@ -60,6 +61,11 @@ public class VideoPlayer : MonoBehaviour
         GameObject game = GameObject.Find("Game");
         CacheManager cacheManager = game.GetComponent<CacheManager>();
         string videoFolder = Path.Combine(cacheManager.GamePath, "CUTSCENE");
+        if (!Directory.Exists(videoFolder))
+        {
+            videoFolder = Path.Combine(cacheManager.GamePath, "smk"); // GoG version
+        }
+
         string filePath = Path.Combine(videoFolder, VideoFile);
 
         if (!File.Exists(filePath))
@@ -88,7 +94,8 @@ public class VideoPlayer : MonoBehaviour
             return;
         }
 
-        _frameBuffer = new Color32[_width * _height];
+        _frameBuffer = new byte[_width * _height * 3];
+        _frameColors = new Color32[_width * _height];
         _outputTexture = new Texture2D(_width, _height, TextureFormat.RGB24, false)
         {
             wrapMode = TextureWrapMode.Clamp,
@@ -105,7 +112,7 @@ public class VideoPlayer : MonoBehaviour
         StartCoroutine(PlayVideo());
     }
 
-    private unsafe void LoadAudio()
+    private void LoadAudio()
     {
         IntPtr audioDataHandle = GetAudioData(_videoFileHandle);
         if (audioDataHandle == IntPtr.Zero)
@@ -126,12 +133,13 @@ public class VideoPlayer : MonoBehaviour
             int trackSize = audioData.AudioDataSize[i];
             float[] audioSamples = new float[trackSize];
 
-            byte* nativeAudioData = (byte*)audioData.AudioData[i].ToPointer();
+            byte[] audioBytes = new byte[audioData.AudioDataSize[i]];
+            Marshal.Copy(audioData.AudioData[i], audioBytes, 0, audioData.AudioDataSize[i]);
             
-            // This probably won't work if the bit depth isn't 8 but most likely all the files use the same audio settings anyway.
+            // All the SMK files use 8-bit audio so we can simply divide by 255 to get the float value.
             for (int j = 0; j < trackSize; ++j)
             {
-                audioSamples[j] = nativeAudioData[j] / 255f;
+                audioSamples[j] = audioBytes[j] / 255f;
             }
 
             AudioSource audioSource = gameObject.AddComponent<AudioSource>();
@@ -145,24 +153,26 @@ public class VideoPlayer : MonoBehaviour
         DisposeAudioData(audioDataHandle);
     }
 
-    private unsafe void ReadFrame()
-    {
-        fixed (Color32* framePtr = _frameBuffer)
-        {
-            GetFrameData(_videoFileHandle, framePtr, (uint)_frameBuffer.Length);
-        }
-    }
-
     private IEnumerator PlayVideo()
     {
+        int frameSize = _width * _height * 3;
         while (_videoFileHandle != IntPtr.Zero)
         {
             _videoTimer += Time.deltaTime;
             while (_videoTimer > 0f)
             {
-                ReadFrame();
+                GetFrameData(_videoFileHandle, _frameBuffer, (uint)_frameBuffer.Length);
 
-                _outputTexture.SetPixels32(_frameBuffer);
+                int colorIndex = 0;
+                for (int i = 0; i < frameSize; i += 3)
+                {
+                    _frameColors[colorIndex].r = _frameBuffer[i];
+                    _frameColors[colorIndex].g = _frameBuffer[i + 1];
+                    _frameColors[colorIndex].b = _frameBuffer[i + 2];
+                    ++colorIndex;
+                }
+
+                _outputTexture.SetPixels32(_frameColors);
                 _outputTexture.Apply(false, false);
 
                 if (!AdvanceFrame(_videoFileHandle))

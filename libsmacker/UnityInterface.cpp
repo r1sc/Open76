@@ -43,7 +43,7 @@ void DisposeFile(smk smkFileHandle)
 	smk_close(smkFileHandle);
 }
 
-void GetFrameData(smk smkFileHandle, Color32* buffer, unsigned int bufferSize)
+void GetFrameData(smk smkFileHandle, unsigned char* buffer, unsigned int bufferSize)
 {
 	if (smkFileHandle == nullptr)
 	{
@@ -59,7 +59,7 @@ void GetFrameData(smk smkFileHandle, Color32* buffer, unsigned int bufferSize)
 	smk_info_video(smkFileHandle, &width, &height, nullptr);
 
 	// Quick bounds check.
-	if (bufferSize < width * height)
+	if (bufferSize < width * height * 3)
 	{
 		return;
 	}
@@ -71,10 +71,9 @@ void GetFrameData(smk smkFileHandle, Color32* buffer, unsigned int bufferSize)
 		for (unsigned long w = 0; w < width; ++w)
 		{
 			const int frameIndex = frameData[(h * width) + w] * 3;
-			buffer[pixelIndex].R = palleteData[frameIndex];
-			buffer[pixelIndex].G = palleteData[frameIndex + 1];
-			buffer[pixelIndex].B = palleteData[frameIndex + 2];
-			++pixelIndex;
+			buffer[pixelIndex++] = palleteData[frameIndex];
+			buffer[pixelIndex++] = palleteData[frameIndex + 1];
+			buffer[pixelIndex++] = palleteData[frameIndex + 2];
 		}
 	}
 }
