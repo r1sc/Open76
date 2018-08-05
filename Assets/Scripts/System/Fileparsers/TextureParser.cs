@@ -16,31 +16,25 @@ namespace Assets.Fileparsers
 
         public static Texture2D ReadMapTexture(string filename, Color32[] palette)
         {
-            filename = filename.ToLower();
-            if (TextureCache.ContainsKey(filename))
-                return TextureCache[filename];
-
-            if (!VirtualFilesystem.Instance.FileExists(filename))
+            Texture2D texture;
+            if (TextureCache.TryGetValue(filename, out texture))
             {
-                Debug.LogWarning("MAP Texture not found: " + filename);
-                return Texture2D.blackTexture;
+                return texture;
             }
 
-            //Debug.Log("Loading texture: " + filename);
-
             var hasTransparency = false;
-            using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
+            using (var br = VirtualFilesystem.Instance.GetFileStream(filename))
             {
                 var width = br.ReadInt32();
                 var height = br.ReadInt32();
                 int pixelSize = width * height;
-                var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
+                texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
                 {
                     filterMode = FilterMode,
                     wrapMode = TextureWrapMode.Repeat
                 };
 
-                int readLimit = (int)Math.Min(br.BaseStream.Length - br.BaseStream.Position, pixelSize);
+                int readLimit = (int)Math.Min(br.Length - br.Position, pixelSize);
                 if (readLimit > 0)
                 {
                     byte[] paletteBytes = br.ReadBytes(readLimit);
@@ -78,7 +72,6 @@ namespace Assets.Fileparsers
                 
                 if(hasTransparency)
                 {
-                    texture.alphaIsTransparency = true;
                     texture.wrapMode = TextureWrapMode.Clamp;
                 }
                 texture.Apply(true);
@@ -89,22 +82,18 @@ namespace Assets.Fileparsers
 
         public static Texture2D ReadVqmTexture(string filename, Color32[] palette)
         {
-            filename = filename.ToLower();
-            if (TextureCache.ContainsKey(filename))
-                return TextureCache[filename];
-
-            if (!VirtualFilesystem.Instance.FileExists(filename))
+            Texture2D texture;
+            if (TextureCache.TryGetValue(filename, out texture))
             {
-                Debug.LogWarning("VQM Texture not found: " + filename);
                 return Texture2D.blackTexture;
             }
 
-            using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(filename)))
+            using (var br = VirtualFilesystem.Instance.GetFileStream(filename))
             {
                 var width = br.ReadInt32();
                 var height = br.ReadInt32();
                 var pixels = width * height;
-                var texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
+                texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
                 {
                     filterMode = FilterMode,
                     wrapMode = TextureWrapMode.Repeat
@@ -112,17 +101,17 @@ namespace Assets.Fileparsers
                 var cbkFile = br.ReadCString(12);
                 var unk1 = br.ReadInt32();
                 bool hasTransparency = false;
-
+                
                 if (VirtualFilesystem.Instance.FileExists(cbkFile))
                 {
                     Color32[] pixelBuffer = new Color32[pixels];
-                    using (var cbkBr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(cbkFile)))
+                    using (var cbkBr = VirtualFilesystem.Instance.GetFileStream(cbkFile))
                     {
                         var x = 0;
                         var y = 0;
 
                         var byteIndex = 0;
-                        var byteLength = cbkBr.BaseStream.Length - cbkBr.BaseStream.Position;
+                        var byteLength = cbkBr.Length - cbkBr.Position;
                         byte[] data = br.ReadBytes((int)byteLength);
                         while (byteIndex < byteLength)
                         {
@@ -131,7 +120,7 @@ namespace Assets.Fileparsers
 
                             if ((index & 0x8000) == 0)
                             {
-                                cbkBr.BaseStream.Position = 4 + index * 16;
+                                cbkBr.Position = 4 + index * 16;
                                 byte[] cbkData = cbkBr.ReadBytes(16);
                                 for (int sy = 0; sy < 4; sy++)
                                 {
@@ -189,7 +178,6 @@ namespace Assets.Fileparsers
 
                 if (hasTransparency)
                 {
-                    texture.alphaIsTransparency = true;
                     texture.wrapMode = TextureWrapMode.Clamp;
                 }
                 texture.Apply(true);

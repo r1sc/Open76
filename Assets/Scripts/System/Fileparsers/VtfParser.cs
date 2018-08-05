@@ -104,7 +104,7 @@ namespace Assets.Fileparsers
                 var tmtFilename = vtf.TmtFilenames[tmtIdx];
                 if (tmtFilename != "NULL")
                 {
-                    using (var br = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(tmtFilename)))
+                    using (var br = VirtualFilesystem.Instance.GetFileStream(tmtFilename))
                     {
                         var one = br.ReadUInt32();
                         var zero1 = br.ReadUInt32();
@@ -127,7 +127,8 @@ namespace Assets.Fileparsers
                         {
                             TextureNames = new List<string>()
                         };
-                        while(br.BaseStream.Position < br.BaseStream.Length)
+
+                        while(br.Position < br.Length)
                         {
                             var textureName = br.ReadCString(8);
                             tmt.TextureNames.Add(textureName);
