@@ -1,4 +1,5 @@
-﻿using Assets.System;
+﻿using Assets.Scripts.Camera;
+using Assets.System;
 using UnityEngine;
 
 namespace Assets
@@ -19,12 +20,13 @@ namespace Assets
                 var cacheManager = FindObjectOfType<CacheManager>();
                 var importedVcf = cacheManager.ImportVcf(VcfToLoad, true);
                 importedVcf.AddComponent<InputCarController>();
+                importedVcf.AddComponent<CarAI>();
 
                 var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
                 importedVcf.transform.position = spawnPoint.transform.position;
                 importedVcf.transform.rotation = spawnPoint.transform.rotation;
 
-                FindObjectOfType<SmoothFollow>().Target = importedVcf.transform;
+                CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = importedVcf.transform;
             }
         }
 

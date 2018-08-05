@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Assets;
 using Assets.Fileparsers;
+using Assets.Scripts.Camera;
 using UnityEngine;
 using Assets.System;
 
@@ -28,7 +29,7 @@ namespace Assets
         void Update()
         {
             _material.mainTextureOffset += Speed * Time.deltaTime;
-            transform.position = Camera.main.transform.position + Vector3.up * Height;
+            transform.position = CameraManager.Instance.ActiveCamera.transform.position + Vector3.up * Height;
         }
     }
 }

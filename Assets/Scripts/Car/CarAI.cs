@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Assets;
 using Assets.Car;
 using Assets.Scripts.I76Types;
 using Assets.Scripts.System;
@@ -21,28 +22,72 @@ public class CarAI : MonoBehaviour
     private Road _currentRoad;
     private Vector3 _targetRoadSegment;
     private Vector3 _nextRoadSegment;
+    private int _healthGroups;
+    private int _health;
 
     public bool Arrived { get; set; }
-    public bool Alive { get; private set; }
+    public bool Alive
+    {
+        get { return _health > 0; }
+    }
     public bool Attacked { get; private set; }
-    public int Health { get; private set; }
     public int TeamId { get; set; }
+    
+    public int Health
+    {
+        get { return _health; }
+        private set
+        {
+            if (_health <= 0)
+            {
+                return;
+            }
+
+            _health = value;
+            SetHealthGroup(_healthGroups - Mathf.FloorToInt((float)_health / (StartHealth + 1) * _healthGroups));
+
+            if (_health <= 0)
+            {
+                Explode();
+            }
+        }
+    }
 
     private const float SteeringSensitivity = 1.5f;
+    private const int StartHealth = 100;
 
     private void Awake()
     {
-        Alive = true;
         _transform = transform;
-        Health = 100;
+        _health = StartHealth;
         _worldTransform = GameObject.Find("World").transform;
         _car = GetComponent<NewCar>();
         _rigidBody = GetComponent<Rigidbody>();
+
+        if (_transform.childCount > 0)
+        {
+            _healthGroups = _transform.Find("Chassis/ThirdPerson").childCount;
+        }
     }
 
     private void Update()
     {
+        if (_health <= 0)
+        {
+            return;
+        }
+
         Navigate();
+    }
+
+    private void SetHealthGroup(int healthGroupIndex)
+    {
+        Transform parent = transform.Find("Chassis/ThirdPerson");
+        for (int i = 0; i < _healthGroups; ++i)
+        {
+            Transform child = parent.GetChild(i);
+            child.gameObject.SetActive(healthGroupIndex == i + 1);
+        }
     }
 
     private void Navigate()
@@ -158,6 +203,33 @@ public class CarAI : MonoBehaviour
         }
     }
 
+    private void Explode()
+    {
+        _rigidBody.AddForce(Vector3.up * _rigidBody.mass * 5f, ForceMode.Impulse);
+
+        InputCarController inputController = GetComponent<InputCarController>();
+        if (inputController != null)
+        {
+            Destroy(inputController);
+        }
+
+        NewCar carPhysics = GetComponent<NewCar>();
+        if (carPhysics != null)
+        {
+            Destroy(carPhysics);
+        }
+
+        Destroy(transform.Find("FrontLeft").gameObject);
+        Destroy(transform.Find("FrontRight").gameObject);
+        Destroy(transform.Find("BackLeft").gameObject);
+        Destroy(transform.Find("BackRight").gameObject);
+    }
+
+    public void Kill()
+    {
+        Health = 0;
+    }
+
     public void Sit()
     {
         _car.Brake = 1.0f;
@@ -166,7 +238,7 @@ public class CarAI : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (_currentPath == null)
+        if (_currentPath == null || _health <= 0)
         {
             return;
         }

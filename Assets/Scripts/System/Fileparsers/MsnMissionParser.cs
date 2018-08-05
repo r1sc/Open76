@@ -349,102 +349,108 @@ namespace Assets.Fileparsers
                 using (var adef = new Bwd2Reader(msn))
                 {
                     adef.FindNext("FSM");
-                    mdef.FSM = new FSM();
-
-                    mdef.FSM.ActionTable = new string[adef.ReadUInt32()];
-                    for (int i = 0; i < mdef.FSM.ActionTable.Length; i++)
+                    if (adef.Current != null && adef.Current.DataLength > 0)
                     {
-                        mdef.FSM.ActionTable[i] = adef.ReadCString(40);
-                    }
+                        mdef.FSM = new FSM();
 
-                    var numEntities = adef.ReadUInt32();
-                    mdef.FSM.EntityTable = new FSMEntity[numEntities];
-
-                    for (int i = 0; i < numEntities; i++)
-                    {
-                        var label = adef.ReadCString(40);
-                        var rawlabel = adef.ReadBytes(8);
-
-                        int labelhigh = 0;
-                        StringBuilder labelBuilder = new StringBuilder();
-                        for (int j = 0; j < 8; j++)
+                        mdef.FSM.ActionTable = new string[adef.ReadUInt32()];
+                        for (int i = 0; i < mdef.FSM.ActionTable.Length; i++)
                         {
-                            var v = rawlabel[j];
-                            if (v > 0x7f)
+                            mdef.FSM.ActionTable[i] = adef.ReadCString(40);
+                        }
+
+                        var numEntities = adef.ReadUInt32();
+                        mdef.FSM.EntityTable = new FSMEntity[numEntities];
+
+                        for (int i = 0; i < numEntities; i++)
+                        {
+                            var label = adef.ReadCString(40);
+                            var rawlabel = adef.ReadBytes(8);
+
+                            int labelhigh = 0;
+                            StringBuilder labelBuilder = new StringBuilder();
+                            for (int j = 0; j < 8; j++)
                             {
-                                labelhigh = (labelhigh << 1) | 0x01;
+                                var v = rawlabel[j];
+                                if (v > 0x7f)
+                                {
+                                    labelhigh = (labelhigh << 1) | 0x01;
+                                }
+                                else
+                                {
+                                    labelhigh = (labelhigh << 1) & 0xfe;
+                                }
+
+                                v = (byte) (v & 0x7f);
+                                if (v != 0)
+                                    labelBuilder.Append((char) v);
                             }
-                            else
+
+                            mdef.FSM.EntityTable[i] = new FSMEntity
                             {
-                                labelhigh = (labelhigh << 1) & 0xfe;
+                                Label = label,
+                                Value = labelBuilder.ToString(),
+                                Id = labelhigh
+                            };
+                        }
+
+                        mdef.FSM.SoundClipTable = new string[adef.ReadUInt32()];
+                        for (int i = 0; i < mdef.FSM.SoundClipTable.Length; i++)
+                        {
+                            mdef.FSM.SoundClipTable[i] = adef.ReadCString(40);
+                        }
+
+                        var numPaths = adef.ReadUInt32();
+                        mdef.FSM.Paths = new FSMPath[numPaths];
+                        for (int i = 0; i < numPaths; i++)
+                        {
+                            var name = adef.ReadCString(40);
+                            var nodes = new I76Vector3[adef.ReadUInt32()];
+                            for (int p = 0; p < nodes.Length; p++)
+                            {
+                                nodes[p] = new I76Vector3(adef.ReadSingle(), adef.ReadSingle(), adef.ReadSingle());
                             }
-                            v = (byte)(v & 0x7f);
-                            if (v != 0)
-                                labelBuilder.Append((char)v);
+
+                            mdef.FSM.Paths[i] = new FSMPath
+                            {
+                                Name = name,
+                                Nodes = nodes
+                            };
                         }
 
-                        mdef.FSM.EntityTable[i] = new FSMEntity
+                        var numMachines = adef.ReadUInt32();
+                        mdef.FSM.StackMachines = new StackMachine[numMachines];
+                        for (int i = 0; i < numMachines; i++)
                         {
-                            Label = label,
-                            Value = labelBuilder.ToString(),
-                            Id = labelhigh
-                        };
-                    }
+                            var next = adef.BaseStream.Position + 168;
 
-                    mdef.FSM.SoundClipTable = new string[adef.ReadUInt32()];
-                    for (int i = 0; i < mdef.FSM.SoundClipTable.Length; i++)
-                    {
-                        mdef.FSM.SoundClipTable[i] = adef.ReadCString(40);
-                    }
+                            var machine = new StackMachine();
+                            machine.StartAddress = adef.ReadUInt32();
+                            machine.InitialArguments = new int[adef.ReadUInt32()];
 
-                    var numPaths = adef.ReadUInt32();
-                    mdef.FSM.Paths = new FSMPath[numPaths];
-                    for (int i = 0; i < numPaths; i++)
-                    {
-                        var name = adef.ReadCString(40);
-                        var nodes = new I76Vector3[adef.ReadUInt32()];
-                        for (int p = 0; p < nodes.Length; p++)
-                        {
-                            nodes[p] = new I76Vector3(adef.ReadSingle(), adef.ReadSingle(), adef.ReadSingle());
+                            for (int j = 0; j < machine.InitialArguments.Length; j++)
+                            {
+                                machine.InitialArguments[j] = adef.ReadInt32();
+                            }
+
+                            adef.BaseStream.Position = next;
+
+                            mdef.FSM.StackMachines[i] = machine;
                         }
-                        mdef.FSM.Paths[i] = new FSMPath
+
+                        mdef.FSM.Constants = new int[adef.ReadUInt32()];
+                        for (int i = 0; i < mdef.FSM.Constants.Length; i++)
                         {
-                            Name = name,
-                            Nodes = nodes
-                        };
-                    }
-
-                    var numMachines = adef.ReadUInt32();
-                    mdef.FSM.StackMachines = new StackMachine[numMachines];
-                    for (int i = 0; i < numMachines; i++)
-                    {
-                        var next = adef.BaseStream.Position + 168;
-
-                        var machine = new StackMachine();
-                        machine.StartAddress = adef.ReadUInt32();
-                        machine.InitialArguments = new int[adef.ReadUInt32()];
-
-                        for (int j = 0; j < machine.InitialArguments.Length; j++)
-                        {
-                            machine.InitialArguments[j] = adef.ReadInt32();
+                            mdef.FSM.Constants[i] = adef.ReadInt32();
                         }
-                        adef.BaseStream.Position = next;
 
-                        mdef.FSM.StackMachines[i] = machine;
-                    }
-
-                    mdef.FSM.Constants = new int[adef.ReadUInt32()];
-                    for (int i = 0; i < mdef.FSM.Constants.Length; i++)
-                    {
-                        mdef.FSM.Constants[i] = adef.ReadInt32();
-                    }
-
-                    mdef.FSM.ByteCode = new ByteCode[adef.ReadUInt32()];
-                    for (int i = 0; i < mdef.FSM.ByteCode.Length; i++)
-                    {
-                        var byteCode = mdef.FSM.ByteCode[i] = new ByteCode();
-                        byteCode.OpCode = (OpCode)adef.ReadUInt32();
-                        byteCode.Value = adef.ReadInt32();
+                        mdef.FSM.ByteCode = new ByteCode[adef.ReadUInt32()];
+                        for (int i = 0; i < mdef.FSM.ByteCode.Length; i++)
+                        {
+                            var byteCode = mdef.FSM.ByteCode[i] = new ByteCode();
+                            byteCode.OpCode = (OpCode) adef.ReadUInt32();
+                            byteCode.Value = adef.ReadInt32();
+                        }
                     }
                 }
             }

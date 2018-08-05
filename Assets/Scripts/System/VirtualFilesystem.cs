@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace Assets.System
 {
@@ -159,6 +160,28 @@ namespace Assets.System
         public bool FileExists(string filename)
         {
             return _files.ContainsKey(filename.ToLower());
+        }
+
+        public AudioClip GetAudioClip(string filename)
+        {
+            if (!FileExists(filename))
+            {
+                Debug.Log("File '" + filename + "' does not exist.");
+                return null;
+            }
+
+            if (!filename.ToLower().EndsWith("wav"))
+            {
+                Debug.Log("File is not an audio file.");
+                return null;
+            }
+
+            using (Stream stream = GetFileStream(filename))
+            {
+                byte[] data = new byte[stream.Length];
+                stream.Read(data, 0, (int)stream.Length);
+                return WavUtility.ToAudioClip(data, 0, filename);
+            }
         }
 
         public Stream GetFileStream(string filename)

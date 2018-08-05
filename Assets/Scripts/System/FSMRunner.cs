@@ -44,7 +44,7 @@ namespace Assets.Scripts.System
             }
         }
 
-        private void FixedUpdate()
+        private void LateUpdate()
         {
             if (FSM == null)
             {

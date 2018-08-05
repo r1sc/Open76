@@ -1,8 +1,5 @@
 ﻿using Assets.Car;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Assets.Scripts.Camera;
 using UnityEngine;
 
 namespace Assets
@@ -10,14 +7,26 @@ namespace Assets
     class InputCarController : MonoBehaviour
     {
         private NewCar _car;
+        private CarAI _carAi;
 
         void Start()
         {
             _car = GetComponent<NewCar>();
+            _carAi = GetComponent<CarAI>();
         }
 
         void Update()
         {
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                _carAi.Kill();
+            }
+
+            if (!CameraManager.Instance.IsMainCameraActive || !_carAi.Alive)
+            {
+                return;
+            }
+
             var throttle = Input.GetAxis("Vertical");
             var brake = -Mathf.Min(0, throttle);
             throttle = Mathf.Max(0, throttle);
