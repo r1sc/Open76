@@ -224,11 +224,19 @@ namespace Assets.System
 
             if (fileInfo.Compression == 0)
             {
-                return new FastBinaryReader(_zfsMemory)
+                FastBinaryReader br = new FastBinaryReader(_zfsMemory)
                 {
                     Position = fileInfo.Offset,
                     Length = (int)(fileInfo.Offset + fileInfo.Length)
                 };
+
+                if (originalFile != null)
+                {
+                    br.Position += originalFile.Offset;
+                    br.Length = (int)(br.Position + originalFile.Length);
+                }
+
+                return br;
             }
 
             CompressionAlgorithm compressionAlgorithm;
