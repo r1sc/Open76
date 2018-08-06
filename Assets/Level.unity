@@ -776,7 +776,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0008be089dc6eb6428b105d939845780, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GamePath: C:\Games\Interstate 76 Arsenal\interstate 76
+  GamePath: C:\Users\admin\Desktop\Interstate 76\I76_DISK1
   _3DObjectPrefab: {fileID: 1723168424737596, guid: eb7818e377de6054c9bf402b84889e40,
     type: 2}
   NoColliderPrefab: {fileID: 1723168424737596, guid: 847602bb3013513499142ad90578e09d,

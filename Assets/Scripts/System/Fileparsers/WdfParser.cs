@@ -60,12 +60,12 @@ namespace Assets.Fileparsers
                     sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.ParentName = br.ReadCString(8);
-                    br.BaseStream.Seek(36, SeekOrigin.Current);
+                    br.Position += 36;
 
                     wdf.Parts[i] = sdfPart;
                 }
 
-                br.BaseStream.Seek(-16, SeekOrigin.Current);
+                br.Position -= 16;
                 wdf.Radius = br.ReadSingle();
 
                 return wdf;

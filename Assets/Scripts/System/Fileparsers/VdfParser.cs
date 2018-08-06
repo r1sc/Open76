@@ -123,13 +123,13 @@ namespace Assets.Fileparsers
                         sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                         sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                         sdfPart.ParentName = br.ReadCString(8);
-                        br.BaseStream.Seek(36, SeekOrigin.Current);
+                        br.Position += 36;
 
                         parts[i] = sdfPart;
                     }
                     vdf.PartsThirdPerson.Add(parts);
                 }
-                br.BaseStream.Seek(100 * numParts * 12, SeekOrigin.Current);
+                br.Position += 100 * numParts * 12;
 
                 vdf.PartsFirstPerson = new SdfPart[numParts];
                 for (int i = 0; i < numParts; i++)
@@ -141,7 +141,7 @@ namespace Assets.Fileparsers
                     sdfPart.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.ParentName = br.ReadCString(8);
-                    br.BaseStream.Seek(36, SeekOrigin.Current);
+                    br.Position += 36;
 
                     vdf.PartsFirstPerson[i] = sdfPart;
                 }

@@ -112,7 +112,7 @@ namespace Assets.Fileparsers
                 using (var wdef = new Bwd2Reader(msn))
                 {
                     wdef.FindNext("WRLD");
-                    wdef.BaseStream.Seek(30, SeekOrigin.Current);
+                    wdef.Position += 30;
                     mdef.PaletteFilePath = wdef.ReadCString(13);
                     mdef.LumaTableFilePath = wdef.ReadCString(13);
                     mdef.XlucencyTableFilePath = wdef.ReadCString(13);
@@ -136,7 +136,7 @@ namespace Assets.Fileparsers
                     var unk = tdef.ReadByte();
                     var terrainFilePath = tdef.ReadCString(13);
 
-                    using (var terr = new BinaryReader(VirtualFilesystem.Instance.GetFileStream(terrainFilePath)))
+                    using (var terr = VirtualFilesystem.Instance.GetFileStream(terrainFilePath))
                     {
                         for (var i = 0; i < numUniqueTerrainPatches; i++)
                         {
@@ -294,7 +294,7 @@ namespace Assets.Fileparsers
                         var forward = new Vector3(odef.ReadSingle(), odef.ReadSingle(), odef.ReadSingle());
                         var pos = new Vector3(odef.ReadSingle(), odef.ReadSingle(), odef.ReadSingle());
 
-                        odef.BaseStream.Position += 36;
+                        odef.Position += 36;
                         var classId = (ClassId)odef.ReadUInt32();
                         odef.ReadUInt16();
                         var teamId = odef.ReadUInt16();
@@ -323,7 +323,7 @@ namespace Assets.Fileparsers
                     while (ldef.Current != null && ldef.Current.Name != "EXIT")
                     {
                         var label = ldef.ReadCString(8);
-                        ldef.BaseStream.Position += 84;
+                        ldef.Position += 84;
                         var classId = (ClassId)ldef.ReadUInt32();
                         ldef.ReadUInt32();
                         var numStrings = ldef.ReadUInt32();
@@ -422,7 +422,7 @@ namespace Assets.Fileparsers
                         mdef.FSM.StackMachines = new StackMachine[numMachines];
                         for (int i = 0; i < numMachines; i++)
                         {
-                            var next = adef.BaseStream.Position + 168;
+                            var next = adef.Position + 168;
 
                             var machine = new StackMachine();
                             machine.StartAddress = adef.ReadUInt32();
@@ -433,7 +433,7 @@ namespace Assets.Fileparsers
                                 machine.InitialArguments[j] = adef.ReadInt32();
                             }
 
-                            adef.BaseStream.Position = next;
+                            adef.Position = next;
 
                             mdef.FSM.StackMachines[i] = machine;
                         }

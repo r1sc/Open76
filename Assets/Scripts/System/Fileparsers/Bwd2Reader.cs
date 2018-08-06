@@ -5,10 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Assets.Scripts.System;
 
 namespace Assets.Fileparsers
 {
-    public sealed class Bwd2Reader : BinaryReader
+    public sealed class Bwd2Reader : FastBinaryReader
     {
         public class Tag
         {
@@ -22,13 +23,13 @@ namespace Assets.Fileparsers
         private readonly Tag _root;
         public Tag Current;
         
-        public Bwd2Reader(Stream stream) : base(stream)
+        public Bwd2Reader(FastBinaryReader reader) : base(new FastBinaryReader(reader))
         {
-            while (BaseStream.Position < BaseStream.Length)
+            while (Position < Length)
             {
-                var tagName = this.ReadCString(4);
+                var tagName = ReadCString(4);
                 var dataLength = ReadUInt32() - 8;
-                var tag = new Tag { Name = tagName, DataPosition = BaseStream.Position, DataLength = dataLength };
+                var tag = new Tag { Name = tagName, DataPosition = Position, DataLength = dataLength };
                 if (_root == null)
                 {
                     Current = _root = tag;
@@ -38,12 +39,13 @@ namespace Assets.Fileparsers
                     Current.Next = tag;
                     Current = tag;
                 }
-                BaseStream.Seek(dataLength, SeekOrigin.Current);
+
+                Position += dataLength;
             }
             Current = _root;
         }
 
-        public Bwd2Reader(Bwd2Reader parentReader) : this(new PartStream(parentReader.BaseStream, parentReader.Current.DataPosition, parentReader.Current.DataLength))
+        public Bwd2Reader(Bwd2Reader parentReader) : this(new FastBinaryReader(parentReader.Data, parentReader.Current.DataPosition, parentReader.Current.DataLength))
         {
             _isChildReader = true;
         }
@@ -58,7 +60,7 @@ namespace Assets.Fileparsers
             {
                 if (Current.Name == recordName)
                 {
-                    BaseStream.Position = Current.DataPosition;
+                    Position = Current.DataPosition;
                     break;
                 }
                 Current = Current.Next;
@@ -72,13 +74,13 @@ namespace Assets.Fileparsers
             {
                 throw new Exception("EOF");
             }
-            BaseStream.Position = Current.DataPosition;
+            Position = Current.DataPosition;
         }
 
-        protected override void Dispose(bool disposing)
+        public override void Dispose()
         {
             if(!_isChildReader)
-                base.Dispose(disposing);
+                base.Dispose();
         }
     }
 }
