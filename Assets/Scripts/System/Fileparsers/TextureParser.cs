@@ -111,16 +111,16 @@ namespace Assets.Fileparsers
                         var y = 0;
 
                         var byteIndex = 0;
-                        var byteLength = cbkBr.Length - cbkBr.Position;
-                        byte[] data = br.ReadBytes((int)byteLength);
-                        while (byteIndex < byteLength)
+                        var brLength = br.Length - br.Position;
+                        var cbkStart = cbkBr.Position;
+                        while (byteIndex < brLength)
                         {
-                            var index = BitConverter.ToUInt16(data, byteIndex);
+                            var index = br.ReadUInt16();
                             byteIndex += sizeof(ushort);
 
                             if ((index & 0x8000) == 0)
                             {
-                                cbkBr.Position = 4 + index * 16;
+                                cbkBr.Position = cbkStart + 4 + index * 16;
                                 byte[] cbkData = cbkBr.ReadBytes(16);
                                 for (int sy = 0; sy < 4; sy++)
                                 {
@@ -161,10 +161,6 @@ namespace Assets.Fileparsers
                             {
                                 x = 0;
                                 y += 4;
-                            }
-                            if (y >= height)
-                            {
-                                break;
                             }
                         }
                     }
