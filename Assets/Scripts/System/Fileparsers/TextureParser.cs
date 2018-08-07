@@ -1,9 +1,6 @@
 ﻿using Assets.System;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace Assets.Fileparsers
@@ -11,6 +8,7 @@ namespace Assets.Fileparsers
     class TextureParser
     {
         const FilterMode FilterMode = UnityEngine.FilterMode.Bilinear;
+        public static Color32 MaskColor = new Color32(0, 0, 255, 255);
         private static Color32 transparent = new Color32(0, 0, 0, 0);
         private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>();
 
@@ -53,14 +51,21 @@ namespace Assets.Fileparsers
                             var paletteIndex = paletteBytes[colorIndex];
 
                             Color32 color;
-                            if (paletteIndex == 0xFF || paletteIndex == 1)
+                            if (paletteIndex == 0xFF)
                             {
                                 hasTransparency = true;
                                 color = transparent;
                             }
                             else
                             {
-                                color = palette[paletteIndex];
+                                if (paletteIndex == 1)
+                                {
+                                    color = MaskColor; // Set a special color that's easier to filter out.
+                                }
+                                else
+                                {
+                                    color = palette[paletteIndex];
+                                }
                             }
 
                             pixelBuffer[colorIndex] = color;
