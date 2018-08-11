@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Assets.Scripts.System;
 using UnityEngine;
 
@@ -145,6 +146,34 @@ namespace Assets.System
                         throw new Exception("Wtf");
                     File.WriteAllBytes(Path.Combine(path, i.ToString()), buffer);
                 }
+            }
+        }
+        
+        public void FindStringReferencesInAllFiles(string searchString)
+        {
+            HashSet<string> fileMatches = new HashSet<string>();
+
+            searchString = searchString.ToUpper();
+            foreach (var zfsFileInfo in _files)
+            {
+                using (var stream = GetDataStream(zfsFileInfo.Value))
+                {
+                    var buf = stream.ReadBytes((int)zfsFileInfo.Value.Length);
+                    string dataAsText = Encoding.UTF8.GetString(buf);
+                    dataAsText = dataAsText.ToUpper();
+
+                    if (dataAsText.Contains(searchString))
+                    {
+                        fileMatches.Add(zfsFileInfo.Key);
+                    }
+                }
+            }
+
+            int matches = fileMatches.Count;
+            Debug.Log("string '" + searchString + "' found " + matches + " times.");
+            foreach (string filename in fileMatches)
+            {
+                Debug.Log(filename);
             }
         }
 
