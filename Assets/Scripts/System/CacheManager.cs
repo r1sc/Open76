@@ -319,13 +319,17 @@ namespace Assets.System
             var carObject = Instantiate(CarPrefab); //ImportGeo(vdf.SOBJGeoName + ".geo", vtf, CarPrefab.gameObject).GetComponent<ArcadeCar>();
             carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
 
-            foreach (var hLoc in vdf.HLocs)
+            Transform[] weaponMountTransforms = new Transform[vdf.HLocs.Count];
+            for (int i = 0; i < vdf.HLocs.Count; ++i)
             {
-                var hlocGo = new GameObject("HLOC");
-                hlocGo.transform.parent = carObject.transform;
-                hlocGo.transform.localRotation = Quaternion.LookRotation(hLoc.Forward, hLoc.Up);
-                hlocGo.transform.localPosition = hLoc.Position;
+                HLoc hloc = vdf.HLocs[i];
+                Transform mountPoint = new GameObject(hloc.Label).transform;
+                mountPoint.parent = carObject.transform;
+                mountPoint.localRotation = Quaternion.LookRotation(hloc.Forward, hloc.Up);
+                mountPoint.localPosition = hloc.Position;
+                weaponMountTransforms[i] = mountPoint;
             }
+
             foreach (var vLoc in vdf.VLocs)
             {
                 var vlocGo = new GameObject("VLOC");
@@ -371,6 +375,15 @@ namespace Assets.System
             var chassisCollider = new GameObject("ChassisColliders");
             chassisCollider.transform.parent = carObject.transform;
             ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[0], CarBodyPrefab, true);
+
+            for (int i = 0; i < vcf.Weapons.Count; ++i)
+            {
+                Transform weaponTransform = new GameObject(vcf.Weapons[i].Gdf.Name).transform;
+                weaponTransform.SetParent(weaponMountTransforms[i]);
+                weaponTransform.localPosition = Vector3.zero;
+                weaponTransform.localRotation = Quaternion.identity; 
+                ImportCarParts(weaponTransform.gameObject, vtf, vcf.Weapons[i].Gdf.Parts, NoColliderPrefab, false);
+            }
 
             // Note: The following is probably how I76 does collision detection. Two large boxes that encapsulate the entire vehicle.
             // Right now this won't work with Open76's raycast suspension, so I'm leaving this off for now. Investigate in the future.
@@ -452,14 +465,16 @@ namespace Assets.System
                     parentName = "WORLD";
                 }
 
+                Transform partTransform = partObj.transform;
                 if (!forgetParentPosition)
-                    partObj.transform.parent = partDict[parentName].transform;
-                partObj.transform.right = sdfPart.Right;
-                partObj.transform.up = sdfPart.Up;
-                partObj.transform.forward = sdfPart.Forward;
-                partObj.transform.localPosition = sdfPart.Position;
+                    partTransform.SetParent(partDict[parentName].transform);
+                partTransform.right = sdfPart.Right;
+                partTransform.up = sdfPart.Up;
+                partTransform.forward = sdfPart.Forward;
+                partTransform.localPosition = sdfPart.Position;
+                partTransform.localRotation = Quaternion.identity;
                 if (forgetParentPosition)
-                    partObj.transform.parent = partDict[parentName].transform;
+                    partTransform.parent = partDict[parentName].transform;
                 partObj.SetActive(true);
                 partDict.Add(sdfPart.Name, partObj);
 
