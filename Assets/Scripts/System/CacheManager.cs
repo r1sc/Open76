@@ -378,11 +378,14 @@ namespace Assets.System
 
             for (int i = 0; i < vcf.Weapons.Count; ++i)
             {
-                Transform weaponTransform = new GameObject(vcf.Weapons[i].Gdf.Name).transform;
-                weaponTransform.SetParent(weaponMountTransforms[i]);
-                weaponTransform.localPosition = Vector3.zero;
-                weaponTransform.localRotation = Quaternion.identity; 
-                ImportCarParts(weaponTransform.gameObject, vtf, vcf.Weapons[i].Gdf.Parts, NoColliderPrefab, false);
+                if (vcf.Weapons[i].Gdf.Parts != null && vcf.Weapons[i].Gdf.Parts.Length > 0)
+                {
+                    Transform weaponTransform = new GameObject(vcf.Weapons[i].Gdf.Name).transform;
+                    weaponTransform.SetParent(weaponMountTransforms[i]);
+                    weaponTransform.localPosition = Vector3.zero;
+                    weaponTransform.localRotation = Quaternion.identity;
+                    ImportCarParts(weaponTransform.gameObject, vtf, vcf.Weapons[i].Gdf.Parts, NoColliderPrefab, false);
+                }
             }
 
             // Note: The following is probably how I76 does collision detection. Two large boxes that encapsulate the entire vehicle.

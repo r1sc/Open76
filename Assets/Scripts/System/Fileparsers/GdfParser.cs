@@ -81,7 +81,7 @@ namespace Assets.Fileparsers
                         };
 
                         gdf.Parts[i] = sdfPart;
-                        br.Position += 56;
+                        br.Position += 36;
                     }
                 }
                 
