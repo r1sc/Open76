@@ -35,14 +35,11 @@ namespace Assets.Fileparsers
                 int unk6 = br.ReadInt32();
                 int unk7 = br.ReadInt32();
                 br.Position += 4; // Skip RIFF header
-                int waveFileSize = br.ReadInt32(); // Read total size of audio data from RIFF header
+                int waveFileSize = br.ReadInt32() + 8; // Read total size of audio data from RIFF header
                 br.Position -= 8; // Go back to RIFF header
 
                 byte[] audioData = br.ReadBytes(waveFileSize);
                 gpw.Clip = WavUtility.ToAudioClip(audioData, 0, fileName);
-
-                float unk8 = br.ReadSingle();
-                float unk9 = br.ReadSingle();
 
                 GpwCache.Add(fileName, gpw);
                 return gpw;
