@@ -4,7 +4,6 @@
 	{
 		_MainTex("Texture", 2D) = "white" {}
 		_MaskTex("Mask Texture", 2D) = "black" {}
-		_MaskColor("Mask Color", Color) = (0, 0, 0, 0)
 	}
 	SubShader
 	{
@@ -30,7 +29,6 @@
 
 			uniform sampler2D _MainTex;
 			uniform sampler2D _MaskTex;
-			uniform float4 _MaskColor;
 
 			v2f vert (appdata v)
 			{
@@ -45,8 +43,7 @@
 				fixed4 col = tex2D(_MainTex, i.uv);
 				fixed4 maskCol = tex2D(_MaskTex, i.uv);
 
-				float3 delta = maskCol.rgb - _MaskColor.rgb;
-				if(dot(delta,delta) < 0.5)
+				if (maskCol.a > 0.0)
 				{
 					col.a = 0.0;
 				}

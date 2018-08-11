@@ -231,6 +231,23 @@ namespace Assets.System
             return obj.gameObject;
         }
 
+        private bool TryGetMaskTexture(string filename, out Texture2D maskTexture)
+        {
+            GeoMeshCacheEntry cacheEntry;
+            if (_meshCache.TryGetValue(filename, out cacheEntry))
+            {
+                foreach (GeoFace face in cacheEntry.GeoMesh.Faces)
+                {
+                    if (TextureParser.MaskTextureCache.TryGetValue(face.TextureName, out maskTexture))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            maskTexture = null;
+            return false;
+        }
 
         public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation)
         {
@@ -431,11 +448,10 @@ namespace Assets.System
                 }
 
                 // Special case for mirrors.
-                if (sdfPart.Name.Contains("MIRI"))
+                Texture2D maskTexture;
+                if (sdfPart.Name.Contains("MIRI") && TryGetMaskTexture(geoFilename, out maskTexture))
                 {
                     RenderTexture renderTexture = new RenderTexture(256, 128, 24);
-                    Color32 maskColor = TextureParser.MaskColor;
-                    _carMirrorMaterialPrefab.SetVector("_MaskColor", new Vector4(maskColor.r / 255f, maskColor.g / 255f, maskColor.b / 255f));
 
                     GameObject mirrorCameraObj = Instantiate(partObj);
                     Transform mirrorObjTransform = mirrorCameraObj.transform;
@@ -446,7 +462,7 @@ namespace Assets.System
                     Material mirrorMaterial = Instantiate(_carMirrorMaterialPrefab);
                     MeshRenderer meshRenderer = partObj.transform.GetComponent<MeshRenderer>();
                     mirrorMaterial.mainTexture = meshRenderer.material.mainTexture;
-                    mirrorMaterial.SetTexture("_MaskTex", mirrorMaterial.mainTexture);
+                    mirrorMaterial.SetTexture("_MaskTex", maskTexture);
                     meshRenderer.material = mirrorMaterial;
 
                     GameObject cameraPivotObj = new GameObject("Camera Pivot");
@@ -461,7 +477,7 @@ namespace Assets.System
                     Material cameraMaterial = Instantiate(_carMirrorMaterialPrefab);
                     cameraMaterial.mainTexture = renderTexture;
                     MeshRenderer mirrorRenderer = mirrorCameraObj.GetComponent<MeshRenderer>();
-                    cameraMaterial.SetTexture("_MaskTex", mirrorMaterial.mainTexture);
+                    cameraMaterial.SetTexture("_MaskTex", maskTexture);
                     mirrorRenderer.material = cameraMaterial;
                 }
             }
