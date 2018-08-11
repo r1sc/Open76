@@ -39,6 +39,7 @@ namespace Assets.Fileparsers
         {
             public MountPoint MountPoint { get; set; }
             public string GdfFilename { get; set; }
+            public Gdf Gdf { get; set; }
         }
 
         public enum MountPoint : uint
@@ -84,6 +85,9 @@ namespace Assets.Fileparsers
                         MountPoint = (MountPoint)br.ReadUInt32(),
                         GdfFilename = br.ReadCString(13)
                     };
+
+                    vcfWeapon.Gdf = GdfParser.ParseGdf(vcfWeapon.GdfFilename);
+
                     vcf.Weapons.Add(vcfWeapon);
                     br.Next();
                 }
