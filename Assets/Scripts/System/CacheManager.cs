@@ -378,13 +378,47 @@ namespace Assets.System
 
             for (int i = 0; i < vcf.Weapons.Count; ++i)
             {
-                if (vcf.Weapons[i].Gdf.Parts != null && vcf.Weapons[i].Gdf.Parts.Length > 0)
+                VcfParser.VcfWeapon weapon = vcf.Weapons[i];
+                int mountPoint = weapon.MountPoint;
+                HLoc hloc = vdf.HLocs[mountPoint];
+
+                SdfPart[] partsArray;
+                switch (hloc.MeshType)
                 {
-                    Transform weaponTransform = new GameObject(vcf.Weapons[i].Gdf.Name).transform;
+                    case HardpointMeshType.Top:
+                        partsArray = weapon.Gdf.TopParts;
+                        break;
+                    case HardpointMeshType.Side:
+                        partsArray = weapon.Gdf.SideParts;
+                        break;
+                    case HardpointMeshType.Inside:
+                        partsArray = weapon.Gdf.InsideParts;
+                        break;
+                    case HardpointMeshType.Turret:
+                        partsArray = weapon.Gdf.TurretParts;
+                        break;
+                    default:
+                        partsArray = null;
+                        break;
+                }
+
+                if (partsArray != null)
+                {
+                    Transform weaponTransform = new GameObject(weapon.Gdf.Name).transform;
                     weaponTransform.SetParent(weaponMountTransforms[i]);
                     weaponTransform.localPosition = Vector3.zero;
                     weaponTransform.localRotation = Quaternion.identity;
-                    ImportCarParts(weaponTransform.gameObject, vtf, vcf.Weapons[i].Gdf.Parts, NoColliderPrefab, false);
+                    ImportCarParts(weaponTransform.gameObject, vtf, partsArray, NoColliderPrefab, false);
+
+                    // Disable depth test for 'inside' weapons, otherwise they are obscured.
+                    if (hloc.MeshType == HardpointMeshType.Inside)
+                    {
+                        MeshRenderer weaponRenderer = weaponTransform.GetComponentInChildren<MeshRenderer>();
+                        if (weaponRenderer != null)
+                        {
+                            weaponRenderer.sharedMaterial.shader = Shader.Find("Custom/CutOutWithoutZ");
+                        }
+                    }
                 }
             }
 
@@ -442,7 +476,7 @@ namespace Assets.System
 
             foreach (var sdfPart in sdfParts)
             {
-                if (sdfPart.Name == "NULL")
+                if (sdfPart == null || sdfPart.Name == "NULL")
                     continue;
 
                 if (_bannedNames.Any(b => sdfPart.Name.EndsWith(b)))

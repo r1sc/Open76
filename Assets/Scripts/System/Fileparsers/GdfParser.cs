@@ -13,12 +13,15 @@ namespace Assets.Fileparsers
         public string SoundName { get; set; }
         public string EnabledSpriteName { get; set; }
         public string DisabledSpriteName { get; set; }
-        public SdfPart[] Parts { get; set; }
+        public SdfPart[] TopParts { get; set; }
+        public SdfPart[] SideParts { get; set; }
+        public SdfPart[] InsideParts { get; set; }
+        public SdfPart[] TurretParts { get; set; }
     }
     
     public class GdfParser
     {
-        public static Gdf ParseGdf(string filename)
+        public static Gdf ParseGdf(string filename, int mountPoint)
         {
             using (var br = new Bwd2Reader(filename))
             {
@@ -67,24 +70,83 @@ namespace Assets.Fileparsers
                 br.FindNext("GGEO"); // 4 bytes
                 {
                     int numParts = br.ReadInt32();
-                    gdf.Parts = new SdfPart[numParts];
-                    for (int i = 0; i < numParts; ++i)
+                    if (numParts > 0)
                     {
-                        SdfPart sdfPart = new SdfPart
-                        {
-                            Name = br.ReadCString(8),
-                            Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                            Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                            Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                            Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
-                            ParentName = br.ReadCString(8)
-                        };
+                        int topPartsIndex = 0;
+                        int sidePartsIndex = 0;
+                        int turretPartsIndex = 0;
+                        int insidePartsIndex = 0;
 
-                        gdf.Parts[i] = sdfPart;
-                        br.Position += 36;
+                        const int weaponSlots = 4;
+                        int totalSlots = weaponSlots * numParts;
+                        for (int i = 0; i < totalSlots; ++i)
+                        {
+                            string partName = br.ReadCString(8);
+                            if (partName == "NULL")
+                            {
+                                br.Position += 92;
+                            }
+                            else
+                            {
+                                SdfPart sdfPart = new SdfPart
+                                {
+                                    Name = partName,
+                                    Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                                    Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                                    Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                                    Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                                    ParentName = br.ReadCString(8)
+                                };
+
+                                char partType = partName[3];
+                                switch (partType)
+                                {
+                                    case 'P':
+                                        if (gdf.TopParts == null)
+                                        {
+                                            gdf.TopParts = new SdfPart[numParts];
+                                        }
+
+                                        gdf.TopParts[topPartsIndex++] = sdfPart;
+                                        break;
+                                    case 'S':
+                                        if (gdf.SideParts == null)
+                                        {
+                                            gdf.SideParts = new SdfPart[numParts];
+                                        }
+
+                                        gdf.SideParts[sidePartsIndex++] = sdfPart;
+                                        break;
+                                    case 'T':
+                                        if (gdf.TurretParts == null)
+                                        {
+                                            gdf.TurretParts = new SdfPart[numParts];
+                                        }
+
+                                        gdf.TurretParts[turretPartsIndex++] = sdfPart;
+                                        break;
+                                    case 'I':
+                                        if (gdf.InsideParts == null)
+                                        {
+                                            gdf.InsideParts = new SdfPart[numParts];
+                                        }
+
+                                        gdf.InsideParts[insidePartsIndex++] = sdfPart;
+                                        break;
+                                    default:
+                                        Debug.LogWarningFormat("Unknown part type '{0}' for part name '{1}'.", partType, partName);
+                                        break;
+                                }
+
+                                br.Position += 36;
+                            }
+
+                            // Skip Lower LOD levels - do we want to use these at all?
+                            br.Position += 200;
+                        }
                     }
                 }
-                
+
                 br.FindNext("ORDF"); // 133 bytes
 
 

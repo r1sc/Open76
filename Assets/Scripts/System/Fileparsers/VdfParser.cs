@@ -33,9 +33,19 @@ namespace Assets.Fileparsers
         public Vector3 Forward { get; set; }
         public Vector3 Position { get; set; }
         public float Unk { get; set; }
+        public uint HardpointIndex { get; set; }
         public uint Num1 { get; set; }
-        public uint Num2 { get; set; }
-        public uint Num3 { get; set; }
+        public HardpointMeshType MeshType { get; set; }
+    }
+
+    public enum HardpointMeshType : byte
+    {
+        None,
+        Top,
+        Side,
+        Turret,
+        Dropper,
+        Inside
     }
 
     public class Vdf
@@ -192,9 +202,9 @@ namespace Assets.Fileparsers
                     var hloc = new HLoc
                     {
                         Label = br.ReadCString(16),
+                        HardpointIndex = br.ReadUInt32(),
                         Num1 = br.ReadUInt32(),
-                        Num2 = br.ReadUInt32(),
-                        Num3 = br.ReadUInt32(),
+                        MeshType = (HardpointMeshType)br.ReadUInt32(),
                         Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
                         Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
                         Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
