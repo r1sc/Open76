@@ -77,6 +77,13 @@ namespace Assets.System
                         {
                             var lblUpper = odef.Label.ToUpper();
                             
+                            // Training mission uses hardcoded VCF for player.
+                            string vcfName = odef.Label;
+                            if (msnFilename.ToLower() == "a01.msn" && vcfName == "vppirna1")
+                            {
+                                vcfName = "vppa01";
+                            }
+
                             switch (lblUpper)
                             {
                                 case "SPAWN":
@@ -88,7 +95,7 @@ namespace Assets.System
                                     go.tag = "Regen";
                                     break;
                                 default:
-                                    go = cacheManager.ImportVcf(odef.Label + ".vcf", odef.TeamId == 1);
+                                    go = cacheManager.ImportVcf(vcfName + ".vcf", odef.TeamId == 1);
                                     break;
                             }
 
