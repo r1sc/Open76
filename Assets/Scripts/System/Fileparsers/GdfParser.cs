@@ -21,7 +21,7 @@ namespace Assets.Fileparsers
     
     public class GdfParser
     {
-        public static Gdf ParseGdf(string filename, int mountPoint)
+        public static Gdf ParseGdf(string filename)
         {
             using (var br = new Bwd2Reader(filename))
             {
