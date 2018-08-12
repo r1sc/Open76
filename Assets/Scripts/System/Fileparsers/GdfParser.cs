@@ -9,6 +9,7 @@ namespace Assets.Fileparsers
         public int FireAmount { get; set; }
         public float FiringRate { get; set; }
         public int AmmoCount { get; set; }
+        public float WeaponMass { get; set; }
         public string FireSpriteName { get; set; }
         public string SoundName { get; set; }
         public string EnabledSpriteName { get; set; }
@@ -41,7 +42,7 @@ namespace Assets.Fileparsers
                     br.ReadBytes(8);
                     int unk6 = br.ReadInt32();
                     gdf.Fireproofing = br.ReadInt32();
-                    float unk7 = br.ReadSingle();
+                    gdf.WeaponMass = br.ReadSingle();
                     string unk8 = br.ReadCString(13);
                     br.ReadBytes(9);
                     gdf.FiringRate = 1f / br.ReadSingle();
