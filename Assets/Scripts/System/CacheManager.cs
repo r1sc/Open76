@@ -48,25 +48,40 @@ namespace Assets.System
             Palette = ActPaletteParser.ReadActPalette("p02.act");
         }
 
-        public AudioClip GetSound(string soundName)
+        public AudioSource GetSound(GameObject rootObject, string soundName)
         {
+            const float maxVolume = 0.8f; // Set a default volume since high values cause bad distortion.
+            
             var filename = Path.GetFileNameWithoutExtension(soundName);
-            AudioClip audioClip = null;
+            AudioSource audioSource = null;
             if (VirtualFilesystem.Instance.FileExists(filename + ".wav"))
             {
-                audioClip = VirtualFilesystem.Instance.GetAudioClip(filename + ".wav");
+                audioSource = rootObject.AddComponent<AudioSource>();
+                audioSource.clip = VirtualFilesystem.Instance.GetAudioClip(filename + ".wav");
+                audioSource.volume = maxVolume;
+                audioSource.playOnAwake = false;
+                audioSource.spatialize = false;
+                audioSource.spatialBlend = 0.0f;
             }
             else if (VirtualFilesystem.Instance.FileExists(filename + ".gpw"))
             {
+                audioSource = rootObject.AddComponent<AudioSource>();
                 Gpw gpw = GpwParser.ParseGpw(filename + ".gpw");
-                audioClip = gpw.Clip;
+                audioSource.clip = gpw.Clip;
+                audioSource.volume = maxVolume;
+                audioSource.playOnAwake = false;
+
+                audioSource.spatialize = true;
+                audioSource.spatialBlend = 1.0f;
+                audioSource.minDistance = 5f;
+                audioSource.maxDistance = 75f;
             }
             else
             {
                 Debug.LogWarning("Sound file not found: " + soundName);
             }
 
-            return audioClip;
+            return audioSource;
         }
 
         public Texture2D GetTexture(string textureName)
@@ -311,10 +326,10 @@ namespace Assets.System
             return sdfObject;
         }
 
-        public GameObject ImportVcf(string filename, bool importFirstPerson)
+        public GameObject ImportVcf(string filename, bool importFirstPerson, out Vdf vdf)
         {
             var vcf = VcfParser.ParseVcf(filename);
-            var vdf = VdfParser.ParseVdf(vcf.VdfFilename);
+            vdf = VdfParser.ParseVdf(vcf.VdfFilename);
             var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
 
             var carObject = Instantiate(CarPrefab); //ImportGeo(vdf.SOBJGeoName + ".geo", vtf, CarPrefab.gameObject).GetComponent<ArcadeCar>();

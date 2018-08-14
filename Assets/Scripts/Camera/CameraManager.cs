@@ -50,11 +50,14 @@ namespace Assets.Scripts.Camera
         {
             if (_cameraStack.Count > 0)
             {
-                _cameraStack.Peek().enabled = false;
+                UnityEngine.Camera camera = _cameraStack.Peek();
+                camera.enabled = false;
+                camera.GetComponent<AudioListener>().enabled = false;
             }
 
             GameObject newCameraObject = new GameObject("Stack Camera " + _cameraStack.Count);
             UnityEngine.Camera newCamera = newCameraObject.AddComponent<UnityEngine.Camera>();
+            newCameraObject.AddComponent<AudioListener>();
             _cameraStack.Push(newCamera);
         }
 
@@ -70,7 +73,9 @@ namespace Assets.Scripts.Camera
 
             if (_cameraStack.Count > 0)
             {
-                _cameraStack.Peek().enabled = true;
+                UnityEngine.Camera camera = _cameraStack.Peek();
+                camera.enabled = true;
+                camera.GetComponent<AudioListener>().enabled = true;
             }
         }
 

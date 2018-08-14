@@ -39,7 +39,7 @@ namespace Assets.Fileparsers
                 br.Position -= 8; // Go back to RIFF header
 
                 byte[] audioData = br.ReadBytes(waveFileSize);
-                gpw.Clip = WavUtility.ToAudioClip(audioData, 0, fileName);
+                gpw.Clip = WavUtility.ToAudioClip(audioData, fileName);
 
                 GpwCache.Add(fileName, gpw);
                 return gpw;

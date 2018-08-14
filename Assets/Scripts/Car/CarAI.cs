@@ -1,6 +1,7 @@
 ﻿using System;
 using Assets;
 using Assets.Car;
+using Assets.Fileparsers;
 using Assets.Scripts.I76Types;
 using Assets.Scripts.System;
 using Assets.System;
@@ -23,7 +24,15 @@ public class CarAI : MonoBehaviour
     private Vector2 _targetRoadSegment;
     private Vector2 _nextRoadSegment;
     private int _healthGroups;
+    private int _currentHealthGroup;
     private int _health;
+    private AudioSource _engineStartSound;
+    private AudioSource _engineLoopSound;
+    private bool _engineStarting;
+    private float _engineStartTimer;
+    private CacheManager _cacheManager;
+    private GameObject _gameObject;
+    private bool _isPlayer;
 
     public bool Arrived { get; set; }
     public bool Alive
@@ -32,7 +41,9 @@ public class CarAI : MonoBehaviour
     }
     public bool Attacked { get; private set; }
     public int TeamId { get; set; }
-    
+    public bool EngineRunning { get; private set; }
+    public Vdf Vdf { get; set; }
+
     public int Health
     {
         get { return _health; }
@@ -56,13 +67,90 @@ public class CarAI : MonoBehaviour
     private const float SteeringSensitivity = 1.5f;
     private const int StartHealth = 100;
 
-    private void Awake()
+    private void UpdateEngineSounds()
     {
+        string engineStartSound;
+        string engineLoopSound;
+
+        switch (Vdf.VehicleSize)
+        {
+            case 1: // Small car
+                engineLoopSound = "eishp";
+                engineStartSound = "esshp";
+                engineStartSound += _currentHealthGroup;
+                break;
+            case 2: // Medium car
+                engineLoopSound = "eihp";
+                engineStartSound = "eshp";
+                engineStartSound += _currentHealthGroup;
+                break;
+            case 3: // Large car
+                engineLoopSound = "einp1";
+                engineStartSound = "esnp";
+                engineStartSound += _currentHealthGroup;
+                break;
+            case 4: // Van
+                engineLoopSound = "eisv";
+                engineStartSound = "essv";
+                break;
+            case 5: // Heavy vehicle
+                engineLoopSound = "eimarx";
+                engineStartSound = "esmarx";
+                break;
+            case 6: // Tank
+                engineLoopSound = "eitank";
+                engineStartSound = "estank";
+                break;
+            default:
+                Debug.LogWarningFormat("Unhandled vehicle size '{0}'. No vehicle sounds loaded.", Vdf.VehicleSize);
+                return;
+        }
+
+        engineStartSound += ".gpw";
+        engineLoopSound += ".gpw";
+        if (_engineStartSound == null || _engineStartSound.clip.name != engineStartSound)
+        {
+            if (_engineStartSound != null)
+            {
+                Destroy(_engineStartSound);
+            }
+
+            _engineStartSound = _cacheManager.GetSound(_gameObject, engineStartSound);
+            _engineStartSound.volume = 0.6f;
+        }
+
+        if (_engineLoopSound == null || _engineLoopSound.clip.name != engineLoopSound)
+        {
+            if (_engineLoopSound != null)
+            {
+                Destroy(_engineLoopSound);
+            }
+
+            _engineLoopSound = _cacheManager.GetSound(_gameObject, engineLoopSound);
+            _engineLoopSound.loop = true;
+            _engineLoopSound.volume = 0.6f;
+
+            if (EngineRunning)
+            {
+                _engineLoopSound.Play();
+            }
+        }
+    }
+
+    private void Start()
+    {
+        _isPlayer = TeamId == 1;
         _transform = transform;
         _health = StartHealth;
         _worldTransform = GameObject.Find("World").transform;
         _car = GetComponent<NewCar>();
         _rigidBody = GetComponent<Rigidbody>();
+        EngineRunning = true;
+        _cacheManager = FindObjectOfType<CacheManager>();
+        _gameObject = gameObject;
+        _currentHealthGroup = 1;
+
+        UpdateEngineSounds();
 
         if (_transform.childCount > 0)
         {
@@ -70,6 +158,26 @@ public class CarAI : MonoBehaviour
         }
     }
 
+    private void ToggleEngine()
+    {
+        if (_engineStartSound.isPlaying)
+        {
+            return;
+        }
+
+        if (EngineRunning)
+        {
+            _engineLoopSound.Stop();
+            EngineRunning = false;
+        }
+        else
+        {
+            _engineStartSound.Play();
+            _engineStarting = true;
+            _engineStartTimer = 0f;
+        }
+    }
+    
     private void Update()
     {
         if (_health <= 0)
@@ -77,16 +185,59 @@ public class CarAI : MonoBehaviour
             return;
         }
 
+        if (EngineRunning)
+        {
+            // Simple and temporary engine pitch adjustment code based on rigidbody velocity - should be using wheels.
+            const float firstGearTopSpeed = 40f;
+            const float gearRatioAdjustment = 1.5f;
+            const float minPitch = 0.6f;
+            const float maxPitch = 1.2f;
+
+            float velocity = _rigidBody.velocity.magnitude;
+            float gearMaxSpeed = firstGearTopSpeed;
+            while (velocity / gearMaxSpeed > maxPitch - minPitch)
+            {
+                gearMaxSpeed *= gearRatioAdjustment;
+            }
+
+            float enginePitch = minPitch + velocity / gearMaxSpeed;
+            _engineLoopSound.pitch = enginePitch;
+        }
+
+        if (_engineStarting)
+        {
+            _engineStartTimer += Time.deltaTime;
+            if (_engineStartTimer > _engineStartSound.clip.length - 0.5f)
+            {
+                _engineLoopSound.Play();
+                EngineRunning = true;
+                _engineStarting = false;
+                _engineStartTimer = 0f;
+            }
+        }
+
+        // Start / Stop engine.
+        if (_isPlayer && Input.GetKeyDown(KeyCode.S))
+        {
+            ToggleEngine();
+        }
+
         Navigate();
     }
 
     private void SetHealthGroup(int healthGroupIndex)
     {
+        _currentHealthGroup = healthGroupIndex;
         Transform parent = transform.Find("Chassis/ThirdPerson");
         for (int i = 0; i < _healthGroups; ++i)
         {
             Transform child = parent.GetChild(i);
             child.gameObject.SetActive(healthGroupIndex == i + 1);
+        }
+
+        if (_health > 0)
+        {
+            UpdateEngineSounds();
         }
     }
 
@@ -223,8 +374,14 @@ public class CarAI : MonoBehaviour
 
     private void Explode()
     {
-        _rigidBody.AddForce(Vector3.up * _rigidBody.mass * 5f, ForceMode.Impulse);
+        AudioSource explosionSource = _cacheManager.GetSound(_gameObject, "xcar");
+        if (explosionSource != null)
+        {
+            explosionSource.volume = 0.9f;
+            explosionSource.Play();
+        }
 
+        _rigidBody.AddForce(Vector3.up * _rigidBody.mass * 5f, ForceMode.Impulse);
         InputCarController inputController = GetComponent<InputCarController>();
         if (inputController != null)
         {
@@ -236,6 +393,10 @@ public class CarAI : MonoBehaviour
         {
             Destroy(carPhysics);
         }
+
+        EngineRunning = false;
+        Destroy(_engineLoopSound);
+        Destroy(_engineStartSound);
 
         Destroy(transform.Find("FrontLeft").gameObject);
         Destroy(transform.Find("FrontRight").gameObject);

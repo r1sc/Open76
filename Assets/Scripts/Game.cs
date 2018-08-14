@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using Assets.Fileparsers;
 using Assets.Scripts.Camera;
 using Assets.System;
 using UnityEngine;
@@ -18,8 +18,9 @@ namespace Assets
 
             if (MissionFile.ToLower().StartsWith("m"))
             {
+                Vdf unused;
                 var cacheManager = FindObjectOfType<CacheManager>();
-                var importedVcf = cacheManager.ImportVcf(VcfToLoad, true);
+                var importedVcf = cacheManager.ImportVcf(VcfToLoad, true, out unused);
                 importedVcf.AddComponent<InputCarController>();
                 importedVcf.AddComponent<CarAI>();
 

@@ -31,7 +31,7 @@ namespace Assets
             var brake = -Mathf.Min(0, throttle);
             throttle = Mathf.Max(0, throttle);
 
-            _car.Throttle = throttle;
+            _car.Throttle = _carAi.EngineRunning ? throttle : 0f;
             _car.Brake = brake;
 
             var steering = Input.GetAxis("Horizontal");
