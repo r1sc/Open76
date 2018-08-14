@@ -16,12 +16,13 @@ namespace Assets.System
         public RaySusp DriveWheelPrefab;
         public GameObject CarBodyPrefab;
         public NewCar CarPrefab;
-
-        public Material ColorMaterialPrefab;
-        public Material TextureMaterialPrefab;
-        public Material TransparentMaterialPrefab;
         public Color32[] Palette;
         
+        private Material _colorMaterialPrefab;
+        private Material _textureMaterialPrefab;
+        private Material _transparentMaterialPrefab;
+        private Material _carMirrorMaterialPrefab;
+
         private readonly string[] _bannedNames =
         {
             "51CMP3",
@@ -37,8 +38,13 @@ namespace Assets.System
 
         void Start()
         {
+            _colorMaterialPrefab = Resources.Load<Material>("Materials/AlphaMaterial");
+            _textureMaterialPrefab = Resources.Load<Material>("Materials/TextureMaterial");
+            _transparentMaterialPrefab = Resources.Load<Material>("Materials/AlphaMaterial");
+            _carMirrorMaterialPrefab = Resources.Load<Material>("Materials/CarMirror");
+
             VirtualFilesystem.Instance.Init(GamePath);
-            _materialCache["default"] = Instantiate(TextureMaterialPrefab);
+            _materialCache["default"] = Instantiate(_textureMaterialPrefab);
             Palette = ActPaletteParser.ReadActPalette("p02.act");
         }
 
@@ -87,7 +93,7 @@ namespace Assets.System
             if (!_materialCache.ContainsKey(textureName))
             {
                 var texture = GetTexture(textureName);
-                var material = Instantiate(transparent ? TransparentMaterialPrefab : TextureMaterialPrefab);
+                var material = Instantiate(transparent ? _transparentMaterialPrefab : _textureMaterialPrefab);
                 material.mainTexture = texture ?? Texture2D.blackTexture;
                 material.name = textureName;
                 _materialCache[textureName] = material;
@@ -101,7 +107,7 @@ namespace Assets.System
             if (_materialCache.ContainsKey(materialName))
                 return _materialCache[materialName];
 
-            var material = Instantiate(ColorMaterialPrefab);
+            var material = Instantiate(_colorMaterialPrefab);
             material.color = color;
             _materialCache[materialName] = material;
 
@@ -246,6 +252,23 @@ namespace Assets.System
             return obj.gameObject;
         }
 
+        private bool TryGetMaskTexture(string filename, out Texture2D maskTexture)
+        {
+            GeoMeshCacheEntry cacheEntry;
+            if (_meshCache.TryGetValue(filename, out cacheEntry))
+            {
+                foreach (GeoFace face in cacheEntry.GeoMesh.Faces)
+                {
+                    if (TextureParser.MaskTextureCache.TryGetValue(face.TextureName, out maskTexture))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            maskTexture = null;
+            return false;
+        }
 
         public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation)
         {
@@ -333,7 +356,7 @@ namespace Assets.System
             }
 
             if (importFirstPerson)
-                ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true);
+                ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
 
             var meshFilters = thirdPerson.GetComponentsInChildren<MeshFilter>();
             var bounds = new Bounds();
@@ -397,7 +420,7 @@ namespace Assets.System
             return new[] { wheel, wheel2 };
         }
 
-        private void ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts, GameObject prefab, bool justChassis, bool forgetParentPosition = false, int textureGroup = 0)
+        private void ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts, GameObject prefab, bool justChassis, bool forgetParentPosition = false, int textureGroup = 0, int layerMask = 0)
         {
             var partDict = new Dictionary<string, GameObject> { { "WORLD", parent } };
 
@@ -439,6 +462,45 @@ namespace Assets.System
                     partObj.transform.parent = partDict[parentName].transform;
                 partObj.SetActive(true);
                 partDict.Add(sdfPart.Name, partObj);
+
+                if (layerMask != 0)
+                {
+                    partObj.layer = layerMask;
+                }
+
+                // Special case for mirrors.
+                Texture2D maskTexture;
+                if (sdfPart.Name.Contains("MIRI") && TryGetMaskTexture(geoFilename, out maskTexture))
+                {
+                    RenderTexture renderTexture = new RenderTexture(256, 128, 24);
+
+                    GameObject mirrorCameraObj = Instantiate(partObj);
+                    Transform mirrorObjTransform = mirrorCameraObj.transform;
+                    mirrorObjTransform.SetParent(partObj.transform);
+                    mirrorObjTransform.localPosition = Vector3.zero;
+                    mirrorObjTransform.localRotation = Quaternion.identity;
+
+                    Material mirrorMaterial = Instantiate(_carMirrorMaterialPrefab);
+                    MeshRenderer meshRenderer = partObj.transform.GetComponent<MeshRenderer>();
+                    mirrorMaterial.mainTexture = meshRenderer.material.mainTexture;
+                    mirrorMaterial.SetTexture("_MaskTex", maskTexture);
+                    meshRenderer.material = mirrorMaterial;
+
+                    GameObject cameraPivotObj = new GameObject("Camera Pivot");
+                    Camera mirrorCamera = cameraPivotObj.AddComponent<Camera>();
+                    mirrorCamera.cullingMask = ~LayerMask.GetMask("FirstPerson");
+                    mirrorCamera.targetTexture = renderTexture;
+                    Transform pivotTransform = cameraPivotObj.transform;
+                    pivotTransform.SetParent(mirrorObjTransform);
+                    pivotTransform.localPosition = Vector3.zero;
+                    pivotTransform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+
+                    Material cameraMaterial = Instantiate(_carMirrorMaterialPrefab);
+                    cameraMaterial.mainTexture = renderTexture;
+                    MeshRenderer mirrorRenderer = mirrorCameraObj.GetComponent<MeshRenderer>();
+                    cameraMaterial.SetTexture("_MaskTex", maskTexture);
+                    mirrorRenderer.material = cameraMaterial;
+                }
             }
         }
 

@@ -1,9 +1,6 @@
 ﻿using Assets.System;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace Assets.Fileparsers
@@ -11,8 +8,9 @@ namespace Assets.Fileparsers
     class TextureParser
     {
         const FilterMode FilterMode = UnityEngine.FilterMode.Bilinear;
-        private static Color32 transparent = new Color32(0, 0, 0, 0);
+        private static readonly Color32 Transparent = new Color32(0, 0, 0, 0);
         private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>();
+        public static readonly Dictionary<string, Texture2D> MaskTextureCache = new Dictionary<string, Texture2D>();
 
         public static Texture2D ReadMapTexture(string filename, Color32[] palette)
         {
@@ -39,6 +37,8 @@ namespace Assets.Fileparsers
                 {
                     byte[] paletteBytes = br.ReadBytes(readLimit);
                     Color32[] pixelBuffer = new Color32[readLimit];
+                    Color32[] maskBuffer = null;
+                    bool maskCached = false;
                     
                     for (int x = 0; x < width; ++x)
                     {
@@ -53,14 +53,38 @@ namespace Assets.Fileparsers
                             var paletteIndex = paletteBytes[colorIndex];
 
                             Color32 color;
-                            if (paletteIndex == 0xFF || paletteIndex == 1)
+                            if (paletteIndex == 0xFF)
                             {
                                 hasTransparency = true;
-                                color = transparent;
+                                color = Transparent;
                             }
                             else
                             {
-                                color = palette[paletteIndex];
+                                if (paletteIndex == 1 && !maskCached)
+                                {
+                                    if (maskBuffer == null)
+                                    {
+                                        if (MaskTextureCache.ContainsKey(filename))
+                                        {
+                                            maskCached = true;
+                                        }
+                                        else
+                                        {
+                                            maskBuffer = new Color32[readLimit];
+                                            maskBuffer[colorIndex].a = 255;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        maskBuffer[colorIndex].a = 255;
+                                    }
+
+                                    color = Color.black;
+                                }
+                                else
+                                {
+                                    color = palette[paletteIndex];
+                                }
                             }
 
                             pixelBuffer[colorIndex] = color;
@@ -68,13 +92,21 @@ namespace Assets.Fileparsers
                     }
 
                     texture.SetPixels32(pixelBuffer);
+
+                    if (maskBuffer != null)
+                    {
+                        Texture2D maskTexture = new Texture2D(width, height, TextureFormat.Alpha8, false);
+                        maskTexture.SetPixels32(maskBuffer);
+                        maskTexture.Apply(false, true);
+                        MaskTextureCache.Add(filename.ToUpper(), maskTexture);
+                    }
                 }
                 
                 if(hasTransparency)
                 {
                     texture.wrapMode = TextureWrapMode.Clamp;
                 }
-                texture.Apply(true);
+                texture.Apply(true, true);
                 TextureCache.Add(filename, texture);
                 return texture;
             }
@@ -129,7 +161,7 @@ namespace Assets.Fileparsers
                                         var paletteIndex = cbkData[sx * 4 + sy];
                                         if (paletteIndex == 0xFF)
                                             hasTransparency = true;
-                                        var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
+                                        var color = paletteIndex == 0xFF ? Transparent : palette[paletteIndex];
                                         int pixelIndex = y * width + sx * width + x + sy;
                                         if (pixelIndex < pixels)
                                         {
@@ -143,7 +175,7 @@ namespace Assets.Fileparsers
                                 var paletteIndex = index & 0xFF;
                                 if (paletteIndex == 0xFF)
                                     hasTransparency = true;
-                                var color = paletteIndex == 0xFF ? transparent : palette[paletteIndex];
+                                var color = paletteIndex == 0xFF ? Transparent : palette[paletteIndex];
                                 for (int sy = 0; sy < 4; sy++)
                                 {
                                     for (int sx = 0; sx < 4; sx++)
