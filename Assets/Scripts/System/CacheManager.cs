@@ -48,37 +48,49 @@ namespace Assets.System
             Palette = ActPaletteParser.ReadActPalette("p02.act");
         }
 
-        public AudioSource GetSound(GameObject rootObject, string soundName)
+        public AudioClip GetAudioClip(string soundName)
         {
-            const float maxVolume = 0.8f; // Set a default volume since high values cause bad distortion.
-            
-            var filename = Path.GetFileNameWithoutExtension(soundName);
-            AudioSource audioSource = null;
+            string filename = Path.GetFileNameWithoutExtension(soundName);
             if (VirtualFilesystem.Instance.FileExists(filename + ".wav"))
             {
-                audioSource = rootObject.AddComponent<AudioSource>();
-                audioSource.clip = VirtualFilesystem.Instance.GetAudioClip(filename + ".wav");
-                audioSource.volume = maxVolume;
-                audioSource.playOnAwake = false;
+                return VirtualFilesystem.Instance.GetAudioClip(filename + ".wav");
+            }
+
+            if (VirtualFilesystem.Instance.FileExists(filename + ".gpw"))
+            {
+                return GpwParser.ParseGpw(filename + ".gpw").Clip;
+            }
+            
+            Debug.LogWarning("Sound file not found: " + soundName);
+            return null;
+        }
+
+        public AudioSource GetAudioSource(GameObject rootObject, string soundName)
+        {
+            const float maxVolume = 0.8f; // Set a default volume since high values cause bad distortion.
+
+            AudioClip audioClip = GetAudioClip(soundName);
+            if (audioClip == null)
+            {
+                return null;
+            }
+
+            AudioSource audioSource = rootObject.AddComponent<AudioSource>();
+            audioSource.volume = maxVolume;
+            audioSource.playOnAwake = false;
+            audioSource.clip = audioClip;
+
+            if (audioClip.name.EndsWith(".wav"))
+            {
                 audioSource.spatialize = false;
                 audioSource.spatialBlend = 0.0f;
             }
-            else if (VirtualFilesystem.Instance.FileExists(filename + ".gpw"))
+            else if (audioClip.name.EndsWith(".gpw"))
             {
-                audioSource = rootObject.AddComponent<AudioSource>();
-                Gpw gpw = GpwParser.ParseGpw(filename + ".gpw");
-                audioSource.clip = gpw.Clip;
-                audioSource.volume = maxVolume;
-                audioSource.playOnAwake = false;
-
                 audioSource.spatialize = true;
                 audioSource.spatialBlend = 1.0f;
                 audioSource.minDistance = 5f;
                 audioSource.maxDistance = 75f;
-            }
-            else
-            {
-                Debug.LogWarning("Sound file not found: " + soundName);
             }
 
             return audioSource;

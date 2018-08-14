@@ -115,7 +115,7 @@ public class CarAI : MonoBehaviour
                 Destroy(_engineStartSound);
             }
 
-            _engineStartSound = _cacheManager.GetSound(_gameObject, engineStartSound);
+            _engineStartSound = _cacheManager.GetAudioSource(_gameObject, engineStartSound);
             _engineStartSound.volume = 0.6f;
         }
 
@@ -126,7 +126,7 @@ public class CarAI : MonoBehaviour
                 Destroy(_engineLoopSound);
             }
 
-            _engineLoopSound = _cacheManager.GetSound(_gameObject, engineLoopSound);
+            _engineLoopSound = _cacheManager.GetAudioSource(_gameObject, engineLoopSound);
             _engineLoopSound.loop = true;
             _engineLoopSound.volume = 0.6f;
 
@@ -374,7 +374,7 @@ public class CarAI : MonoBehaviour
 
     private void Explode()
     {
-        AudioSource explosionSource = _cacheManager.GetSound(_gameObject, "xcar");
+        AudioSource explosionSource = _cacheManager.GetAudioSource(_gameObject, "xcar");
         if (explosionSource != null)
         {
             explosionSource.volume = 0.9f;
@@ -397,6 +397,7 @@ public class CarAI : MonoBehaviour
         EngineRunning = false;
         Destroy(_engineLoopSound);
         Destroy(_engineStartSound);
+        Destroy(GetComponent<NewCar>());
 
         Destroy(transform.Find("FrontLeft").gameObject);
         Destroy(transform.Find("FrontRight").gameObject);

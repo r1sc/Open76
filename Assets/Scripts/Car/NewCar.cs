@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
+using Assets.System;
 using UnityEngine;
 
 namespace Assets.Car
@@ -48,7 +47,7 @@ namespace Assets.Car
         private float _b, _c;
         private float _heightRatio;
 
-
+        private AudioSource _surfaceAudioSource;
 
         // Use this for initialization
         void Start()
@@ -57,6 +56,14 @@ namespace Assets.Car
             _b = Mathf.Abs(FrontWheels[0].transform.localPosition.z);
             _c = Mathf.Abs(RearWheels[0].transform.localPosition.z);
             _heightRatio = 2.0f / (_b + _c);
+        }
+
+        void Destroy()
+        {
+            if (_surfaceAudioSource != null)
+            {
+                Destroy(_surfaceAudioSource);
+            }
         }
 
         // Update is called once per frame
@@ -68,12 +75,59 @@ namespace Assets.Car
             }
         }
 
+        private void UpdateSurfaceSound()
+        {
+            RaycastHit hitInfo;
+            Ray terrainRay = new Ray(transform.position, Vector3.down);
+            if (Physics.Raycast(terrainRay, out hitInfo))
+            {
+                string objectTag = hitInfo.collider.gameObject.tag;
+                string surfaceSoundName;
+                switch (objectTag)
+                {
+                    case "road":
+                        surfaceSoundName = "vcdgrav.gpw";
+                        break;
+                    default:
+                        surfaceSoundName = "vcddirt.gpw";
+                        break;
+                }
+
+                if (_surfaceAudioSource == null || _surfaceAudioSource.clip.name != surfaceSoundName)
+                {
+                    if (_surfaceAudioSource != null)
+                    {
+                        Destroy(_surfaceAudioSource);
+                    }
+
+                    CacheManager cacheManager = FindObjectOfType<CacheManager>();
+                    _surfaceAudioSource = cacheManager.GetAudioSource(gameObject, surfaceSoundName);
+                    _surfaceAudioSource.loop = true;
+                    _surfaceAudioSource.volume = 0.6f;
+                    _surfaceAudioSource.Play();
+                }
+            }
+
+            if (_surfaceAudioSource != null)
+            {
+                _surfaceAudioSource.volume = Mathf.Min(_rigidbody.velocity.magnitude * 0.1f, 0.6f);
+                if (!_surfaceAudioSource.isPlaying)
+                {
+                    _surfaceAudioSource.Play();
+                }
+            }
+        }
+
         void FixedUpdate()
         {
             var allWheelsGrounded = FrontWheels.All(x => x.Grounded) && RearWheels.All(x => x.Grounded);
-            if (!allWheelsGrounded)
+            if (!allWheelsGrounded && _surfaceAudioSource != null)
+            {
+                _surfaceAudioSource.Stop();
                 return;
+            }
 
+            UpdateSurfaceSound();
             var vel3d = transform.InverseTransformVector(_rigidbody.velocity);
             _carVelocity = new Vector2(vel3d.z, vel3d.x);
 
