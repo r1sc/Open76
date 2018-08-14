@@ -42,6 +42,27 @@ namespace Assets.System
             Palette = ActPaletteParser.ReadActPalette("p02.act");
         }
 
+        public AudioClip GetSound(string soundName)
+        {
+            var filename = Path.GetFileNameWithoutExtension(soundName);
+            AudioClip audioClip = null;
+            if (VirtualFilesystem.Instance.FileExists(filename + ".wav"))
+            {
+                audioClip = VirtualFilesystem.Instance.GetAudioClip(filename + ".wav");
+            }
+            else if (VirtualFilesystem.Instance.FileExists(filename + ".gpw"))
+            {
+                Gpw gpw = GpwParser.ParseGpw(filename + ".gpw");
+                audioClip = gpw.Clip;
+            }
+            else
+            {
+                Debug.LogWarning("Sound file not found: " + soundName);
+            }
+
+            return audioClip;
+        }
+
         public Texture2D GetTexture(string textureName)
         {
             var filename = Path.GetFileNameWithoutExtension(textureName);
