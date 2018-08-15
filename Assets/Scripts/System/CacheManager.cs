@@ -259,7 +259,8 @@ namespace Assets.System
             {
                 foreach (GeoFace face in cacheEntry.GeoMesh.Faces)
                 {
-                    if (TextureParser.MaskTextureCache.TryGetValue(face.TextureName, out maskTexture))
+                    string textureName = face.TextureName + ".MAP";
+                    if (TextureParser.MaskTextureCache.TryGetValue(textureName, out maskTexture))
                     {
                         return true;
                     }
@@ -319,17 +320,6 @@ namespace Assets.System
             var carObject = Instantiate(CarPrefab); //ImportGeo(vdf.SOBJGeoName + ".geo", vtf, CarPrefab.gameObject).GetComponent<ArcadeCar>();
             carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
 
-            Transform[] weaponMountTransforms = new Transform[vdf.HLocs.Count];
-            for (int i = 0; i < vdf.HLocs.Count; ++i)
-            {
-                HLoc hloc = vdf.HLocs[i];
-                Transform mountPoint = new GameObject(hloc.Label).transform;
-                mountPoint.parent = carObject.transform;
-                mountPoint.localRotation = Quaternion.LookRotation(hloc.Forward, hloc.Up);
-                mountPoint.localPosition = hloc.Position;
-                weaponMountTransforms[i] = mountPoint;
-            }
-
             foreach (var vLoc in vdf.VLocs)
             {
                 var vlocGo = new GameObject("VLOC");
@@ -343,6 +333,17 @@ namespace Assets.System
 
             var thirdPerson = new GameObject("ThirdPerson");
             thirdPerson.transform.parent = chassis.transform;
+
+            Transform[] weaponMountTransforms = new Transform[vdf.HLocs.Count];
+            for (int i = 0; i < vdf.HLocs.Count; ++i)
+            {
+                HLoc hloc = vdf.HLocs[i];
+                Transform mountPoint = new GameObject(hloc.Label).transform;
+                mountPoint.parent = thirdPerson.transform;
+                mountPoint.localRotation = Quaternion.LookRotation(hloc.Forward, hloc.Up);
+                mountPoint.localPosition = hloc.Position;
+                weaponMountTransforms[i] = mountPoint;
+            }
 
             var firstPerson = new GameObject("FirstPerson");
             firstPerson.transform.parent = chassis.transform;
