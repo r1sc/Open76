@@ -1,5 +1,6 @@
 ﻿using Assets.Fileparsers;
 using Assets.Scripts.Camera;
+using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;
 
@@ -30,6 +31,10 @@ namespace Assets
 
                 CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = importedVcf.transform;
             }
+
+#if UNITY_EDITOR
+            gameObject.AddComponent<SceneViewAudioHelper>();
+#endif
         }
 
         // Update is called once per frame
