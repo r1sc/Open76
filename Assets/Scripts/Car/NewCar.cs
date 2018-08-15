@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Assets.System;
+﻿using Assets.System;
 using UnityEngine;
 
 namespace Assets.Car
@@ -7,6 +6,7 @@ namespace Assets.Car
     public class NewCar : MonoBehaviour
     {
         private Rigidbody _rigidbody;
+        private const float AirTimeLandingTreshold = 0.75f;
 
         public float Throttle;
         public float Brake;
@@ -46,8 +46,13 @@ namespace Assets.Car
         private float _slipLongitudal;
         private float _b, _c;
         private float _heightRatio;
+        private float _airTime;
 
         private AudioSource _surfaceAudioSource;
+        private AudioSource _landingAudioSource;
+        private AudioClip _landingAudioClip1;
+        private AudioClip _landingAudioClip2;
+        private CacheManager _cacheManager;
 
         // Use this for initialization
         void Start()
@@ -56,6 +61,16 @@ namespace Assets.Car
             _b = Mathf.Abs(FrontWheels[0].transform.localPosition.z);
             _c = Mathf.Abs(RearWheels[0].transform.localPosition.z);
             _heightRatio = 2.0f / (_b + _c);
+
+            _cacheManager = FindObjectOfType<CacheManager>();
+            _landingAudioSource = gameObject.AddComponent<AudioSource>();
+            _landingAudioSource.playOnAwake = false;
+            _landingAudioSource.volume = 0.8f;
+            _landingAudioSource.spatialBlend = 1.0f;
+            _landingAudioSource.maxDistance = 75f;
+            _landingAudioSource.minDistance = 7.5f;
+            _landingAudioClip1 = _cacheManager.GetAudioClip("vland");
+            _landingAudioClip2 = _cacheManager.GetAudioClip("vlanding");
         }
 
         void Destroy()
@@ -63,6 +78,13 @@ namespace Assets.Car
             if (_surfaceAudioSource != null)
             {
                 Destroy(_surfaceAudioSource);
+                _surfaceAudioSource = null;
+            }
+
+            if (_landingAudioSource != null)
+            {
+                Destroy(_landingAudioSource);
+                _landingAudioSource = null;
             }
         }
 
@@ -93,15 +115,14 @@ namespace Assets.Car
                         break;
                 }
 
-                if (_surfaceAudioSource == null || _surfaceAudioSource.clip.name != surfaceSoundName)
+                if (_surfaceAudioSource == null || _surfaceAudioSource.clip == null || _surfaceAudioSource.clip.name != surfaceSoundName)
                 {
                     if (_surfaceAudioSource != null)
                     {
                         Destroy(_surfaceAudioSource);
                     }
-
-                    CacheManager cacheManager = FindObjectOfType<CacheManager>();
-                    _surfaceAudioSource = cacheManager.GetAudioSource(gameObject, surfaceSoundName);
+                    
+                    _surfaceAudioSource = _cacheManager.GetAudioSource(gameObject, surfaceSoundName);
                     _surfaceAudioSource.loop = true;
                     _surfaceAudioSource.volume = 0.6f;
                     _surfaceAudioSource.Play();
@@ -110,7 +131,7 @@ namespace Assets.Car
 
             if (_surfaceAudioSource != null)
             {
-                _surfaceAudioSource.volume = Mathf.Min(_rigidbody.velocity.magnitude * 0.1f, 0.6f);
+                _surfaceAudioSource.volume = Mathf.Min(_rigidbody.velocity.magnitude * 0.025f, 0.6f);
                 if (!_surfaceAudioSource.isPlaying)
                 {
                     _surfaceAudioSource.Play();
@@ -120,13 +141,38 @@ namespace Assets.Car
 
         void FixedUpdate()
         {
-            var allWheelsGrounded = FrontWheels.All(x => x.Grounded) && RearWheels.All(x => x.Grounded);
-            if (!allWheelsGrounded && _surfaceAudioSource != null)
+            int groundedWheels = 0;
+            for (int i = 0; i < FrontWheels.Length; ++i)
             {
-                _surfaceAudioSource.Stop();
+                if (FrontWheels[i].Grounded) ++groundedWheels;
+            }
+            for (int i = 0; i < RearWheels.Length; ++i)
+            {
+                if (RearWheels[i].Grounded) ++groundedWheels;
+            }
+
+            if (groundedWheels == 0)
+            {
+                _airTime += Time.deltaTime;
+                if (_surfaceAudioSource != null && _surfaceAudioSource.isPlaying)
+                {
+                    _surfaceAudioSource.Stop();
+                }
+            }
+
+            var allWheelsGrounded = groundedWheels == FrontWheels.Length + RearWheels.Length;
+            if (!allWheelsGrounded)
+            {
                 return;
             }
 
+            if (_airTime > AirTimeLandingTreshold && !_landingAudioSource.isPlaying)
+            {
+                _landingAudioSource.clip = Random.Range(0, 2) == 0 ? _landingAudioClip1 : _landingAudioClip2;
+                _landingAudioSource.Play();
+            }
+
+            _airTime = 0.0f;
             UpdateSurfaceSound();
             var vel3d = transform.InverseTransformVector(_rigidbody.velocity);
             _carVelocity = new Vector2(vel3d.z, vel3d.x);
