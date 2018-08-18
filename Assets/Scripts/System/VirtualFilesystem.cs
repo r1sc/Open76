@@ -82,7 +82,7 @@ namespace Assets.System
                         zfsFileInfo.DecompressedLength; // Unk perhaps decompressed length is 3 bytes
 
                     _files.Add(zfsFileInfo.Filename, zfsFileInfo);
-                    if (zfsFileInfo.Filename.EndsWith(".pix"))
+                    if (zfsFileInfo.Filename.EndsWithFast(".pix"))
                     {
                         pixFiles.Add(zfsFileInfo);
                     }
@@ -213,7 +213,7 @@ namespace Assets.System
         public FastBinaryReader GetFileStream(string filename)
         {
             string replacementFilePath;
-            if (filename.EndsWith(".msn") || filename.EndsWith(".ter"))
+            if (filename.EndsWithFast(".msn") || filename.EndsWithFast(".ter"))
             {
                 string missionDir = Path.Combine(Gamepath, "MISSIONS");
                 if (!Directory.Exists(missionDir))
@@ -303,7 +303,7 @@ namespace Assets.System
 
         public IEnumerable<string> FindAllWithExtension(string extension)
         {
-            return _files.Keys.Where(key => key.EndsWith(extension));
+            return _files.Keys.Where(key => key.EndsWithFast(extension));
         }
     }
 }
