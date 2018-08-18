@@ -7,8 +7,7 @@ namespace Assets.Scripts.Car
 {
     public class WeaponsPanel : MonoBehaviour
     {
-        public ReferenceImage ReferenceImage;
-        
+        private ReferenceImage _referenceImage;
         private SpriteManager _spriteManager;
         private I76Sprite[] _weaponSprites;
         private int _weaponCount;
@@ -18,8 +17,8 @@ namespace Assets.Scripts.Car
             _spriteManager = SpriteManager.Instance;
 
             _weaponCount = vcf.Weapons.Count;
-            ReferenceImage = _spriteManager.LoadReferenceImage("zbk_.map");
-            if (ReferenceImage == null)
+            _referenceImage = _spriteManager.LoadReferenceImage("zbk_.map");
+            if (_referenceImage == null)
             {
                 return;
             }
@@ -31,7 +30,7 @@ namespace Assets.Scripts.Car
                 if (child.name.Contains("WEP"))
                 {
                     MeshRenderer panelRenderer = child.GetComponent<MeshRenderer>();
-                    panelRenderer.material.mainTexture = ReferenceImage.MainTexture;
+                    panelRenderer.material.mainTexture = _referenceImage.MainTexture;
                     foundPanel = true;
                     break;
                 }
@@ -51,7 +50,7 @@ namespace Assets.Scripts.Car
                 int weaponIndex = GetWeaponIndex(i);
                 string spriteName = "bracket_" + weaponIndex;
                 I76Sprite housingSprite = _spriteManager.GetSprite("zwpe.map", "housing" + weaponIndex);
-                ReferenceImage.ApplySprite(spriteName, housingSprite, false);
+                _referenceImage.ApplySprite(spriteName, housingSprite, false);
 
                 I76Sprite onSprite, offSprite;
                 if (TryGetWeaponSprites(weaponsList[i].Gdf, out onSprite, out offSprite))
@@ -59,14 +58,14 @@ namespace Assets.Scripts.Car
                     spriteName = "dymo_" + weaponIndex;
                     _weaponSprites[spriteIndex++] = onSprite;
                     _weaponSprites[spriteIndex++] = offSprite;
-                    ReferenceImage.ApplySprite(spriteName, offSprite, false);
+                    _referenceImage.ApplySprite(spriteName, offSprite, false);
                 }
 
                 SetWeaponHealthGroup(weaponIndex, 0, false);
                 SetWeaponAmmoCount(weaponIndex, weaponsList[i].Gdf.AmmoCount, false);
             }
 
-            ReferenceImage.UploadToGpu();
+            _referenceImage.UploadToGpu();
         }
 
         private int GetWeaponIndex(int index)
@@ -80,7 +79,7 @@ namespace Assets.Scripts.Car
             if (sprite != null)
             {
                 string spriteId = "diode_" + weaponIndex;
-                ReferenceImage.ApplySprite(spriteId, sprite, uploadToGpu);
+                _referenceImage.ApplySprite(spriteId, sprite, uploadToGpu);
             }
         }
 
@@ -98,14 +97,14 @@ namespace Assets.Scripts.Car
             I76Sprite digitSprite4 = _spriteManager.GetNumberSprite(digit4);
 
             string spriteIdSuffix = weaponIndex.ToString();
-            ReferenceImage.ApplySprite("num_thous_" + spriteIdSuffix, digitSprite1, false);
-            ReferenceImage.ApplySprite("num_hunds_" + spriteIdSuffix, digitSprite2, false);
-            ReferenceImage.ApplySprite("num_tens_" + spriteIdSuffix, digitSprite3, false);
-            ReferenceImage.ApplySprite("num_ones_" + spriteIdSuffix, digitSprite4, false);
+            _referenceImage.ApplySprite("num_thous_" + spriteIdSuffix, digitSprite1, false);
+            _referenceImage.ApplySprite("num_hunds_" + spriteIdSuffix, digitSprite2, false);
+            _referenceImage.ApplySprite("num_tens_" + spriteIdSuffix, digitSprite3, false);
+            _referenceImage.ApplySprite("num_ones_" + spriteIdSuffix, digitSprite4, false);
 
             if (uploadToGpu)
             {
-                ReferenceImage.UploadToGpu();
+                _referenceImage.UploadToGpu();
             }
         }
 
