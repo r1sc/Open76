@@ -789,11 +789,6 @@ MonoBehaviour:
     type: 2}
   CarPrefab: {fileID: 114131967653846888, guid: 86325df56016ebb4b811fbcefcfd3f36,
     type: 2}
-  ColorMaterialPrefab: {fileID: 2100000, guid: 142122667001618458376ca995db7ef0, type: 2}
-  TextureMaterialPrefab: {fileID: 2100000, guid: 142122667001618458376ca995db7ef0,
-    type: 2}
-  TransparentMaterialPrefab: {fileID: 2100000, guid: f146fc764a50bcc4fa479c18a1d329ae,
-    type: 2}
   Palette: []
 --- !u!114 &1712330284
 MonoBehaviour:
