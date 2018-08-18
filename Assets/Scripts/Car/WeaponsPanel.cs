@@ -8,9 +8,7 @@ namespace Assets.Scripts.Car
     public class WeaponsPanel : MonoBehaviour
     {
         public ReferenceImage ReferenceImage;
-
-        public Texture2D Texture;
-
+        
         private SpriteManager _spriteManager;
         private I76Sprite[] _weaponSprites;
         private int _weaponCount;
@@ -26,7 +24,23 @@ namespace Assets.Scripts.Car
                 return;
             }
 
-            Texture = ReferenceImage.MainTexture;
+            Transform transformObj = transform;
+            bool foundPanel = false;
+            foreach (Transform child in transformObj)
+            {
+                if (child.name.Contains("WEP"))
+                {
+                    MeshRenderer panelRenderer = child.GetComponent<MeshRenderer>();
+                    panelRenderer.material.mainTexture = ReferenceImage.MainTexture;
+                    foundPanel = true;
+                    break;
+                }
+            }
+
+            if (!foundPanel)
+            {
+                Debug.LogWarning("Failed to find weapon panel in vehicle's FirstPerson hierarchy.");
+            }
 
             _weaponSprites = new I76Sprite[_weaponCount * 2];
 
