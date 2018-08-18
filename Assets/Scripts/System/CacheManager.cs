@@ -393,6 +393,9 @@ namespace Assets.System
 
                 WeaponsPanel weaponsPanel = firstPerson.AddComponent<WeaponsPanel>();
                 weaponsPanel.InitWeapons(vcf);
+                
+                SystemsPanel systemsPanel = firstPerson.AddComponent<SystemsPanel>();
+                systemsPanel.InitSystems();
 
                 firstPerson.SetActive(false);
             }

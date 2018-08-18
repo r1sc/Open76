@@ -39,7 +39,7 @@ namespace Assets.Scripts.System
                 return;
             }
             
-            MainTexture.SetPixels(referencePos.x, MainTexture.height - referencePos.y - sprite.Height, sprite.Width, sprite.Height, sprite.Pixels, 0);
+            MainTexture.SetPixels(referencePos.x, MainTexture.height - referencePos.y - sprite.Height - 1, sprite.Width, sprite.Height, sprite.Pixels, 0);
 
             if (uploadToGpu)
             {
