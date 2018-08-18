@@ -106,7 +106,7 @@ namespace Assets.Fileparsers
                 {
                     texture.wrapMode = TextureWrapMode.Clamp;
                 }
-                texture.Apply(true, true);
+                texture.Apply(true);
                 TextureCache.Add(filename, texture);
                 return texture;
             }
@@ -117,7 +117,7 @@ namespace Assets.Fileparsers
             Texture2D texture;
             if (TextureCache.TryGetValue(filename, out texture))
             {
-                return Texture2D.blackTexture;
+                return texture;
             }
 
             using (var br = VirtualFilesystem.Instance.GetFileStream(filename))
