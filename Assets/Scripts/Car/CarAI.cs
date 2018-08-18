@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using Assets;
 using Assets.Car;
 using Assets.Scripts.I76Types;
@@ -9,7 +9,7 @@ using UnityEngine;
 public class CarAI : MonoBehaviour
 {
     private Transform _transform;
-    private Vector3 _targetPos;
+    private Vector2 _targetPos;
     private FSMPath _currentPath;
     private Rigidbody _rigidBody;
     private int _nodeIndex;
@@ -20,8 +20,8 @@ public class CarAI : MonoBehaviour
     private float _steerAngle;
     private NewCar _car;
     private Road _currentRoad;
-    private Vector3 _targetRoadSegment;
-    private Vector3 _nextRoadSegment;
+    private Vector2 _targetRoadSegment;
+    private Vector2 _nextRoadSegment;
     private int _healthGroups;
     private int _health;
 
@@ -98,16 +98,18 @@ public class CarAI : MonoBehaviour
         }
 
         Vector3 pos = _transform.position;
-        Vector3 flatPos = new Vector3(pos.x, 0.0f, pos.z);
+        Vector2 pos2D;
+        pos2D.x = pos.x;
+        pos2D.y = pos.z;
+
         float velocity = _rigidBody.velocity.magnitude;
-        
         float adjustedTargetSpeed = _targetSpeed;
         float distanceTreshold = Constants.PathMinDistanceTreshold;
         
         // Find the closest road point.
-        List<Road> closestRoads = RoadManager.Instance.GetRoadsAroundPoint(pos);
-        Vector3 targetVector = (_targetPos - pos).normalized;
-        Vector3 lineOffset = targetVector * Mathf.Max(5f, velocity);
+        Road[] closestRoads = RoadManager.Instance.GetRoadsAroundPoint(pos);
+        Vector2 targetVector = (_targetPos - pos2D).normalized;
+        Vector2 lineOffset = targetVector * Mathf.Max(5f, velocity);
         Road nextRoad = null;
 
         // Check for the closest road and it's closest segment.
@@ -117,24 +119,35 @@ public class CarAI : MonoBehaviour
 
         float currentClosestSegmentDistance = minRoadDistance;
         float nextClosestSegmentDistance = minRoadDistance;
-        for (int i = 0; i < closestRoads.Count; ++i)
+
+        Vector2 vecOffset;
+        for (int i = 0; i < closestRoads.Length; ++i)
         {
             for (int j = 0; j < closestRoads[i].Segments.Length; ++j)
             {
-                Vector3 segmentPos = closestRoads[i].Segments[j];
-                Vector3 currentRoadPoint = Utils.GetClosestPointOnLineSegment(pos + lineOffset, _targetPos, segmentPos);
-                Vector3 nextRoadPoint = Utils.GetClosestPointOnLineSegment(pos + lineOffset * 2, _targetPos, segmentPos);
+                Vector2 segmentPos = closestRoads[i].Segments[j];
+
+                Vector2 lineStartPoint;
+                lineStartPoint.x = pos2D.x + lineOffset.x;
+                lineStartPoint.y = pos2D.y + lineOffset.y;
 
                 // Check for the closest point to the car's position.
-                float currentRoadDistance = Vector3.Distance(currentRoadPoint, segmentPos);
+                vecOffset.x = lineStartPoint.x - segmentPos.x;
+                vecOffset.y = lineStartPoint.y - segmentPos.y;
+                float currentRoadDistance = (float)Math.Sqrt(vecOffset.x * vecOffset.x + vecOffset.y * vecOffset.y);
                 if (currentRoadDistance < currentClosestSegmentDistance)
                 {
                     currentClosestSegmentDistance = currentRoadDistance;
                     _targetRoadSegment = segmentPos;
                 }
 
+                lineStartPoint.x = pos2D.x + lineOffset.x * 2;
+                lineStartPoint.y = pos2D.y + lineOffset.y * 2;
+
                 // Check for the next road point.
-                float nextRoadDistance = Vector3.Distance(nextRoadPoint, segmentPos);
+                vecOffset.x = lineStartPoint.x - segmentPos.x;
+                vecOffset.y = lineStartPoint.y - segmentPos.y;
+                float nextRoadDistance = (float)Math.Sqrt(vecOffset.x * vecOffset.x + vecOffset.y * vecOffset.y);
                 if (nextRoadDistance < nextClosestSegmentDistance)
                 {
                     nextClosestSegmentDistance = nextRoadDistance;
@@ -159,8 +172,9 @@ public class CarAI : MonoBehaviour
             }
             
             // Check if we need to transition between roads.
-            Vector3 flatRoadSegment = new Vector3(_targetRoadSegment.x, 0f, _targetRoadSegment.z);
-            if (Vector3.Distance(flatPos, flatRoadSegment) < distanceTreshold)
+            vecOffset.x = pos2D.x - _targetRoadSegment.x;
+            vecOffset.y = pos2D.y - _targetRoadSegment.y;
+            if ((float)Math.Sqrt(vecOffset.x * vecOffset.x + vecOffset.y * vecOffset.y) < distanceTreshold)
             {
                 _currentRoad = nextRoad;
             }
@@ -173,13 +187,16 @@ public class CarAI : MonoBehaviour
         _car.Brake = (velocity > adjustedTargetSpeed + 5.0f) ? 1.0f : 0.0f;
 
         // Steer towards target.
-        Vector3 segmentVector = (_targetRoadSegment - pos).normalized;
-        float dot = Vector3.Dot(_transform.right, segmentVector) * SteeringSensitivity;
+        Vector2 segmentVector = (_targetRoadSegment - pos2D).normalized;
+        Vector3 segmentVector3D = new Vector3(segmentVector.x, 0.0f, segmentVector.y);
+        float dot = Vector3.Dot(_transform.right, segmentVector3D) * SteeringSensitivity;
         _steerAngle = Mathf.SmoothDampAngle(_steerAngle, dot, ref _angleVelocity, 0.1f);
         _car.Steer = _steerAngle;
         
         // Check if we've reached the next node in path.
-        if (Vector3.Distance(flatPos, _targetPos) < distanceTreshold)
+        vecOffset.x = pos2D.x - _targetPos.x;
+        vecOffset.y = pos2D.y - _targetPos.y;
+        if ((float)Math.Sqrt(vecOffset.x * vecOffset.x + vecOffset.y * vecOffset.y) < distanceTreshold)
         {
             NextWaypoint();
         }
@@ -199,7 +216,8 @@ public class CarAI : MonoBehaviour
         else
         {
             Vector3 worldPos = _worldTransform.position;
-            _targetPos = new Vector3(worldPos.x + _currentPath.Nodes[_nodeIndex].x, 0.0f, worldPos.z + _currentPath.Nodes[_nodeIndex].z);
+            _targetPos.x = worldPos.x + _currentPath.Nodes[_nodeIndex].x;
+            _targetPos.y = worldPos.z + _currentPath.Nodes[_nodeIndex].z;
         }
     }
 
@@ -247,18 +265,17 @@ public class CarAI : MonoBehaviour
 
         // Draw line to target path node.
         Gizmos.color = Color.green;
-        Vector3 targetPos = _targetPos;
-        targetPos.y = Utils.GroundHeightAtPoint(targetPos);
+        Vector3 targetPos = new Vector3(_targetPos.x, Utils.GroundHeightAtPoint(_targetPos.x, _targetPos.y), _targetPos.y);
         Gizmos.DrawLine(pos, targetPos);
 
         // Draw line to current road segment.
         Gizmos.color = Color.yellow;
-        targetPos = _targetRoadSegment;
+        targetPos = new Vector3(_targetRoadSegment.x, Utils.GroundHeightAtPoint(_targetRoadSegment.x, _targetRoadSegment.y), _targetRoadSegment.y);
         Gizmos.DrawLine(pos, targetPos);
 
         // Draw line to next road segment.
         Gizmos.color = Color.magenta;
-        targetPos = _nextRoadSegment;
+        targetPos = new Vector3(_nextRoadSegment.x, Utils.GroundHeightAtPoint(_nextRoadSegment.x, _nextRoadSegment.y), _nextRoadSegment.y);
         Gizmos.DrawLine(pos, targetPos);
     }
 
@@ -299,7 +316,7 @@ public class CarAI : MonoBehaviour
         _car.Brake = 0.0f;
         _currentPath = path;
         _targetSpeed = targetSpeed * Constants.SpeedUnitRatio;
-        _targetPos = new Vector3(worldPos.x + path.Nodes[_nodeIndex].x, 0.0f, worldPos.z + path.Nodes[_nodeIndex].z);
+        _targetPos = new Vector2(worldPos.x + path.Nodes[_nodeIndex].x, worldPos.z + path.Nodes[_nodeIndex].z);
         Arrived = false;
     }
 }

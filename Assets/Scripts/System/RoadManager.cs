@@ -10,7 +10,8 @@ namespace Assets.Scripts.System
     public class RoadManager
     {
         public readonly List<Road> Roads;
-        private Transform _worldTransform;
+        private readonly Transform _worldTransform;
+        private List<Road> _pointBuffer;
 
         private static RoadManager _instance;
 
@@ -27,10 +28,10 @@ namespace Assets.Scripts.System
             }
         }
 
-        public List<Road> GetRoadsAroundPoint(Vector3 worldPoint)
+        public Road[] GetRoadsAroundPoint(Vector3 worldPoint)
         {
             Bounds pointArea = new Bounds(worldPoint, new Vector3(100f, 100f, 100f));
-            List<Road> closestRoads = new List<Road>();
+            _pointBuffer.Clear();
 
             int roadCount = Roads.Count;
             for (int i = 0; i < roadCount; ++i)
@@ -38,11 +39,11 @@ namespace Assets.Scripts.System
                 Road road = Roads[i];
                 if (pointArea.Intersects(road.Bounds))
                 {
-                    closestRoads.Add(road);
+                    _pointBuffer.Add(road);
                 }
             }
 
-            return closestRoads;
+            return _pointBuffer.ToArray();
         }
 
         public void CreateRoadObject(MsnMissionParser.Road parsedRoad, Vector2 worldMiddle)
@@ -81,7 +82,7 @@ namespace Assets.Scripts.System
             Vector3[] vertices = new Vector3[parsedRoad.RoadSegments.Length * 2];
             Vector2[] uvs = new Vector2[parsedRoad.RoadSegments.Length * 2];
             Road roadEntity = roadGo.AddComponent<Road>();
-            Vector3[] midPoints = new Vector3[parsedRoad.RoadSegments.Length];
+            Vector2[] midPoints = new Vector2[parsedRoad.RoadSegments.Length];
             roadEntity.Segments = midPoints;
 
             var uvIdx = 0;
@@ -95,7 +96,7 @@ namespace Assets.Scripts.System
                 uvs[vertexIndex + 1] = new Vector2(1, uvIdx);
 
                 Vector3 midPoint = (roadSegment.Left + roadSegment.Right) * 0.5f;
-                roadEntity.Segments[uvIdx] = midPoint - new Vector3(worldMiddle.x, 0f, worldMiddle.y);
+                roadEntity.Segments[uvIdx] = new Vector2(midPoint.x - worldMiddle.x, midPoint.z - worldMiddle.y);
 
                 uvIdx += 1;
                 vertexIndex += 2;
@@ -131,12 +132,13 @@ namespace Assets.Scripts.System
         {
             Roads = new List<Road>();
             _worldTransform = GameObject.Find("World").transform;
+            _pointBuffer = new List<Road>();
         }
     }
 
     public class Road : MonoBehaviour
     {
-        public Vector3[] Segments { get; set; }
+        public Vector2[] Segments;
         public Bounds Bounds { get; private set; }
 
         public void UpdateBounds(Vector2 worldMiddle)

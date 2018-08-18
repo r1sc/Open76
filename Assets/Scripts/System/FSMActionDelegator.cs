@@ -86,8 +86,7 @@ namespace Assets.Scripts.System
                         var path = fsmRunner.FSM.Paths[pathIndex];
 
                         Vector3 nodePos = path.GetWorldPosition(0);
-                        float worldHeight = Utils.GroundHeightAtPoint(nodePos);
-                        nodePos.y = worldHeight + height * 0.01f;
+                        nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
                         camera.transform.position = nodePos;
 
                         var entity = fsmRunner.FSM.EntityTable[watchTarget].Object;
@@ -124,12 +123,9 @@ namespace Assets.Scripts.System
                        
                         var entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                        Vector3 pos = entity.Object.transform.position;
-                        Vector3 worldPos = _worldTransform.position;
-                        pos.x = worldPos.x + path.Nodes[0].x;
-                        pos.z = worldPos.z + path.Nodes[0].z;
-                        pos.y = Utils.GroundHeightAtPoint(pos) + height * 0.01f;
-                        entity.Object.transform.position = pos;
+                        Vector3 nodePos = path.GetWorldPosition(0);
+                        nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
+                        entity.Object.transform.position = nodePos;
 
                         CarAI car = entity.Object.GetComponent<CarAI>();
                         if (car != null)

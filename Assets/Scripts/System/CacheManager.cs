@@ -122,7 +122,7 @@ namespace Assets.System
                 var textureName = Path.GetFileNameWithoutExtension(geoFace.TextureName);
                 if (vtf != null && textureName[0] == 'V')
                 {
-                    if (textureName.EndsWith("BO DY"))
+                    if (textureName.EndsWithFast("BO DY"))
                     {
                         textureName = vtf.Maps[12];
                     }
@@ -429,11 +429,11 @@ namespace Assets.System
                 if (sdfPart.Name == "NULL")
                     continue;
 
-                if (_bannedNames.Any(b => sdfPart.Name.EndsWith(b)))
+                if (_bannedNames.Any(b => sdfPart.Name.EndsWithFast(b)))
                     continue;
 
 
-                if (justChassis && !(sdfPart.Name.Contains("BDY") || sdfPart.Name.EndsWith("CHAS")))
+                if (justChassis && !(sdfPart.Name.Contains("BDY") || sdfPart.Name.EndsWithFast("CHAS")))
                     continue;
 
                 var geoFilename = sdfPart.Name + ".geo";

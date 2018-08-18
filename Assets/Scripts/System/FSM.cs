@@ -88,7 +88,14 @@ namespace Assets.Scripts.System
         public Vector3 GetWorldPosition(int nodeIndex)
         {
             Transform world = GameObject.Find("World").transform;
-            return world.position + Nodes[nodeIndex].ToVector3();
+            I76Vector3 nodePos = Nodes[nodeIndex];
+            Vector3 worldPos = world.position;
+
+            Vector3 output;
+            output.x = worldPos.x + nodePos.x;
+            output.y = worldPos.y + nodePos.y;
+            output.z = worldPos.z + nodePos.z;
+            return output;
         }
     }
 }
