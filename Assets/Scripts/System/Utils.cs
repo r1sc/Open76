@@ -20,8 +20,7 @@ namespace Assets.System
             int subLength = subText.Length;
 
             int offset = length - subLength;
-            int lengthMin1 = length - 1;
-            for (int i = offset; i < lengthMin1; ++i)
+            for (int i = offset; i < length; ++i)
             {
                 if (text[i] != subText[i - offset])
                 {
