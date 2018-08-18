@@ -321,7 +321,7 @@ public class CarAI : MonoBehaviour
                 distanceTreshold = 5f;
                 adjustedTargetSpeed = 5f;
             }
-            
+
             // Check if we need to transition between roads.
             vecOffset.x = pos2D.x - _targetRoadSegment.x;
             vecOffset.y = pos2D.y - _targetRoadSegment.y;
@@ -343,7 +343,7 @@ public class CarAI : MonoBehaviour
         float dot = Vector3.Dot(_transform.right, segmentVector3D) * SteeringSensitivity;
         _steerAngle = Mathf.SmoothDampAngle(_steerAngle, dot, ref _angleVelocity, 0.1f);
         _car.Steer = _steerAngle;
-        
+
         // Check if we've reached the next node in path.
         vecOffset.x = pos2D.x - _targetPos.x;
         vecOffset.y = pos2D.y - _targetPos.y;

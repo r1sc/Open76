@@ -4,6 +4,7 @@ using Assets.Fileparsers;
 using UnityEngine;
 using Assets.Car;
 using System.IO;
+using Assets.Scripts.Car;
 
 namespace Assets.System
 {
@@ -375,7 +376,7 @@ namespace Assets.System
             var firstPerson = new GameObject("FirstPerson");
             firstPerson.transform.parent = chassis.transform;
             firstPerson.SetActive(false);
-
+            
             for (int i = 0; i < vdf.PartsThirdPerson.Count; ++i)
             {
                 GameObject healthObject = new GameObject("Health " + i);
@@ -388,7 +389,9 @@ namespace Assets.System
             }
 
             if (importFirstPerson)
+            {
                 ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
+            }
 
             var meshFilters = thirdPerson.GetComponentsInChildren<MeshFilter>();
             var bounds = new Bounds();
@@ -403,6 +406,12 @@ namespace Assets.System
             var chassisCollider = new GameObject("ChassisColliders");
             chassisCollider.transform.parent = carObject.transform;
             ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[0], CarBodyPrefab, true);
+
+            if (importFirstPerson)
+            {
+                WeaponsPanel weaponsPanel = carObject.gameObject.AddComponent<WeaponsPanel>();
+                weaponsPanel.InitWeapons(vcf);
+            }
 
             for (int i = 0; i < vcf.Weapons.Count; ++i)
             {

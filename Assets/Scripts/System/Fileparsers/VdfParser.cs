@@ -1,9 +1,6 @@
-﻿using Assets.System;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using Assets.Scripts.System;
+using Assets.System;
 using UnityEngine;
 
 namespace Assets.Fileparsers
@@ -36,6 +33,23 @@ namespace Assets.Fileparsers
         public uint HardpointIndex { get; set; }
         public uint Num1 { get; set; }
         public HardpointMeshType MeshType { get; set; }
+    }
+
+    public class ETbl
+    {
+        public string MapFile { get; set; }
+        public bool IsReferenceImage { get; set; }
+        public uint ItemCount { get; set; }
+        public Dictionary<string, ETblItem> Items { get; set; }
+
+        public class ETblItem
+        {
+            public string Name { get; set; }
+            public int XOffset { get; set; }
+            public int YOffset { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
+        }
     }
 
     public enum HardpointMeshType : byte
@@ -71,6 +85,7 @@ namespace Assets.Fileparsers
         public List<VLoc> VLocs { get; set; }
         public string SOBJGeoName { get; set; }
         public List<HLoc> HLocs { get; set; }
+        public List<ETbl> Etbls { get; set; }
     }
 
     public class VdfParser
@@ -82,7 +97,6 @@ namespace Assets.Fileparsers
                 var vdf = new Vdf();
 
                 br.FindNext("VDFC");
-
                 
                 vdf.Name = br.ReadCString(20);
                 vdf.VehicleType = br.ReadUInt32();
@@ -117,7 +131,6 @@ namespace Assets.Fileparsers
                     br.Next();
                 }
                 
-
                 br.FindNext("VGEO");
                 var numParts = br.ReadUInt32();
                 vdf.PartsThirdPerson = new List<SdfPart[]>(4);
@@ -172,8 +185,7 @@ namespace Assets.Fileparsers
                 var yMaxInner = br.ReadSingle();
                 var yMinInner = br.ReadSingle();
                 var yMinOuter = br.ReadSingle();
-
-
+                
                 var innerBounds = new Bounds();
                 innerBounds.SetMinMax(new Vector3(xMinInner, yMinInner, zMinInner), new Vector3(xMaxInner, yMaxInner, zMaxInner));
                 vdf.BoundsInner = innerBounds;
@@ -197,7 +209,7 @@ namespace Assets.Fileparsers
 
                 vdf.HLocs = new List<HLoc>();
                 br.FindNext("HLOC");
-                while (br.Current != null && br.Current.Name != "EXIT")
+                while (br.Current != null && br.Current.Name == "HLOC")
                 {
                     var hloc = new HLoc
                     {
@@ -214,6 +226,47 @@ namespace Assets.Fileparsers
                     vdf.HLocs.Add(hloc);
 
                     br.Next();
+                }
+
+                vdf.Etbls = new List<ETbl>();
+                br.FindNext("ETBL");
+                
+                while (br.Current != null && br.Current.Name == "ETBL")
+                {
+                    long tableEnd = br.Current.DataPosition + br.Current.DataLength;
+                    while (br.Position < tableEnd)
+                    {
+                        ETbl etbl = new ETbl
+                        {
+                            MapFile = br.ReadCString(13),
+                            IsReferenceImage = br.ReadUInt32() == 1,
+                            ItemCount = br.ReadUInt32(),
+                        };
+                        
+                        uint itemCount = etbl.ItemCount;
+                        etbl.Items = new Dictionary<string, ETbl.ETblItem>((int)itemCount);
+                        for (uint i = 0; i < itemCount; ++i)
+                        {
+                            ETbl.ETblItem etblItem = new ETbl.ETblItem
+                            {
+                                Name = br.ReadCString(16),
+                                XOffset = br.ReadInt32(),
+                                YOffset = br.ReadInt32(),
+                                Width = br.ReadInt32(),
+                                Height = br.ReadInt32()
+                            };
+
+                            etbl.Items.Add(etblItem.Name, etblItem);
+                        }
+                        vdf.Etbls.Add(etbl);
+                    }
+
+                    br.Next();
+                }
+
+                if (!SpriteManager.Instance.Initialised)
+                {
+                    SpriteManager.Instance.Initialise(vdf);
                 }
 
                 return vdf;
