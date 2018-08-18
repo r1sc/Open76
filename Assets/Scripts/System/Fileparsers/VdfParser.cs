@@ -209,7 +209,7 @@ namespace Assets.Fileparsers
 
                 vdf.HLocs = new List<HLoc>();
                 br.FindNext("HLOC");
-                while (br.Current != null && br.Current.Name == "HLOC")
+                while (br.Current != null && br.Current.Name != "EXIT")
                 {
                     var hloc = new HLoc
                     {
@@ -231,7 +231,7 @@ namespace Assets.Fileparsers
                 vdf.Etbls = new List<ETbl>();
                 br.FindNext("ETBL");
                 
-                while (br.Current != null && br.Current.Name == "ETBL")
+                while (br.Current != null && br.Current.Name != "EXIT")
                 {
                     long tableEnd = br.Current.DataPosition + br.Current.DataLength;
                     while (br.Position < tableEnd)

@@ -373,9 +373,6 @@ namespace Assets.System
                 weaponMountTransforms[i] = mountPoint;
             }
 
-            var firstPerson = new GameObject("FirstPerson");
-            firstPerson.transform.parent = chassis.transform;
-            firstPerson.SetActive(false);
             
             for (int i = 0; i < vdf.PartsThirdPerson.Count; ++i)
             {
@@ -390,7 +387,14 @@ namespace Assets.System
 
             if (importFirstPerson)
             {
+                var firstPerson = new GameObject("FirstPerson");
+                firstPerson.transform.parent = chassis.transform;
                 ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
+
+                WeaponsPanel weaponsPanel = firstPerson.AddComponent<WeaponsPanel>();
+                weaponsPanel.InitWeapons(vcf);
+
+                firstPerson.SetActive(false);
             }
 
             var meshFilters = thirdPerson.GetComponentsInChildren<MeshFilter>();
@@ -406,13 +410,7 @@ namespace Assets.System
             var chassisCollider = new GameObject("ChassisColliders");
             chassisCollider.transform.parent = carObject.transform;
             ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[0], CarBodyPrefab, true);
-
-            if (importFirstPerson)
-            {
-                WeaponsPanel weaponsPanel = carObject.gameObject.AddComponent<WeaponsPanel>();
-                weaponsPanel.InitWeapons(vcf);
-            }
-
+            
             for (int i = 0; i < vcf.Weapons.Count; ++i)
             {
                 VcfParser.VcfWeapon weapon = vcf.Weapons[i];
