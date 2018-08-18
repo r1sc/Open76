@@ -216,7 +216,7 @@ namespace Assets.Fileparsers
 
                 vdf.HLocs = new List<HLoc>();
                 br.FindNext("HLOC");
-                while (br.Current != null && br.Current.Name != "EXIT")
+                while (br.Current != null && br.Current.Name == "HLOC")
                 {
                     var hloc = new HLoc
                     {
