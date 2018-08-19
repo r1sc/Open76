@@ -22,6 +22,13 @@ namespace Assets.Scripts.System
         private bool TryGetMapTexture(string mapName, out Texture2D mapTexture, out ETbl etbl)
         {
             List<ETbl> etbls = _vdf.Etbls;
+            if (etbls == null)
+            {
+                mapTexture = null;
+                etbl = null;
+                return false;
+            }
+
             int etblCount = etbls.Count;
             for (int i = 0; i < etblCount; ++i)
             {

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Assets.Scripts.System;
+using Assets.Scripts.System.Fileparsers;
 using Assets.System;
 using UnityEngine;
 
@@ -72,7 +73,9 @@ namespace Assets.Fileparsers
         public float CollisionMultiplier;
         public float DragCoefficient;
         public uint Unknown;
+        public int Revision { get; set; }
         public string Name { get; set; }
+        public string EltFile { get; set; }
         public uint VehicleType { get; set; }
         public uint VehicleSize { get; set; }
         public float LODDistance1 { get; set; }
@@ -95,6 +98,8 @@ namespace Assets.Fileparsers
             using (var br = new Bwd2Reader(filename))
             {
                 var vdf = new Vdf();
+                br.FindNext("REV");
+                vdf.Revision = br.ReadInt32();
 
                 br.FindNext("VDFC");
                 
@@ -110,6 +115,10 @@ namespace Assets.Fileparsers
                 vdf.CollisionMultiplier = br.ReadSingle();
                 vdf.DragCoefficient = br.ReadSingle();
                 vdf.Unknown = br.ReadUInt32();
+                if (vdf.Revision == 8)
+                {
+                    vdf.EltFile = br.ReadCString(13);
+                }
 
                 br.FindNext("SOBJ");
                 vdf.SOBJGeoName = br.ReadCString(8);
@@ -228,45 +237,56 @@ namespace Assets.Fileparsers
                     br.Next();
                 }
 
-                vdf.Etbls = new List<ETbl>();
-                br.FindNext("ETBL");
-                
-                while (br.Current != null && br.Current.Name != "EXIT")
-                {
-                    long tableEnd = br.Current.DataPosition + br.Current.DataLength;
-                    while (br.Position < tableEnd)
-                    {
-                        ETbl etbl = new ETbl
-                        {
-                            MapFile = br.ReadCString(13),
-                            IsReferenceImage = br.ReadUInt32() == 1,
-                            ItemCount = br.ReadUInt32(),
-                        };
-                        
-                        uint itemCount = etbl.ItemCount;
-                        etbl.Items = new Dictionary<string, ETbl.ETblItem>((int)itemCount);
-                        for (uint i = 0; i < itemCount; ++i)
-                        {
-                            ETbl.ETblItem etblItem = new ETbl.ETblItem
-                            {
-                                Name = br.ReadCString(16),
-                                XOffset = br.ReadInt32(),
-                                YOffset = br.ReadInt32(),
-                                Width = br.ReadInt32(),
-                                Height = br.ReadInt32()
-                            };
-
-                            etbl.Items.Add(etblItem.Name, etblItem);
-                        }
-                        vdf.Etbls.Add(etbl);
-                    }
-
-                    br.Next();
-                }
-
                 if (!SpriteManager.Instance.Initialised)
                 {
-                    SpriteManager.Instance.Initialise(vdf);
+                    if (vdf.Revision == 7)
+                    {
+                        vdf.Etbls = new List<ETbl>();
+                        br.FindNext("ETBL");
+
+                        while (br.Current != null && br.Current.Name != "EXIT")
+                        {
+                            long tableEnd = br.Current.DataPosition + br.Current.DataLength;
+                            while (br.Position < tableEnd)
+                            {
+                                ETbl etbl = new ETbl
+                                {
+                                    MapFile = br.ReadCString(13),
+                                    IsReferenceImage = br.ReadUInt32() == 1,
+                                    ItemCount = br.ReadUInt32(),
+                                };
+
+                                uint itemCount = etbl.ItemCount;
+                                etbl.Items = new Dictionary<string, ETbl.ETblItem>((int) itemCount);
+                                for (uint i = 0; i < itemCount; ++i)
+                                {
+                                    ETbl.ETblItem etblItem = new ETbl.ETblItem
+                                    {
+                                        Name = br.ReadCString(16),
+                                        XOffset = br.ReadInt32(),
+                                        YOffset = br.ReadInt32(),
+                                        Width = br.ReadInt32(),
+                                        Height = br.ReadInt32()
+                                    };
+
+                                    etbl.Items.Add(etblItem.Name, etblItem);
+                                }
+
+                                vdf.Etbls.Add(etbl);
+                            }
+
+                            br.Next();
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(vdf.EltFile))
+                    {
+                        vdf.Etbls = EltParser.ParseElt(vdf.EltFile);
+                    }
+
+                    if (vdf.Etbls != null && vdf.Etbls.Count > 0)
+                    {
+                        SpriteManager.Instance.Initialise(vdf);
+                    }
                 }
 
                 return vdf;
