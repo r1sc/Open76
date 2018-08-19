@@ -14,6 +14,7 @@ namespace Assets.Scripts.Car
         private Rigidbody _rigidBody;
         private WeaponsPanel _weaponsPanel;
         private SystemsPanel _systemsPanel;
+        private CompassPanel _compassPanel;
         private int _healthGroups;
         private int _health;
 
@@ -68,6 +69,7 @@ namespace Assets.Scripts.Car
             Transform firstPersonTransform = _transform.Find("Chassis/FirstPerson");
             _weaponsPanel = new WeaponsPanel(vcf, firstPersonTransform);
             _systemsPanel = new SystemsPanel(firstPersonTransform);
+            _compassPanel = new CompassPanel(firstPersonTransform);
         }
 
         private void Update()
@@ -79,6 +81,11 @@ namespace Assets.Scripts.Car
 
             Movement.Update();
 
+            if (_compassPanel != null)
+            {
+                _compassPanel.UpdateCompassHeading(_transform.eulerAngles.y);
+            }
+            
             if (TeamId != 1 || !CameraManager.Instance.IsMainCameraActive)
             {
                 AI.Navigate();
