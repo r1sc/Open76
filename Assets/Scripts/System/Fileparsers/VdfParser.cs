@@ -73,7 +73,6 @@ namespace Assets.Fileparsers
         public float CollisionMultiplier;
         public float DragCoefficient;
         public uint Unknown;
-        public int Revision { get; set; }
         public string Name { get; set; }
         public string EltFile { get; set; }
         public uint VehicleType { get; set; }
