@@ -13,6 +13,7 @@ namespace Assets.Scripts.Car
 
         private Transform _transform;
         private Rigidbody _rigidBody;
+		
         public WeaponsPanel WeaponsPanel;
         public SystemsPanel SystemsPanel;
         public SpecialsPanel SpecialsPanel;
@@ -164,7 +165,7 @@ namespace Assets.Scripts.Car
             {
                 RadarPanel.Update();
             }
-
+			
             if (TeamId != 1 || !CameraManager.Instance.IsMainCameraActive)
             {
                 AI.Navigate();

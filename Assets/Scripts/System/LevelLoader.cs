@@ -98,6 +98,8 @@ namespace Assets.System
                                     break;
                             }
 
+                            CarController car = go.AddComponent<CarController>();
+                            car.TeamId = odef.TeamId;
                             go.transform.parent = patchGameObject.transform;
                             go.transform.localPosition = odef.LocalPosition;
                             go.transform.localRotation = odef.LocalRotation;
