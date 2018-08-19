@@ -61,8 +61,8 @@ namespace Assets.Scripts.Car
                     _referenceImage.ApplySprite(spriteName, offSprite, false);
                 }
 
-                SetWeaponHealthGroup(weaponIndex, 0, false);
-                SetWeaponAmmoCount(weaponIndex, weaponsList[i].Gdf.AmmoCount, false);
+                SetWeaponHealthGroup(i, 0, false);
+                SetWeaponAmmoCount(i, weaponsList[i].Gdf.AmmoCount, false);
             }
 
             _referenceImage.UploadToGpu();
@@ -75,6 +75,8 @@ namespace Assets.Scripts.Car
 
         public void SetWeaponHealthGroup(int weaponIndex, int healthGroup, bool uploadToGpu)
         {
+            weaponIndex = GetWeaponIndex(weaponIndex);
+
             I76Sprite sprite = _spriteManager.GetDiodeSprite(healthGroup);
             if (sprite != null)
             {
@@ -85,6 +87,8 @@ namespace Assets.Scripts.Car
 
         public void SetWeaponAmmoCount(int weaponIndex, int ammoCount, bool uploadToGpu)
         {
+            weaponIndex = GetWeaponIndex(weaponIndex);
+
             string numberString = string.Format("{0:0000}", ammoCount);
             char digit1 = numberString[0];
             char digit2 = numberString[1];

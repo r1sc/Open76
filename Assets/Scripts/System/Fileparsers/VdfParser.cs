@@ -73,7 +73,6 @@ namespace Assets.Fileparsers
         public float CollisionMultiplier;
         public float DragCoefficient;
         public uint Unknown;
-        public int Revision { get; set; }
         public string Name { get; set; }
         public string EltFile { get; set; }
         public uint VehicleType { get; set; }
@@ -99,7 +98,6 @@ namespace Assets.Fileparsers
             {
                 var vdf = new Vdf();
                 br.FindNext("REV");
-                vdf.Revision = br.ReadInt32();
 
                 br.FindNext("VDFC");
                 
@@ -115,7 +113,7 @@ namespace Assets.Fileparsers
                 vdf.CollisionMultiplier = br.ReadSingle();
                 vdf.DragCoefficient = br.ReadSingle();
                 vdf.Unknown = br.ReadUInt32();
-                if (vdf.Revision == 8)
+                if (br.Current.DataLength == 77)
                 {
                     vdf.EltFile = br.ReadCString(13);
                 }
@@ -239,7 +237,7 @@ namespace Assets.Fileparsers
 
                 if (!SpriteManager.Instance.Initialised)
                 {
-                    if (vdf.Revision == 7)
+                    if (vdf.EltFile == null)
                     {
                         vdf.Etbls = new List<ETbl>();
                         br.FindNext("ETBL");
@@ -278,7 +276,7 @@ namespace Assets.Fileparsers
                             br.Next();
                         }
                     }
-                    else if (!string.IsNullOrEmpty(vdf.EltFile))
+                    else
                     {
                         vdf.Etbls = EltParser.ParseElt(vdf.EltFile);
                     }
