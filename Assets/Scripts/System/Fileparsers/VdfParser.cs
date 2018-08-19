@@ -73,6 +73,7 @@ namespace Assets.Fileparsers
         public float CollisionMultiplier;
         public float DragCoefficient;
         public uint Unknown;
+        public int Revision { get; set; }
         public string Name { get; set; }
         public string EltFile { get; set; }
         public uint VehicleType { get; set; }
@@ -97,8 +98,6 @@ namespace Assets.Fileparsers
             using (var br = new Bwd2Reader(filename))
             {
                 var vdf = new Vdf();
-                br.FindNext("REV");
-
                 br.FindNext("VDFC");
                 
                 vdf.Name = br.ReadCString(20);
