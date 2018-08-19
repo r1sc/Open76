@@ -1,5 +1,5 @@
-﻿using Assets.Car;
-using Assets.Scripts.Camera;
+﻿using Assets.Scripts.Camera;
+using Assets.Scripts.Car;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -10,7 +10,7 @@ namespace Assets
     {
         private SmoothFollow _smoothFollow;
         private bool _firstPerson = false;
-        private CarAI _player;
+        private CarController _player;
 
         private enum ChassisView
         {
@@ -38,7 +38,7 @@ namespace Assets
                 Transform target = _smoothFollow.Target;
                 if (target != null)
                 {
-                    _player = target.GetComponent<CarAI>();
+                    _player = target.GetComponent<CarController>();
                 }
             }
             else

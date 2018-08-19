@@ -55,6 +55,7 @@ namespace Assets.Scripts.System
 
     public class I76Sprite
     {
+        public string Name { get; set; }
         public Color[] Pixels { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }

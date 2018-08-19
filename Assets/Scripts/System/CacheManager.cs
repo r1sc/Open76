@@ -2,7 +2,6 @@
 using System.Linq;
 using Assets.Fileparsers;
 using UnityEngine;
-using Assets.Car;
 using System.IO;
 using Assets.Scripts.Car;
 
@@ -16,7 +15,7 @@ namespace Assets.System
         public RaySusp SteerWheelPrefab;
         public RaySusp DriveWheelPrefab;
         public GameObject CarBodyPrefab;
-        public NewCar CarPrefab;
+        public CarController CarPrefab;
         public Color32[] Palette;
         
         private Material _colorMaterialPrefab;
@@ -391,12 +390,7 @@ namespace Assets.System
                 firstPerson.transform.parent = chassis.transform;
                 ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
 
-                WeaponsPanel weaponsPanel = firstPerson.AddComponent<WeaponsPanel>();
-                weaponsPanel.InitWeapons(vcf);
-                
-                SystemsPanel systemsPanel = firstPerson.AddComponent<SystemsPanel>();
-                systemsPanel.InitSystems();
-
+                carObject.InitPanels(vcf);
                 firstPerson.SetActive(false);
             }
 
@@ -469,23 +463,27 @@ namespace Assets.System
             //var outerBox = chassisCollider.AddComponent<BoxCollider>();
             //outerBox.center = vdf.BoundsOuter.center;
             //outerBox.size = vdf.BoundsOuter.size;
-            
+
+            RaySusp[] frontWheels = null;
             if (vcf.FrontWheelDef != null)
             {
-                var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
-                carObject.FrontWheels = frontWheels;
+                frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
+                carObject.Movement.FrontWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
                 CreateWheelPair("Mid", 2, carObject.gameObject, vdf, vtf, vcf.MidWheelDef);
             }
+
+            RaySusp[] rearWheels = null;
             if (vcf.BackWheelDef != null)
             {
-                var rearWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
-                carObject.RearWheels = rearWheels;
+                rearWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
+                carObject.Movement.RearWheels = rearWheels;
             }
-            carObject.Chassis = chassis.transform;
 
+            carObject.Movement.Initialise(chassis.transform, frontWheels, rearWheels);
+            
             return carObject.gameObject;
         }
 

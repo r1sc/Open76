@@ -3,42 +3,19 @@ using Assets.Fileparsers;
 using Assets.Scripts.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car
+namespace Assets.Scripts.Car.Ui
 {
-    public class WeaponsPanel : MonoBehaviour
+    public class WeaponsPanel : Panel
     {
-        private ReferenceImage _referenceImage;
-        private SpriteManager _spriteManager;
-        private I76Sprite[] _weaponSprites;
-        private int _weaponCount;
+        private readonly I76Sprite[] _weaponSprites;
+        private readonly int _weaponCount;
 
-        public void InitWeapons(VcfParser.Vcf vcf)
+        public WeaponsPanel(VcfParser.Vcf vcf, Transform firstPersonTransform) : base(firstPersonTransform, "WEP", "zbk_.map")
         {
-            _spriteManager = SpriteManager.Instance;
-
             _weaponCount = vcf.Weapons.Count;
-            _referenceImage = _spriteManager.LoadReferenceImage("zbk_.map");
-            if (_referenceImage == null)
+            if (ReferenceImage == null)
             {
                 return;
-            }
-
-            Transform transformObj = transform;
-            bool foundPanel = false;
-            foreach (Transform child in transformObj)
-            {
-                if (child.name.Contains("WEP"))
-                {
-                    MeshRenderer panelRenderer = child.GetComponent<MeshRenderer>();
-                    panelRenderer.material.mainTexture = _referenceImage.MainTexture;
-                    foundPanel = true;
-                    break;
-                }
-            }
-
-            if (!foundPanel)
-            {
-                Debug.LogWarning("Failed to find weapon panel in vehicle's FirstPerson hierarchy.");
             }
 
             _weaponSprites = new I76Sprite[_weaponCount * 2];
@@ -47,10 +24,10 @@ namespace Assets.Scripts.Car
             List<VcfParser.VcfWeapon> weaponsList = vcf.Weapons;
             for (int i = 0; i < _weaponCount; ++i)
             {
-                int weaponIndex = GetWeaponIndex(i);
+                int weaponIndex = GetWeaponUiIndex(i);
                 string spriteName = "bracket_" + weaponIndex;
-                I76Sprite housingSprite = _spriteManager.GetSprite("zwpe.map", "housing" + weaponIndex);
-                _referenceImage.ApplySprite(spriteName, housingSprite, false);
+                I76Sprite housingSprite = SpriteManager.GetSprite("zwpe.map", "housing" + weaponIndex);
+                ReferenceImage.ApplySprite(spriteName, housingSprite, false);
 
                 I76Sprite onSprite, offSprite;
                 if (TryGetWeaponSprites(weaponsList[i].Gdf, out onSprite, out offSprite))
@@ -58,36 +35,51 @@ namespace Assets.Scripts.Car
                     spriteName = "dymo_" + weaponIndex;
                     _weaponSprites[spriteIndex++] = onSprite;
                     _weaponSprites[spriteIndex++] = offSprite;
-                    _referenceImage.ApplySprite(spriteName, offSprite, false);
+                    ReferenceImage.ApplySprite(spriteName, offSprite, false);
                 }
 
                 SetWeaponHealthGroup(i, 0, false);
                 SetWeaponAmmoCount(i, weaponsList[i].Gdf.AmmoCount, false);
             }
 
-            _referenceImage.UploadToGpu();
+            ReferenceImage.UploadToGpu();
         }
 
-        private int GetWeaponIndex(int index)
+        private int GetWeaponUiIndex(int index)
         {
             return _weaponCount - index;
         }
 
         public void SetWeaponHealthGroup(int weaponIndex, int healthGroup, bool uploadToGpu)
         {
-            weaponIndex = GetWeaponIndex(weaponIndex);
+            weaponIndex = GetWeaponUiIndex(weaponIndex);
 
-            I76Sprite sprite = _spriteManager.GetDiodeSprite(healthGroup);
+            I76Sprite sprite = SpriteManager.GetDiodeSprite(healthGroup);
             if (sprite != null)
             {
                 string spriteId = "diode_" + weaponIndex;
-                _referenceImage.ApplySprite(spriteId, sprite, uploadToGpu);
+                ReferenceImage.ApplySprite(spriteId, sprite, uploadToGpu);
             }
+        }
+
+        public void SetWeaponEnabledState(int weaponIndex, bool weaponEnabled)
+        {
+            int spriteIndex = weaponIndex * 2;
+            if (weaponEnabled)
+            {
+                ++spriteIndex;
+            }
+
+            weaponIndex = GetWeaponUiIndex(weaponIndex);
+            string referenceName = "dymo_" + weaponIndex;
+
+            I76Sprite sprite = _weaponSprites[spriteIndex];
+            ReferenceImage.ApplySprite(referenceName, sprite, true);
         }
 
         public void SetWeaponAmmoCount(int weaponIndex, int ammoCount, bool uploadToGpu)
         {
-            weaponIndex = GetWeaponIndex(weaponIndex);
+            weaponIndex = GetWeaponUiIndex(weaponIndex);
 
             string numberString = string.Format("{0:0000}", ammoCount);
             char digit1 = numberString[0];
@@ -95,20 +87,20 @@ namespace Assets.Scripts.Car
             char digit3 = numberString[2];
             char digit4 = numberString[3];
 
-            I76Sprite digitSprite1 = _spriteManager.GetNumberSprite(digit1);
-            I76Sprite digitSprite2 = _spriteManager.GetNumberSprite(digit2);
-            I76Sprite digitSprite3 = _spriteManager.GetNumberSprite(digit3);
-            I76Sprite digitSprite4 = _spriteManager.GetNumberSprite(digit4);
+            I76Sprite digitSprite1 = SpriteManager.GetNumberSprite(digit1);
+            I76Sprite digitSprite2 = SpriteManager.GetNumberSprite(digit2);
+            I76Sprite digitSprite3 = SpriteManager.GetNumberSprite(digit3);
+            I76Sprite digitSprite4 = SpriteManager.GetNumberSprite(digit4);
 
             string spriteIdSuffix = weaponIndex.ToString();
-            _referenceImage.ApplySprite("num_thous_" + spriteIdSuffix, digitSprite1, false);
-            _referenceImage.ApplySprite("num_hunds_" + spriteIdSuffix, digitSprite2, false);
-            _referenceImage.ApplySprite("num_tens_" + spriteIdSuffix, digitSprite3, false);
-            _referenceImage.ApplySprite("num_ones_" + spriteIdSuffix, digitSprite4, false);
+            ReferenceImage.ApplySprite("num_thous_" + spriteIdSuffix, digitSprite1, false);
+            ReferenceImage.ApplySprite("num_hunds_" + spriteIdSuffix, digitSprite2, false);
+            ReferenceImage.ApplySprite("num_tens_" + spriteIdSuffix, digitSprite3, false);
+            ReferenceImage.ApplySprite("num_ones_" + spriteIdSuffix, digitSprite4, false);
 
             if (uploadToGpu)
             {
-                _referenceImage.UploadToGpu();
+                ReferenceImage.UploadToGpu();
             }
         }
 
@@ -151,8 +143,8 @@ namespace Assets.Scripts.Car
                     return false;
             }
 
-            onSprite = _spriteManager.GetSprite("zdue.map", onSpriteName);
-            offSprite = _spriteManager.GetSprite("zdue.map", offSpriteName);
+            onSprite = SpriteManager.GetSprite("zdue.map", onSpriteName);
+            offSprite = SpriteManager.GetSprite("zdue.map", offSpriteName);
 
             if (onSprite != null && offSprite != null)
             {

@@ -1,28 +1,28 @@
-﻿using Assets.Car;
-using Assets.Scripts.Camera;
+﻿using Assets.Scripts.Camera;
+using Assets.Scripts.Car;
 using UnityEngine;
 
 namespace Assets
 {
     class InputCarController : MonoBehaviour
     {
-        private NewCar _car;
-        private CarAI _carAi;
+        private CarController _car;
+        private CarMovement _movement;
 
         void Start()
         {
-            _car = GetComponent<NewCar>();
-            _carAi = GetComponent<CarAI>();
+            _car = GetComponent<CarController>();
+            _movement = _car.Movement;
         }
 
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.K))
             {
-                _carAi.Kill();
+                _car.Kill();
             }
 
-            if (!CameraManager.Instance.IsMainCameraActive || !_carAi.Alive)
+            if (!CameraManager.Instance.IsMainCameraActive || !_car.Alive)
             {
                 return;
             }
@@ -31,13 +31,13 @@ namespace Assets
             var brake = -Mathf.Min(0, throttle);
             throttle = Mathf.Max(0, throttle);
 
-            _car.Throttle = _carAi.EngineRunning ? throttle : 0f;
-            _car.Brake = brake;
+            _movement.Throttle = throttle;
+            _movement.Brake = brake;
 
             var steering = Input.GetAxis("Horizontal");
-            _car.Steer = steering;
+            _movement.Steer = steering;
 
-            _car.EBrake = Input.GetButton("E-brake");
+            _movement.EBrake = Input.GetButton("E-brake");
             // _car.RearSlip = ebrake;
 
         }

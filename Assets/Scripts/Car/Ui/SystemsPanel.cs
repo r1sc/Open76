@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using Assets.Fileparsers;
 using Assets.Scripts.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car
+namespace Assets.Scripts.Car.Ui
 {
-    public class SystemsPanel : MonoBehaviour
+    public class SystemsPanel : Panel
     {
-        private ReferenceImage _referenceImage;
-        private SpriteManager _spriteManager;
-
         public enum Systems
         {
             Engine,
@@ -30,32 +25,11 @@ namespace Assets.Scripts.Car
             TireBR
         };
         
-        public void InitSystems()
+        public SystemsPanel(Transform firstPersonTransform) : base(firstPersonTransform, "SYS", "zsy_.map")
         {
-            _spriteManager = SpriteManager.Instance;
-
-            _referenceImage = _spriteManager.LoadReferenceImage("zsy_.map");
-            if (_referenceImage == null)
+            if (ReferenceImage == null)
             {
                 return;
-            }
-
-            Transform transformObj = transform;
-            bool foundPanel = false;
-            foreach (Transform child in transformObj)
-            {
-                if (child.name.Contains("SYS"))
-                {
-                    MeshRenderer panelRenderer = child.GetComponent<MeshRenderer>();
-                    panelRenderer.material.mainTexture = _referenceImage.MainTexture;
-                    foundPanel = true;
-                    break;
-                }
-            }
-
-            if (!foundPanel)
-            {
-                Debug.LogWarning("Failed to find system panel in vehicle's FirstPerson hierarchy.");
             }
 
             Array values = Enum.GetValues(typeof(Systems));
@@ -64,7 +38,7 @@ namespace Assets.Scripts.Car
                 SetSystemHealthGroup(system, 0, false);
             }
 
-            _referenceImage.UploadToGpu();
+            ReferenceImage.UploadToGpu();
         }
         
         public void SetSystemHealthGroup(Systems system, int healthGroup, bool uploadToGpu)
@@ -156,10 +130,10 @@ namespace Assets.Scripts.Car
                 referenceName = spriteName;
             }
 
-            I76Sprite sprite = _spriteManager.GetSprite("zsye.map", spriteName + healthSuffix);
+            I76Sprite sprite = SpriteManager.GetSprite("zsye.map", spriteName + healthSuffix);
             if (sprite != null)
             {
-                _referenceImage.ApplySprite(referenceName, sprite, uploadToGpu);
+                ReferenceImage.ApplySprite(referenceName, sprite, uploadToGpu);
             }
         }
     }

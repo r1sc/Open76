@@ -111,12 +111,16 @@ namespace Assets.Scripts.System
                 return null;
             }
 
-            sprite = new I76Sprite();
             int mapYOffset = Mathf.Clamp(mapTexture.height - item.Height - item.YOffset - item.Height * yOffset + 1, 0, mapTexture.height - item.Height);
             Color[] pixels = mapTexture.GetPixels(item.XOffset + item.Width * xOffset, mapYOffset, item.Width, item.Height, 0);
-            sprite.Pixels = pixels;
-            sprite.Width = item.Width;
-            sprite.Height = item.Height;
+
+            sprite = new I76Sprite
+            {
+                Name = spriteName,
+                Pixels = pixels,
+                Width = item.Width,
+                Height = item.Height
+            };
 
             if (addToCache)
             {
