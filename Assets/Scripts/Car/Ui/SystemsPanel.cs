@@ -2,7 +2,7 @@
 using Assets.Scripts.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car.Ui
+namespace Assets.Scripts.Car.UI
 {
     public class SystemsPanel : Panel
     {
