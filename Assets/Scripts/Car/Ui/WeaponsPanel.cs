@@ -1,86 +1,70 @@
 ﻿using System.Collections.Generic;
 using Assets.Fileparsers;
+using Assets.Scripts.Car.Components;
 using Assets.Scripts.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car.Ui
+namespace Assets.Scripts.Car.UI
 {
     public class WeaponsPanel : Panel
     {
-        private readonly I76Sprite[] _weaponSprites;
-        private readonly int _weaponCount;
+        public WeaponComponent[] Items { get; private set; }
+
+        private readonly bool _initialised;
 
         public WeaponsPanel(VcfParser.Vcf vcf, Transform firstPersonTransform) : base(firstPersonTransform, "WEP", "zbk_.map")
         {
-            _weaponCount = vcf.Weapons.Count;
+            int weaponCount = vcf.Weapons.Count;
+            Items = new WeaponComponent[weaponCount];
+
             if (ReferenceImage == null)
             {
                 return;
             }
-
-            _weaponSprites = new I76Sprite[_weaponCount * 2];
-
-            int spriteIndex = 0;
+            
             List<VcfParser.VcfWeapon> weaponsList = vcf.Weapons;
-            for (int i = 0; i < _weaponCount; ++i)
+            for (int i = 0; i < weaponCount; ++i)
             {
-                int weaponIndex = GetWeaponUiIndex(i);
-                string spriteName = "bracket_" + weaponIndex;
-                I76Sprite housingSprite = SpriteManager.GetSprite("zwpe.map", "housing" + weaponIndex);
+                int iPlus1 = i + 1;
+                string spriteName = "bracket_" + iPlus1;
+                I76Sprite housingSprite = SpriteManager.GetSprite("zwpe.map", "housing" + iPlus1);
                 ReferenceImage.ApplySprite(spriteName, housingSprite, false);
 
                 I76Sprite onSprite, offSprite;
                 if (TryGetWeaponSprites(weaponsList[i].Gdf, out onSprite, out offSprite))
                 {
-                    spriteName = "dymo_" + weaponIndex;
-                    _weaponSprites[spriteIndex++] = onSprite;
-                    _weaponSprites[spriteIndex++] = offSprite;
+                    spriteName = "dymo_" + iPlus1;
+                    Items[i] = new WeaponComponent(weaponsList[i].Gdf.AmmoCount, this, i);
+                    Items[i].OnSprite = onSprite;
+                    Items[i].OffSprite = offSprite;
                     ReferenceImage.ApplySprite(spriteName, offSprite, false);
                 }
-
-                SetWeaponHealthGroup(i, 0, false);
-                SetWeaponAmmoCount(i, weaponsList[i].Gdf.AmmoCount, false);
             }
 
+            _initialised = true;
             ReferenceImage.UploadToGpu();
         }
-
-        private int GetWeaponUiIndex(int index)
+        
+        public void SetWeaponHealthGroup(int weaponIndex, int healthGroup)
         {
-            return _weaponCount - index;
-        }
-
-        public void SetWeaponHealthGroup(int weaponIndex, int healthGroup, bool uploadToGpu)
-        {
-            weaponIndex = GetWeaponUiIndex(weaponIndex);
-
             I76Sprite sprite = SpriteManager.GetDiodeSprite(healthGroup);
             if (sprite != null)
             {
-                string spriteId = "diode_" + weaponIndex;
-                ReferenceImage.ApplySprite(spriteId, sprite, uploadToGpu);
+                string spriteId = "diode_" + (weaponIndex + 1);
+                ReferenceImage.ApplySprite(spriteId, sprite, _initialised);
             }
         }
-
+        
         public void SetWeaponEnabledState(int weaponIndex, bool weaponEnabled)
         {
-            int spriteIndex = weaponIndex * 2;
-            if (weaponEnabled)
-            {
-                ++spriteIndex;
-            }
+            string referenceName = "dymo_" + (weaponIndex + 1);
 
-            weaponIndex = GetWeaponUiIndex(weaponIndex);
-            string referenceName = "dymo_" + weaponIndex;
-
-            I76Sprite sprite = _weaponSprites[spriteIndex];
-            ReferenceImage.ApplySprite(referenceName, sprite, true);
+            I76Sprite sprite = weaponEnabled ? Items[weaponIndex].OnSprite : Items[weaponIndex].OffSprite;
+            ReferenceImage.ApplySprite(referenceName, sprite, _initialised);
         }
-
-        public void SetWeaponAmmoCount(int weaponIndex, int ammoCount, bool uploadToGpu)
+        
+        public void SetWeaponAmmoCount(int weaponIndex, int ammoCount)
         {
-            weaponIndex = GetWeaponUiIndex(weaponIndex);
-
             string numberString = string.Format("{0:0000}", ammoCount);
             char digit1 = numberString[0];
             char digit2 = numberString[1];
@@ -92,13 +76,13 @@ namespace Assets.Scripts.Car.Ui
             I76Sprite digitSprite3 = SpriteManager.GetNumberSprite(digit3);
             I76Sprite digitSprite4 = SpriteManager.GetNumberSprite(digit4);
 
-            string spriteIdSuffix = weaponIndex.ToString();
+            string spriteIdSuffix = (weaponIndex + 1).ToString();
             ReferenceImage.ApplySprite("num_thous_" + spriteIdSuffix, digitSprite1, false);
             ReferenceImage.ApplySprite("num_hunds_" + spriteIdSuffix, digitSprite2, false);
             ReferenceImage.ApplySprite("num_tens_" + spriteIdSuffix, digitSprite3, false);
             ReferenceImage.ApplySprite("num_ones_" + spriteIdSuffix, digitSprite4, false);
 
-            if (uploadToGpu)
+            if (_initialised)
             {
                 ReferenceImage.UploadToGpu();
             }
@@ -106,52 +90,39 @@ namespace Assets.Scripts.Car.Ui
 
         private bool TryGetWeaponSprites(Gdf weaponGdf, out I76Sprite onSprite, out I76Sprite offSprite)
         {
-            string onSpriteName;
-            string offSpriteName;
-
-            onSprite = null;
-            offSprite = null;
+            string spriteName;
 
             switch (weaponGdf.Name)
             {
                 case "30cal MG":
-                    onSpriteName = "30cal_mg_on";
-                    offSpriteName = "30cal_mg_off";
+                    spriteName = "30cal_mg";
                     break;
                 case "Oil Slick":
-                    onSpriteName = "oilslick_on";
-                    offSpriteName = "oilslick_off";
+                    spriteName = "oilslick";
                     break;
                 case "FireRite Rkt":
-                    onSpriteName = "fr_rocket_on";
-                    offSpriteName = "fr_rocket_off";
+                    spriteName = "fr_rocket";
                     break;
                 case "Landmines":
-                    onSpriteName = "landmines_on";
-                    offSpriteName = "landmines_off";
+                    spriteName = "landmines";
                     break;
                 case "Fire-Dropper":
-                    onSpriteName = "firedropper_on";
-                    offSpriteName = "firedropper_off";
+                    spriteName = "firedropper";
                     break;
                 case "7.62mm MG":
-                    onSpriteName = "762_mg_on";
-                    offSpriteName = "762_mg_off";
+                    spriteName = "762_mg";
                     break;
                 default:
                     Debug.LogWarningFormat("GetWeaponSprite for weapon '{0}' not implemented.", weaponGdf.Name);
+                    onSprite = null;
+                    offSprite = null;
                     return false;
             }
 
-            onSprite = SpriteManager.GetSprite("zdue.map", onSpriteName);
-            offSprite = SpriteManager.GetSprite("zdue.map", offSpriteName);
+            onSprite = SpriteManager.GetSprite("zdue.map", spriteName + "_on");
+            offSprite = SpriteManager.GetSprite("zdue.map", spriteName + "_off");
 
-            if (onSprite != null && offSprite != null)
-            {
-                return true;
-            }
-
-            return false;
+            return onSprite != null && offSprite != null;
         }
     }
 }
