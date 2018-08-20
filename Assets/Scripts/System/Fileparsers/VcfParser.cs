@@ -37,16 +37,9 @@ namespace Assets.Fileparsers
 
         public class VcfWeapon
         {
-            public MountPoint MountPoint { get; set; }
+            public int MountPoint { get; set; }
             public string GdfFilename { get; set; }
-        }
-
-        public enum MountPoint : uint
-        {
-            Dropper,
-            FirstTop,
-            Rear,
-            SecondTop
+            public Gdf Gdf { get; set; }
         }
 
         public static Vcf ParseVcf(string filename)
@@ -81,9 +74,12 @@ namespace Assets.Fileparsers
                 {
                     var vcfWeapon = new VcfWeapon
                     {
-                        MountPoint = (MountPoint)br.ReadUInt32(),
+                        MountPoint = br.ReadInt32(),
                         GdfFilename = br.ReadCString(13)
                     };
+
+                    vcfWeapon.Gdf = GdfParser.ParseGdf(vcfWeapon.GdfFilename);
+
                     vcf.Weapons.Add(vcfWeapon);
                     br.Next();
                 }

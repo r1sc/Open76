@@ -259,7 +259,8 @@ namespace Assets.System
             {
                 foreach (GeoFace face in cacheEntry.GeoMesh.Faces)
                 {
-                    if (TextureParser.MaskTextureCache.TryGetValue(face.TextureName, out maskTexture))
+                    string textureName = face.TextureName + ".MAP";
+                    if (TextureParser.MaskTextureCache.TryGetValue(textureName, out maskTexture))
                     {
                         return true;
                     }
@@ -319,13 +320,6 @@ namespace Assets.System
             var carObject = Instantiate(CarPrefab); //ImportGeo(vdf.SOBJGeoName + ".geo", vtf, CarPrefab.gameObject).GetComponent<ArcadeCar>();
             carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
 
-            foreach (var hLoc in vdf.HLocs)
-            {
-                var hlocGo = new GameObject("HLOC");
-                hlocGo.transform.parent = carObject.transform;
-                hlocGo.transform.localRotation = Quaternion.LookRotation(hLoc.Forward, hLoc.Up);
-                hlocGo.transform.localPosition = hLoc.Position;
-            }
             foreach (var vLoc in vdf.VLocs)
             {
                 var vlocGo = new GameObject("VLOC");
@@ -339,6 +333,17 @@ namespace Assets.System
 
             var thirdPerson = new GameObject("ThirdPerson");
             thirdPerson.transform.parent = chassis.transform;
+
+            Transform[] weaponMountTransforms = new Transform[vdf.HLocs.Count];
+            for (int i = 0; i < vdf.HLocs.Count; ++i)
+            {
+                HLoc hloc = vdf.HLocs[i];
+                Transform mountPoint = new GameObject(hloc.Label).transform;
+                mountPoint.parent = thirdPerson.transform;
+                mountPoint.localRotation = Quaternion.LookRotation(hloc.Forward, hloc.Up);
+                mountPoint.localPosition = hloc.Position;
+                weaponMountTransforms[i] = mountPoint;
+            }
 
             var firstPerson = new GameObject("FirstPerson");
             firstPerson.transform.parent = chassis.transform;
@@ -371,6 +376,52 @@ namespace Assets.System
             var chassisCollider = new GameObject("ChassisColliders");
             chassisCollider.transform.parent = carObject.transform;
             ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[0], CarBodyPrefab, true);
+
+            for (int i = 0; i < vcf.Weapons.Count; ++i)
+            {
+                VcfParser.VcfWeapon weapon = vcf.Weapons[i];
+                int mountPoint = weapon.MountPoint;
+                HLoc hloc = vdf.HLocs[mountPoint];
+
+                SdfPart[] partsArray;
+                switch (hloc.MeshType)
+                {
+                    case HardpointMeshType.Top:
+                        partsArray = weapon.Gdf.TopParts;
+                        break;
+                    case HardpointMeshType.Side:
+                        partsArray = weapon.Gdf.SideParts;
+                        break;
+                    case HardpointMeshType.Inside:
+                        partsArray = weapon.Gdf.InsideParts;
+                        break;
+                    case HardpointMeshType.Turret:
+                        partsArray = weapon.Gdf.TurretParts;
+                        break;
+                    default:
+                        partsArray = null;
+                        break;
+                }
+
+                if (partsArray != null)
+                {
+                    Transform weaponTransform = new GameObject(weapon.Gdf.Name).transform;
+                    weaponTransform.SetParent(weaponMountTransforms[i]);
+                    weaponTransform.localPosition = Vector3.zero;
+                    weaponTransform.localRotation = Quaternion.identity;
+                    ImportCarParts(weaponTransform.gameObject, vtf, partsArray, NoColliderPrefab, false);
+
+                    // Disable depth test for 'inside' weapons, otherwise they are obscured.
+                    if (hloc.MeshType == HardpointMeshType.Inside)
+                    {
+                        MeshRenderer weaponRenderer = weaponTransform.GetComponentInChildren<MeshRenderer>();
+                        if (weaponRenderer != null)
+                        {
+                            weaponRenderer.sharedMaterial.shader = Shader.Find("Custom/CutOutWithoutZ");
+                        }
+                    }
+                }
+            }
 
             // Note: The following is probably how I76 does collision detection. Two large boxes that encapsulate the entire vehicle.
             // Right now this won't work with Open76's raycast suspension, so I'm leaving this off for now. Investigate in the future.
@@ -426,7 +477,7 @@ namespace Assets.System
 
             foreach (var sdfPart in sdfParts)
             {
-                if (sdfPart.Name == "NULL")
+                if (sdfPart == null || sdfPart.Name == "NULL")
                     continue;
 
                 if (_bannedNames.Any(b => sdfPart.Name.EndsWith(b)))
@@ -452,14 +503,16 @@ namespace Assets.System
                     parentName = "WORLD";
                 }
 
+                Transform partTransform = partObj.transform;
                 if (!forgetParentPosition)
-                    partObj.transform.parent = partDict[parentName].transform;
-                partObj.transform.right = sdfPart.Right;
-                partObj.transform.up = sdfPart.Up;
-                partObj.transform.forward = sdfPart.Forward;
-                partObj.transform.localPosition = sdfPart.Position;
+                    partTransform.SetParent(partDict[parentName].transform);
+                partTransform.right = sdfPart.Right;
+                partTransform.up = sdfPart.Up;
+                partTransform.forward = sdfPart.Forward;
+                partTransform.localPosition = sdfPart.Position;
+                partTransform.localRotation = Quaternion.identity;
                 if (forgetParentPosition)
-                    partObj.transform.parent = partDict[parentName].transform;
+                    partTransform.parent = partDict[parentName].transform;
                 partObj.SetActive(true);
                 partDict.Add(sdfPart.Name, partObj);
 
