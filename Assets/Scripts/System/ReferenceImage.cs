@@ -24,8 +24,8 @@ namespace Assets.Scripts.System
                 _referencePositions.Add(item.Key, referencePosition);
             }
         }
-
-        public void ApplySprite(string referenceId, I76Sprite sprite, bool uploadToGpu)
+        
+        public void ApplySprite(string referenceId, I76Sprite sprite, bool uploadToGpu, bool alphaBlend = false)
         {
             if (sprite == null)
             {
@@ -38,8 +38,22 @@ namespace Assets.Scripts.System
                 Debug.LogErrorFormat("Reference ID '{0}' does not exist for reference image '{1}'.", referenceId, Name);
                 return;
             }
-            
-            MainTexture.SetPixels(referencePos.x, MainTexture.height - referencePos.y - sprite.Height - 1, sprite.Width, sprite.Height, sprite.Pixels, 0);
+
+            int xOffset = referencePos.x;
+            int yOffset = MainTexture.height - referencePos.y - sprite.Height - 1;
+
+            Color[] pixels = sprite.Pixels;
+            if (alphaBlend)
+            {
+                Color[] existingPixels = MainTexture.GetPixels(xOffset, yOffset, sprite.Width, sprite.Height);
+                int pixelCount = existingPixels.Length;
+                for (int i = 0; i < pixelCount; ++i)
+                {
+                    pixels[i] = Color.Lerp(existingPixels[i], pixels[i], pixels[i].a);
+                }
+            }
+
+            MainTexture.SetPixels(xOffset, yOffset, sprite.Width, sprite.Height, pixels, 0);
 
             if (uploadToGpu)
             {
