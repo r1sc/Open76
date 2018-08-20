@@ -1,6 +1,6 @@
 ﻿using Assets.Fileparsers;
 using Assets.Scripts.Camera;
-using Assets.Scripts.Car.Ui;
+using Assets.Scripts.Car.UI;
 using Assets.Scripts.System;
 using UnityEngine;
 
@@ -14,6 +14,8 @@ namespace Assets.Scripts.Car
         private Rigidbody _rigidBody;
         private WeaponsPanel _weaponsPanel;
         private SystemsPanel _systemsPanel;
+        private SpecialsPanel _specialsPanel;
+        private GearPanel _gearPanel;
         private CompassPanel _compassPanel;
         private int _healthGroups;
         private int _health;
@@ -69,6 +71,8 @@ namespace Assets.Scripts.Car
             Transform firstPersonTransform = _transform.Find("Chassis/FirstPerson");
             _weaponsPanel = new WeaponsPanel(vcf, firstPersonTransform);
             _systemsPanel = new SystemsPanel(firstPersonTransform);
+            _specialsPanel = new SpecialsPanel(vcf, firstPersonTransform);
+            _gearPanel = new GearPanel(firstPersonTransform);
             _compassPanel = new CompassPanel(firstPersonTransform);
         }
 
