@@ -14,6 +14,23 @@ namespace Assets.System
             return Vector3.Normalize(Vector3.Cross(AB, AC));
         }
 
+        public static bool EndsWithFast(this string text, string subText)
+        {
+            int length = text.Length;
+            int subLength = subText.Length;
+
+            int offset = length - subLength;
+            for (int i = offset; i < length; ++i)
+            {
+                if (text[i] != subText[i - offset])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public static T RandomElement<T>(T[] array)
         {
             return array[Random.Range(0, array.Length)];
@@ -24,10 +41,12 @@ namespace Assets.System
             return array[Random.Range(0, array.Count)];
         }
 
-        public static float GroundHeightAtPoint(Vector3 position)
+        public static float GroundHeightAtPoint(float x, float z)
         {
-            Vector3 rayPoint = position;
-            rayPoint.y += 1000f;
+            Vector3 rayPoint;
+            rayPoint.x = x;
+            rayPoint.y = 1000f;
+            rayPoint.z = z;
 
             RaycastHit hitInfo;
             if (Physics.Raycast(new Ray(rayPoint, Vector3.down), out hitInfo, LayerMask.GetMask("Terrain")))
@@ -36,35 +55,7 @@ namespace Assets.System
             }
 
             Debug.Log("Failed to raycast against terrain.");
-            return position.y;
-        }
-
-        // Find the closest point on a line to a point.
-        public static Vector3 GetClosestPointOnLineSegment(Vector3 lineStartPoint, Vector3 lineEndPoint, Vector3 origin)
-        {
-            Vector3 ap = new Vector3(origin.x - lineStartPoint.x, origin.y - lineStartPoint.y, origin.z - lineStartPoint.z); // Vector from A to P   
-            Vector3 ab = new Vector3(lineEndPoint.x - lineStartPoint.x, lineEndPoint.y - lineStartPoint.y, lineEndPoint.z - lineStartPoint.z); // Vector from A to B  
-
-            float magnitudeAb = ab.sqrMagnitude;
-            if (magnitudeAb < float.Epsilon)
-            {
-                return lineStartPoint;
-            }
-
-            float distance = (ap.x * ab.x + ap.y * ab.y + ap.z * ab.z) / magnitudeAb; // The normalized "distance" from A to the closest point  
-
-            //Check if origin projection is over vectorAB 
-            if (distance < 0f)
-            {
-                return lineStartPoint;
-            }
-
-            if (distance > 1f)
-            {
-                return lineEndPoint;
-            }
-
-            return new Vector3(lineStartPoint.x + ab.x * distance, lineStartPoint.y + ab.y * distance, lineStartPoint.z + ab.z * distance);
+            return 0.0f;
         }
     }
 }
