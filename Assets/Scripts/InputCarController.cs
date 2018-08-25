@@ -17,9 +17,34 @@ namespace Assets
 
         void Update()
         {
+            // Kill player.
             if (Input.GetKeyDown(KeyCode.K))
             {
                 _car.Kill();
+            }
+
+            // Cycle radar target.
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                _car.RadarPanel.CycleTarget();
+            }
+
+            // Toggle radar range.
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                _car.RadarPanel.ToggleRange();
+            }
+
+            // Target nearest enemy.
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                _car.RadarPanel.TargetNearest();
+            }
+
+            // Clear radar target.
+            if (Input.GetKeyDown(KeyCode.Y))
+            {
+                _car.RadarPanel.ClearTarget();
             }
 
             if (!CameraManager.Instance.IsMainCameraActive || !_car.Alive)
