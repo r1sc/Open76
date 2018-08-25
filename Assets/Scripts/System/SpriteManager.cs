@@ -35,7 +35,15 @@ namespace Assets.Scripts.System
                 etbl = _vdf.Etbls[i];
                 if (etbl.MapFile == mapName)
                 {
-                    mapTexture = TextureParser.ReadMapTexture(mapName, _cacheManager.Palette);
+                    if (VirtualFilesystem.Instance.FileExists(mapName))
+                    {
+                        mapTexture = TextureParser.ReadMapTexture(mapName, _cacheManager.Palette);
+                    }
+                    else
+                    {
+                        mapTexture = null;
+                    }
+
                     return true;
                 }
             }

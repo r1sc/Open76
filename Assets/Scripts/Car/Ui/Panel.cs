@@ -5,7 +5,7 @@ namespace Assets.Scripts.Car.UI
 {
     public class Panel
     {
-        public ReferenceImage ReferenceImage { get; private set; }
+        public ReferenceImage ReferenceImage { get; protected set; }
 
         protected SpriteManager SpriteManager;
         private static Material _panelMaterialPrefab;
@@ -28,7 +28,16 @@ namespace Assets.Scripts.Car.UI
 
                     MeshRenderer panelRenderer = child.GetComponent<MeshRenderer>();
                     Material newMaterial = Object.Instantiate(_panelMaterialPrefab);
-                    newMaterial.mainTexture = ReferenceImage.MainTexture;
+                    if (ReferenceImage.MainTexture != null)
+                    {
+                        newMaterial.mainTexture = ReferenceImage.MainTexture;
+                    }
+                    else
+                    {
+                        newMaterial.mainTexture = panelRenderer.material.mainTexture;
+                        ReferenceImage.MainTexture = (Texture2D)newMaterial.mainTexture;
+                    }
+
                     panelRenderer.material = newMaterial;
                     foundPanel = true;
                     break;

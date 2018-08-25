@@ -6,7 +6,7 @@ namespace Assets.Scripts.System
 {
     public class ReferenceImage
     {
-        public Texture2D MainTexture { get; private set; }
+        public Texture2D MainTexture { get; set; }
         public string Name { get; private set; }
 
         private readonly Dictionary<string, Vector2Int> _referencePositions;
@@ -32,15 +32,18 @@ namespace Assets.Scripts.System
                 return;
             }
 
-            Vector2Int referencePos;
-            if (!_referencePositions.TryGetValue(referenceId, out referencePos))
-            {
-                Debug.LogErrorFormat("Reference ID '{0}' does not exist for reference image '{1}'.", referenceId, Name);
-                return;
+            Vector2Int referencePos = Vector2Int.zero;
+            if (referenceId != null)
+            { 
+                if (!_referencePositions.TryGetValue(referenceId, out referencePos))
+                {
+                    Debug.LogErrorFormat("Reference ID '{0}' does not exist for reference image '{1}'.", referenceId, Name);
+                    return;
+                }
             }
 
             int xOffset = referencePos.x;
-            int yOffset = MainTexture.height - referencePos.y - sprite.Height - 1;
+            int yOffset = Mathf.Max(0, MainTexture.height - referencePos.y - sprite.Height - 1);
 
             Color[] pixels = sprite.Pixels;
             if (alphaBlend)
