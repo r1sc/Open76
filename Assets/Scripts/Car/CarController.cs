@@ -165,7 +165,7 @@ namespace Assets.Scripts.Car
             {
                 RadarPanel.Update();
             }
-			
+
             if (TeamId != 1 || !CameraManager.Instance.IsMainCameraActive)
             {
                 AI.Navigate();
