@@ -13,10 +13,11 @@ namespace Assets.Scripts.Car
 
         private Transform _transform;
         private Rigidbody _rigidBody;
-        private WeaponsPanel _weaponsPanel;
-        private SystemsPanel _systemsPanel;
-        private SpecialsPanel _specialsPanel;
-        private GearPanel _gearPanel;
+        public WeaponsPanel WeaponsPanel;
+        public SystemsPanel SystemsPanel;
+        public SpecialsPanel SpecialsPanel;
+        public GearPanel GearPanel;
+        public RadarPanel RadarPanel;
         private CompassPanel _compassPanel;
         private CameraController _camera;
         private int _healthGroups;
@@ -102,11 +103,12 @@ namespace Assets.Scripts.Car
         public void InitPanels(VcfParser.Vcf vcf)
         {
             Transform firstPersonTransform = _transform.Find("Chassis/FirstPerson");
-            _weaponsPanel = new WeaponsPanel(vcf, firstPersonTransform);
-            _systemsPanel = new SystemsPanel(firstPersonTransform);
-            _specialsPanel = new SpecialsPanel(vcf, firstPersonTransform);
-            _gearPanel = new GearPanel(firstPersonTransform);
+            WeaponsPanel = new WeaponsPanel(vcf, firstPersonTransform);
+            SystemsPanel = new SystemsPanel(firstPersonTransform);
+            SpecialsPanel = new SpecialsPanel(vcf, firstPersonTransform);
+            GearPanel = new GearPanel(firstPersonTransform);
             _compassPanel = new CompassPanel(firstPersonTransform);
+            RadarPanel = new RadarPanel(this, firstPersonTransform);
         }
 
         private void Update()
@@ -157,6 +159,12 @@ namespace Assets.Scripts.Car
                 }
             }
             
+            // Always process radar panel, even outside first person view.
+            if (RadarPanel != null)
+            {
+                RadarPanel.Update();
+            }
+
             if (TeamId != 1 || !CameraManager.Instance.IsMainCameraActive)
             {
                 AI.Navigate();
@@ -205,6 +213,13 @@ namespace Assets.Scripts.Car
 
             Movement = null;
             AI = null;
+
+            WeaponsPanel = null;
+            SystemsPanel = null;
+            SpecialsPanel = null;
+            GearPanel = null;
+            _compassPanel = null;
+            RadarPanel = null;
 
             Destroy(transform.Find("FrontLeft").gameObject);
             Destroy(transform.Find("FrontRight").gameObject);
