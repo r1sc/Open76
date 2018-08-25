@@ -18,6 +18,7 @@ namespace Assets.Scripts.Car
         private SpecialsPanel _specialsPanel;
         private GearPanel _gearPanel;
         private CompassPanel _compassPanel;
+        private CameraController _camera;
         private int _healthGroups;
         private int _health;
         private int _currentHealthGroup;
@@ -86,6 +87,7 @@ namespace Assets.Scripts.Car
             _cacheManager = FindObjectOfType<CacheManager>();
             Movement = new CarMovement(this);
             AI = new CarAI(this);
+            _camera = CameraManager.Instance.MainCamera.GetComponent<CameraController>();
             _rigidBody = GetComponent<Rigidbody>();
 
             EngineRunning = true;
@@ -147,9 +149,12 @@ namespace Assets.Scripts.Car
             
             Movement.Update();
 
-            if (_compassPanel != null)
+            if (_camera.FirstPerson)
             {
-                _compassPanel.UpdateCompassHeading(_transform.eulerAngles.y);
+                if (_compassPanel != null)
+                {
+                    _compassPanel.UpdateCompassHeading(_transform.eulerAngles.y);
+                }
             }
             
             if (TeamId != 1 || !CameraManager.Instance.IsMainCameraActive)
