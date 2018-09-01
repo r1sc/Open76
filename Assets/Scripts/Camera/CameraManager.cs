@@ -7,6 +7,7 @@ namespace Assets.Scripts.Camera
     {
         private readonly Stack<UnityEngine.Camera> _cameraStack;
         private readonly GameObject _mainCameraObject;
+        private bool _audioEnabled;
 
         public UnityEngine.Camera MainCamera
         {
@@ -33,6 +34,29 @@ namespace Assets.Scripts.Camera
             get { return _instance ?? (_instance = new CameraManager()); }
         }
 
+        public bool AudioEnabled
+        {
+            get { return _audioEnabled; }
+            set
+            {
+                if (_audioEnabled == value)
+                {
+                    return;
+                }
+
+                _audioEnabled = value;
+                if (_cameraStack.Count > 0)
+                {
+                    UnityEngine.Camera camera = _cameraStack.Peek();
+                    camera.GetComponent<AudioListener>().enabled = value;
+                }
+                else
+                {
+                    MainCamera.GetComponent<AudioListener>().enabled = value;
+                }
+            }
+        }
+
         public bool IsMainCameraActive
         {
             get { return MainCamera == ActiveCamera; }
@@ -44,17 +68,21 @@ namespace Assets.Scripts.Camera
             UnityEngine.Camera mainCamera = Object.FindObjectOfType<UnityEngine.Camera>();
             _mainCameraObject = mainCamera.gameObject;
             _cameraStack.Push(mainCamera);
+            _audioEnabled = true;
         }
         
         public void PushCamera()
         {
             if (_cameraStack.Count > 0)
             {
-                _cameraStack.Peek().enabled = false;
+                UnityEngine.Camera camera = _cameraStack.Peek();
+                camera.enabled = false;
+                camera.GetComponent<AudioListener>().enabled = false;
             }
 
             GameObject newCameraObject = new GameObject("Stack Camera " + _cameraStack.Count);
             UnityEngine.Camera newCamera = newCameraObject.AddComponent<UnityEngine.Camera>();
+            newCameraObject.AddComponent<AudioListener>();
             _cameraStack.Push(newCamera);
         }
 
@@ -70,7 +98,9 @@ namespace Assets.Scripts.Camera
 
             if (_cameraStack.Count > 0)
             {
-                _cameraStack.Peek().enabled = true;
+                UnityEngine.Camera camera = _cameraStack.Peek();
+                camera.enabled = true;
+                camera.GetComponent<AudioListener>().enabled = _audioEnabled;
             }
         }
 

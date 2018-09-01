@@ -95,12 +95,14 @@ namespace Assets.System
                                     go.tag = "Regen";
                                     break;
                                 default:
-                                    go = cacheManager.ImportVcf(vcfName + ".vcf", odef.TeamId == 1);
+                                    Vdf vdf;
+                                    go = cacheManager.ImportVcf(odef.Label + ".vcf", odef.TeamId == 1, out vdf);
+                                    CarAI car = go.AddComponent<CarAI>();
+                                    car.TeamId = odef.TeamId;
+                                    car.Vdf = vdf;
                                     break;
                             }
 
-                            CarAI car = go.AddComponent<CarAI>();
-                            car.TeamId = odef.TeamId;
                             go.transform.parent = patchGameObject.transform;
                             go.transform.localPosition = odef.LocalPosition;
                             go.transform.localRotation = odef.LocalRotation;

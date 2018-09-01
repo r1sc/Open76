@@ -18,8 +18,9 @@ namespace Assets
             var levelLoader = GetComponent<LevelLoader>();
             levelLoader.LoadLevel(MissionFile);
 
+            Vdf unused;
             var cacheManager = FindObjectOfType<CacheManager>();
-            var importedVcf = cacheManager.ImportVcf(VcfToLoad, false);
+            var importedVcf = cacheManager.ImportVcf(VcfToLoad, false, out unused);
             importedVcf.transform.position = new Vector3(339, 0.2f, 325);
             importedVcf.transform.localRotation = Quaternion.Euler(0, 96, 0);
 

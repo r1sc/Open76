@@ -206,7 +206,7 @@ namespace Assets.System
             using (FastBinaryReader reader = GetFileStream(filename))
             {
                 byte[] data = reader.ReadBytes((int)(reader.Length - reader.Position));
-                return WavUtility.ToAudioClip(data, 0, filename);
+                return WavUtility.ToAudioClip(data, filename);
             }
         }
 

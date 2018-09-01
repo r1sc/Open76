@@ -48,25 +48,52 @@ namespace Assets.System
             Palette = ActPaletteParser.ReadActPalette("p02.act");
         }
 
-        public AudioClip GetSound(string soundName)
+        public AudioClip GetAudioClip(string soundName)
         {
-            var filename = Path.GetFileNameWithoutExtension(soundName);
-            AudioClip audioClip = null;
+            string filename = Path.GetFileNameWithoutExtension(soundName);
             if (VirtualFilesystem.Instance.FileExists(filename + ".wav"))
             {
-                audioClip = VirtualFilesystem.Instance.GetAudioClip(filename + ".wav");
-            }
-            else if (VirtualFilesystem.Instance.FileExists(filename + ".gpw"))
-            {
-                Gpw gpw = GpwParser.ParseGpw(filename + ".gpw");
-                audioClip = gpw.Clip;
-            }
-            else
-            {
-                Debug.LogWarning("Sound file not found: " + soundName);
+                return VirtualFilesystem.Instance.GetAudioClip(filename + ".wav");
             }
 
-            return audioClip;
+            if (VirtualFilesystem.Instance.FileExists(filename + ".gpw"))
+            {
+                return GpwParser.ParseGpw(filename + ".gpw").Clip;
+            }
+            
+            Debug.LogWarning("Sound file not found: " + soundName);
+            return null;
+        }
+
+        public AudioSource GetAudioSource(GameObject rootObject, string soundName)
+        {
+            const float maxVolume = 0.8f; // Set a default volume since high values cause bad distortion.
+
+            AudioClip audioClip = GetAudioClip(soundName);
+            if (audioClip == null)
+            {
+                return null;
+            }
+
+            AudioSource audioSource = rootObject.AddComponent<AudioSource>();
+            audioSource.volume = maxVolume;
+            audioSource.playOnAwake = false;
+            audioSource.clip = audioClip;
+
+            if (audioClip.name.EndsWith(".wav"))
+            {
+                audioSource.spatialize = false;
+                audioSource.spatialBlend = 0.0f;
+            }
+            else if (audioClip.name.EndsWith(".gpw"))
+            {
+                audioSource.spatialize = true;
+                audioSource.spatialBlend = 1.0f;
+                audioSource.minDistance = 5f;
+                audioSource.maxDistance = 75f;
+            }
+
+            return audioSource;
         }
 
         public Texture2D GetTexture(string textureName)
@@ -311,10 +338,10 @@ namespace Assets.System
             return sdfObject;
         }
 
-        public GameObject ImportVcf(string filename, bool importFirstPerson)
+        public GameObject ImportVcf(string filename, bool importFirstPerson, out Vdf vdf)
         {
             var vcf = VcfParser.ParseVcf(filename);
-            var vdf = VdfParser.ParseVdf(vcf.VdfFilename);
+            vdf = VdfParser.ParseVdf(vcf.VdfFilename);
             var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
 
             var carObject = Instantiate(CarPrefab); //ImportGeo(vdf.SOBJGeoName + ".geo", vtf, CarPrefab.gameObject).GetComponent<ArcadeCar>();
