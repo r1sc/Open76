@@ -10,6 +10,7 @@ namespace Assets.System
     class CacheManager : MonoBehaviour
     {
         public string GamePath;
+        public GameObject ProjectilePrefab;
         public GameObject _3DObjectPrefab;
         public GameObject NoColliderPrefab;
         public RaySusp SteerWheelPrefab;
@@ -177,14 +178,14 @@ namespace Assets.System
             return GetColorMaterial("color" + geoFace.Color, geoFace.Color);
         }
 
-        class GeoMeshCacheEntry
+        public class GeoMeshCacheEntry
         {
             public GeoMesh GeoMesh { get; set; }
             public Mesh Mesh { get; set; }
             public Material[] Materials { get; set; }
         }
 
-        private GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf, int textureGroup)
+        public GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf, int textureGroup)
         {
             GeoMeshCacheEntry cacheEntry;
             if (_meshCache.TryGetValue(filename, out cacheEntry))
@@ -378,7 +379,6 @@ namespace Assets.System
                 mountPoint.localPosition = hloc.Position;
                 weaponMountTransforms[i] = mountPoint;
             }
-
             
             for (int i = 0; i < vdf.PartsThirdPerson.Count; ++i)
             {
@@ -389,16 +389,6 @@ namespace Assets.System
                 {
                     healthObject.SetActive(false);
                 }
-            }
-
-            if (importFirstPerson)
-            {
-                var firstPerson = new GameObject("FirstPerson");
-                firstPerson.transform.parent = chassis.transform;
-                ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
-
-                carObject.InitPanels(vcf);
-                firstPerson.SetActive(false);
             }
 
             var meshFilters = thirdPerson.GetComponentsInChildren<MeshFilter>();
@@ -426,6 +416,7 @@ namespace Assets.System
                 VcfParser.VcfWeapon weapon = vcf.Weapons[i];
                 int mountPoint = weapon.MountPoint;
                 HLoc hloc = vdf.HLocs[mountPoint];
+                weapon.RearFacing = hloc.FacingDirection == 2;
 
                 SdfPart[] partsArray;
                 switch (hloc.MeshType)
@@ -454,6 +445,7 @@ namespace Assets.System
                     weaponTransform.localPosition = Vector3.zero;
                     weaponTransform.localRotation = Quaternion.identity;
                     ImportCarParts(weaponTransform.gameObject, vtf, partsArray, NoColliderPrefab, false);
+                    weapon.Transform = weaponTransform;
 
                     // Disable depth test for 'inside' weapons, otherwise they are obscured.
                     if (hloc.MeshType == HardpointMeshType.Inside)
@@ -464,6 +456,10 @@ namespace Assets.System
                             weaponRenderer.sharedMaterial.shader = Shader.Find("Custom/CutOutWithoutZ");
                         }
                     }
+                }
+                else
+                {
+                    weapon.Transform = chassis.transform;
                 }
             }
 
@@ -493,6 +489,16 @@ namespace Assets.System
             {
                 rearWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
                 carObject.Movement.RearWheels = rearWheels;
+            }
+            
+            if (importFirstPerson)
+            {
+                var firstPerson = new GameObject("FirstPerson");
+                firstPerson.transform.parent = chassis.transform;
+                ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
+
+                carObject.InitPanels(vcf);
+                firstPerson.SetActive(false);
             }
 
             carObject.Movement.Initialise(chassis.transform, frontWheels, rearWheels);
