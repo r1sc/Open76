@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace Assets.Fileparsers
 {
@@ -54,6 +55,8 @@ namespace Assets.Fileparsers
             public int MountPoint { get; set; }
             public string GdfFilename { get; set; }
             public Gdf Gdf { get; set; }
+            public bool RearFacing { get; set; }
+            public Transform Transform { get; set; }
         }
 
         public static Vcf ParseVcf(string filename)

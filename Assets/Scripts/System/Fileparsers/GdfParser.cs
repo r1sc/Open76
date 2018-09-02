@@ -5,9 +5,13 @@ namespace Assets.Fileparsers
     public class Gdf
     {
         public string Name { get; set; }
-        public int Fireproofing { get; set; }
+        public int Health { get; set; }
+        public int Damage { get; set; }
         public int FireAmount { get; set; }
+        public float BurstRate { get; set; }
+        public float BulletVelocity { get; set; }
         public float FiringRate { get; set; }
+        public int WeaponGroup { get; set; }
         public int AmmoCount { get; set; }
         public float WeaponMass { get; set; }
         public string FireSpriteName { get; set; }
@@ -18,6 +22,7 @@ namespace Assets.Fileparsers
         public SdfPart[] SideParts { get; set; }
         public SdfPart[] InsideParts { get; set; }
         public SdfPart[] TurretParts { get; set; }
+        public SdfPart Projectile { get; set; }
     }
     
     public class GdfParser
@@ -39,33 +44,43 @@ namespace Assets.Fileparsers
                     float unk3 = br.ReadSingle();
                     float unk4 = br.ReadSingle();
                     float unk5 = br.ReadSingle();
-                    br.ReadBytes(8);
-                    int unk6 = br.ReadInt32();
-                    gdf.Fireproofing = br.ReadInt32();
+                    float unk6 = br.ReadSingle();
+                    br.ReadBytes(4);
+                    gdf.Damage = br.ReadInt32();
+                    gdf.Health = br.ReadInt32();
                     gdf.WeaponMass = br.ReadSingle();
-                    string unk8 = br.ReadCString(13);
-                    br.ReadBytes(9);
+                    string unk7 = br.ReadCString(12);
+                    ushort unk8 = br.ReadUInt16();
+                    float unk9 = br.ReadSingle();
+                    gdf.BurstRate = 1f / br.ReadSingle();
                     gdf.FiringRate = 1f / br.ReadSingle();
                     gdf.FireAmount = br.ReadInt32();
-                    float unk9 = br.ReadSingle();
-                    float unk10 = br.ReadSingle();
+                    gdf.BulletVelocity = br.ReadSingle();
+                    gdf.WeaponGroup = br.ReadInt32();
                     gdf.AmmoCount = br.ReadInt32();
-                    float unk11 = br.ReadSingle();
+                    float unk10 = br.ReadSingle();
 
                     gdf.FireSpriteName = br.ReadCString(13);
                     gdf.SoundName = br.ReadCString(13);
                     if (rev == 8)
                     {
-                        int unk12 = br.ReadInt32(); // Always 1?
+                        int unk11 = br.ReadInt32(); // Always 1?
                         gdf.EnabledSpriteName = br.ReadCString(16);
                         gdf.DisabledSpriteName = br.ReadCString(16);
                     }
                 }
 
                 br.FindNext("GPOF"); // 192 bytes
-                for (int i = 0; i < 48; ++i)
+
+                SdfPart[] parts = new SdfPart[4];
+                for (int i = 0; i < 4; ++i)
                 {
-                    br.ReadSingle();
+                    SdfPart part = new SdfPart();
+                    part.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    part.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    part.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    part.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    parts[i] = part;
                 }
                 
                 br.FindNext("GGEO"); // 4 bytes
@@ -152,6 +167,18 @@ namespace Assets.Fileparsers
 
 
                 br.FindNext("OGEO"); // 104 bytes
+
+                br.ReadInt32();
+
+                gdf.Projectile = new SdfPart
+                {
+                    Name = br.ReadCString(8),
+                    Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
+                    ParentName = br.ReadCString(8)
+                };
 
                 return gdf;
             }

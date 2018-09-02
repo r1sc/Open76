@@ -32,7 +32,7 @@ namespace Assets.Fileparsers
         public Vector3 Position { get; set; }
         public float Unk { get; set; }
         public uint HardpointIndex { get; set; }
-        public uint Num1 { get; set; }
+        public uint FacingDirection { get; set; }
         public HardpointMeshType MeshType { get; set; }
     }
 
@@ -220,7 +220,7 @@ namespace Assets.Fileparsers
                     {
                         Label = br.ReadCString(16),
                         HardpointIndex = br.ReadUInt32(),
-                        Num1 = br.ReadUInt32(),
+                        FacingDirection = br.ReadUInt32(),
                         MeshType = (HardpointMeshType)br.ReadUInt32(),
                         Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
                         Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
