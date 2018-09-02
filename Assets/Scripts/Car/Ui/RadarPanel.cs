@@ -105,8 +105,8 @@ namespace Assets.Scripts.Car.UI
 
             CacheManager cacheManager = Object.FindObjectOfType<CacheManager>();
 
-            _newContact = cacheManager.GetSound("cgrowl.gpw");
-            _sweepContact = cacheManager.GetSound("cradar.gpw");
+            _newContact = cacheManager.GetAudioClip("cgrowl.gpw");
+            _sweepContact = cacheManager.GetAudioClip("cradar.gpw");
 
             _rangeSprites = new I76Sprite[3];
             for (int i = 0; i < 3; ++i)
