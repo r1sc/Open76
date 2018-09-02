@@ -212,6 +212,7 @@ namespace Assets.Scripts.Car
             Destroy(_engineLoopSound);
             Destroy(_engineStartSound);
 
+            Movement.Destroy();
             Movement = null;
             AI = null;
 
