@@ -1,5 +1,6 @@
 ﻿using Assets.Fileparsers;
 using Assets.Scripts.Camera;
+using Assets.Scripts.Car;
 using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;
@@ -23,7 +24,7 @@ namespace Assets
                 var cacheManager = FindObjectOfType<CacheManager>();
                 var importedVcf = cacheManager.ImportVcf(VcfToLoad, true, out unused);
                 importedVcf.AddComponent<InputCarController>();
-                importedVcf.AddComponent<CarAI>();
+                importedVcf.AddComponent<CarController>();
 
                 var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
                 importedVcf.transform.position = spawnPoint.transform.position;
@@ -35,12 +36,6 @@ namespace Assets
 #if UNITY_EDITOR
             gameObject.AddComponent<SceneViewAudioHelper>();
 #endif
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
         }
     }
 }

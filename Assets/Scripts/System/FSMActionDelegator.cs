@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Camera;
+using Assets.Scripts.Car;
 using Assets.System;
 using UnityEngine;
 
@@ -6,13 +7,6 @@ namespace Assets.Scripts.System
 {
     public class FSMActionDelegator
     {
-        private Transform _worldTransform;
-
-        public FSMActionDelegator()
-        {
-            _worldTransform = GameObject.Find("World").transform;
-        }
-
         private void LogUnhandledEntity(string actionName, int entityIndex, FSMEntity entity, StackMachine machine)
         {
             Debug.LogWarning("FSM action '" + actionName + "' not implemented for entity " + entityIndex + " (" + entity.Value + ") @ " + (machine.IP - 1));
@@ -102,7 +96,7 @@ namespace Assets.Scripts.System
                         var entity = fsmRunner.FSM.EntityTable[entityIndex];
                         var path = fsmRunner.FSM.Paths[pathIndex];
 
-                        CarAI car = entity.Object.GetComponent<CarAI>();
+                        CarController car = entity.Object.GetComponent<CarController>();
                         if (car != null)
                         {
                             car.SetTargetPath(path, targetSpeed);
@@ -127,7 +121,7 @@ namespace Assets.Scripts.System
                         nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
                         entity.Object.transform.position = nodePos;
 
-                        CarAI car = entity.Object.GetComponent<CarAI>();
+                        CarController car = entity.Object.GetComponent<CarController>();
                         if (car != null)
                         {
                             car.SetSpeed(targetSpeed);
@@ -144,7 +138,7 @@ namespace Assets.Scripts.System
                         var origoEntity = fsmRunner.FSM.EntityTable[entityIndex];
                         var entity = origoEntity.Object;
 
-                        CarAI car = entity.GetComponent<CarAI>();
+                        CarController car = entity.GetComponent<CarController>();
                         if (car != null)
                         {
                             if (car.Arrived)
@@ -164,7 +158,7 @@ namespace Assets.Scripts.System
                         var entityIndex = args.Dequeue();
                         var entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                        CarAI car = entity.Object.GetComponent<CarAI>();
+                        CarController car = entity.Object.GetComponent<CarController>();
                         if (car != null)
                         {
                             car.Sit();
@@ -185,7 +179,7 @@ namespace Assets.Scripts.System
                     var entityIndex = args.Dequeue();
                     var entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                    CarAI car = entity.Object.GetComponent<CarAI>();
+                    CarController car = entity.Object.GetComponent<CarController>();
                     if (car != null)
                     {
                         return car.Attacked ? 1 : 0;
@@ -199,7 +193,7 @@ namespace Assets.Scripts.System
                         var entityIndex = args.Dequeue();
                         var entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                        CarAI car = entity.Object.GetComponent<CarAI>();
+                        CarController car = entity.Object.GetComponent<CarController>();
                         if (car != null)
                         {
                             return car.Alive ? 0 : 1;

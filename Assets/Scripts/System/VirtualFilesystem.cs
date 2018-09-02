@@ -286,6 +286,13 @@ namespace Assets.System
                 throw new Exception("Decompressed length does not match expected decompressed length");
             }
 
+            /*byte[] testCompress = new byte[fileInfo.Length];
+            uint compLength = LZO.Compress(decompressedData, testCompress, fileInfo.Length, compressionAlgorithm);
+            if (compLength > 0 && compLength != fileInfo.Length)
+            {
+                throw new Exception("Compressed length does not match expected compressed length");
+            }*/
+
             FastBinaryReader reader = new FastBinaryReader(decompressedData)
             {
                 Position = 0,

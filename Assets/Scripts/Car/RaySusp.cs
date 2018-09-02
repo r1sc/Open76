@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Assets.Car
+namespace Assets.Scripts.Car
 {
     public class RaySusp : MonoBehaviour
     {

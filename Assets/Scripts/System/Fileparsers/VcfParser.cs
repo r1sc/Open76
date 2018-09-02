@@ -6,6 +6,20 @@ using System.Text;
 
 namespace Assets.Fileparsers
 {
+    public enum SpecialType
+    {
+        None,
+        RadarJammer,
+        NitrousOxide,
+        Blower,
+        XAustBrake,
+        StructoBumper,
+        CurbFeelers,
+        MudFlaps,
+        HeatedSeats,
+        CupHolders
+    }
+
     public class VcfParser
     {
         public class Vcf
@@ -29,7 +43,7 @@ namespace Assets.Fileparsers
             public uint ChassisRear { get; set; }
             public uint ArmorOrChassisLeftToAdd { get; set; }
             public List<VcfWeapon> Weapons { get; set; }
-
+            public List<SpecialType> Specials { get; set; }
             public Wdf FrontWheelDef { get; set; }
             public Wdf MidWheelDef { get; set; }
             public Wdf BackWheelDef { get; set; }
@@ -68,6 +82,20 @@ namespace Assets.Fileparsers
                 vcf.ChassisRear = br.ReadUInt32();
                 vcf.ArmorOrChassisLeftToAdd = br.ReadUInt32();
 
+                vcf.Specials = new List<SpecialType>();
+                if (br.TryFindNext("SPEC"))
+                {
+                    vcf.Specials.Add((SpecialType)br.ReadInt32());
+                }
+                if (br.TryFindNext("SPEC"))
+                {
+                    vcf.Specials.Add((SpecialType)br.ReadInt32());
+                }
+                if (br.TryFindNext("SPEC"))
+                {
+                    vcf.Specials.Add((SpecialType)br.ReadInt32());
+                }
+
                 br.FindNext("WEPN");
                 vcf.Weapons = new List<VcfWeapon>();
                 while (br.Current != null && br.Current.Name != "EXIT")
@@ -83,7 +111,6 @@ namespace Assets.Fileparsers
                     vcf.Weapons.Add(vcfWeapon);
                     br.Next();
                 }
-
             }
 
             if (vcf.WdfFrontFilename.ToUpper() != "NULL")

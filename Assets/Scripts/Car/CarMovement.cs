@@ -1,31 +1,31 @@
 ﻿using Assets.System;
 using UnityEngine;
 
-namespace Assets.Car
+namespace Assets.Scripts.Car
 {
-    public class NewCar : MonoBehaviour
+    public class CarMovement
     {
-        private Rigidbody _rigidbody;
         private const float AirTimeLandingTreshold = 0.75f;
+        private readonly Rigidbody _rigidbody;
 
         public float Throttle;
         public float Brake;
         public bool EBrake;
         public float Steer;
-        public float MaxSteer;
-        public float SteerSpeedBias = 250.0f;
+        public float MaxSteer = 0.5f;
+        public float SteerSpeedBias = 55f;
 
-        public float EngineForce;
-        public float BrakeConstant;
-        public float DragConstant;
-        public float RollingResistanceConstant;
+        public float EngineForce = 2000f;
+        public float BrakeConstant = 1000f;
+        public float DragConstant = 0f;
+        public float RollingResistanceConstant = 15f;
         public float WheelRadius = 0.33f;
         public RaySusp[] FrontWheels, RearWheels;
         public Transform Chassis;
         public float SteerAngle;
-        public float CorneringStiffnessFront;
-        public float CorneringStiffnessRear;
-        public float MaxGrip;
+        public float CorneringStiffnessFront = -5f;
+        public float CorneringStiffnessRear = -5.2f;
+        public float MaxGrip = 4f;
 
         public float EngineMaxTorque;
         public float RPM;
@@ -44,7 +44,8 @@ namespace Assets.Car
         private Vector2 _fTraction;
         private float _fTractionMax;
         private float _slipLongitudal;
-        private float _b, _c;
+        private float _b;
+        private float _c;
         private float _heightRatio;
         private float _airTime;
 
@@ -53,17 +54,30 @@ namespace Assets.Car
         private AudioClip _landingAudioClip1;
         private AudioClip _landingAudioClip2;
         private CacheManager _cacheManager;
+        private readonly GameObject _gameObject;
 
-        // Use this for initialization
-        void Start()
+        private readonly Transform _transform;
+        private bool _ready;
+
+        public CarMovement(CarController controller)
         {
-            _rigidbody = GetComponent<Rigidbody>();
+            _transform = controller.transform;
+            _rigidbody = controller.GetComponent<Rigidbody>();
+            _gameObject = controller.gameObject;
+        }
+
+        public void Initialise(Transform chassisTransform, RaySusp[] frontWheels, RaySusp[] rearWheels)
+        {
+            Chassis = chassisTransform;
+            FrontWheels = frontWheels;
+            RearWheels = rearWheels;
+
             _b = Mathf.Abs(FrontWheels[0].transform.localPosition.z);
             _c = Mathf.Abs(RearWheels[0].transform.localPosition.z);
             _heightRatio = 2.0f / (_b + _c);
 
-            _cacheManager = FindObjectOfType<CacheManager>();
-            _landingAudioSource = gameObject.AddComponent<AudioSource>();
+            _cacheManager = Object.FindObjectOfType<CacheManager>();
+            _landingAudioSource = _gameObject.AddComponent<AudioSource>();
             _landingAudioSource.playOnAwake = false;
             _landingAudioSource.volume = 0.8f;
             _landingAudioSource.spatialBlend = 1.0f;
@@ -71,27 +85,34 @@ namespace Assets.Car
             _landingAudioSource.minDistance = 7.5f;
             _landingAudioClip1 = _cacheManager.GetAudioClip("vland");
             _landingAudioClip2 = _cacheManager.GetAudioClip("vlanding");
+
+            _ready = true;
         }
 
-        void Destroy()
+        public void Destroy()
         {
             if (_surfaceAudioSource != null)
             {
-                Destroy(_surfaceAudioSource);
+                Object.Destroy(_surfaceAudioSource);
                 _surfaceAudioSource = null;
             }
 
             if (_landingAudioSource != null)
             {
-                Destroy(_landingAudioSource);
+                Object.Destroy(_landingAudioSource);
                 _landingAudioSource = null;
             }
         }
 
         // Update is called once per frame
-        void Update()
+        public void Update()
         {
-            foreach (var wheel in FrontWheels)
+            if (!_ready)
+            {
+                return;
+            }
+
+            foreach (RaySusp wheel in FrontWheels)
             {
                 wheel.TargetAngle = (SteerAngle * Mathf.Rad2Deg) * 2;
             }
@@ -100,7 +121,7 @@ namespace Assets.Car
         private void UpdateSurfaceSound()
         {
             RaycastHit hitInfo;
-            Ray terrainRay = new Ray(transform.position, Vector3.down);
+            Ray terrainRay = new Ray(_transform.position, Vector3.down);
             if (Physics.Raycast(terrainRay, out hitInfo))
             {
                 string objectTag = hitInfo.collider.gameObject.tag;
@@ -119,10 +140,10 @@ namespace Assets.Car
                 {
                     if (_surfaceAudioSource != null)
                     {
-                        Destroy(_surfaceAudioSource);
+                        Object.Destroy(_surfaceAudioSource);
                     }
                     
-                    _surfaceAudioSource = _cacheManager.GetAudioSource(gameObject, surfaceSoundName);
+                    _surfaceAudioSource = _cacheManager.GetAudioSource(_gameObject, surfaceSoundName);
                     _surfaceAudioSource.loop = true;
                     _surfaceAudioSource.volume = 0.6f;
                     _surfaceAudioSource.Play();
@@ -139,9 +160,14 @@ namespace Assets.Car
             }
         }
 
-        void FixedUpdate()
+        public void FixedUpdate()
         {
-            int groundedWheels = 0;
+            if (!_ready)
+            {
+                return;
+            }
+			
+			int groundedWheels = 0;
             for (int i = 0; i < FrontWheels.Length; ++i)
             {
                 if (FrontWheels[i].Grounded) ++groundedWheels;
@@ -161,6 +187,7 @@ namespace Assets.Car
             }
 
             var allWheelsGrounded = groundedWheels == FrontWheels.Length + RearWheels.Length;
+
             if (!allWheelsGrounded)
             {
                 return;
@@ -174,7 +201,8 @@ namespace Assets.Car
 
             _airTime = 0.0f;
             UpdateSurfaceSound();
-            var vel3d = transform.InverseTransformVector(_rigidbody.velocity);
+            var vel3d = _transform.InverseTransformVector(_rigidbody.velocity);
+
             _carVelocity = new Vector2(vel3d.z, vel3d.x);
 
             _speed = _carVelocity.magnitude;
@@ -245,7 +273,7 @@ namespace Assets.Car
 
             _carAcceleration = Time.deltaTime * forces / _rigidbody.mass;
 
-            var worldAcceleration = transform.TransformVector(new Vector3(_carAcceleration.y, 0, _carAcceleration.x));
+            var worldAcceleration = _transform.TransformVector(new Vector3(_carAcceleration.y, 0, _carAcceleration.x));
             _rigidbody.velocity += worldAcceleration;
         }
 
