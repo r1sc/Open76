@@ -1,5 +1,6 @@
 ﻿using Assets.Fileparsers;
 using Assets.Scripts.Camera;
+using Assets.Scripts.Car.Components;
 using Assets.Scripts.Car.UI;
 using Assets.Scripts.System;
 using Assets.System;
@@ -13,10 +14,10 @@ namespace Assets.Scripts.Car
 
         private Transform _transform;
         private Rigidbody _rigidBody;
-		
-        public WeaponsPanel WeaponsPanel;
+
+        public WeaponsController WeaponsController;
+        public SpecialsController SpecialsController;
         public SystemsPanel SystemsPanel;
-        public SpecialsPanel SpecialsPanel;
         public GearPanel GearPanel;
         public RadarPanel RadarPanel;
         private CompassPanel _compassPanel;
@@ -91,7 +92,6 @@ namespace Assets.Scripts.Car
             AI = new CarAI(this);
             _camera = CameraManager.Instance.MainCamera.GetComponent<CameraController>();
             _rigidBody = GetComponent<Rigidbody>();
-
             EngineRunning = true;
         }
 
@@ -104,9 +104,9 @@ namespace Assets.Scripts.Car
         public void InitPanels(VcfParser.Vcf vcf)
         {
             Transform firstPersonTransform = _transform.Find("Chassis/FirstPerson");
-            WeaponsPanel = new WeaponsPanel(vcf, firstPersonTransform);
+            WeaponsController = new WeaponsController(this, vcf, firstPersonTransform);
+            SpecialsController = new SpecialsController(vcf, firstPersonTransform);
             SystemsPanel = new SystemsPanel(firstPersonTransform);
-            SpecialsPanel = new SpecialsPanel(vcf, firstPersonTransform);
             GearPanel = new GearPanel(firstPersonTransform);
             _compassPanel = new CompassPanel(firstPersonTransform);
             RadarPanel = new RadarPanel(this, firstPersonTransform);
@@ -215,9 +215,9 @@ namespace Assets.Scripts.Car
             Movement = null;
             AI = null;
 
-            WeaponsPanel = null;
+            WeaponsController = null;
+            SpecialsController = null;
             SystemsPanel = null;
-            SpecialsPanel = null;
             GearPanel = null;
             _compassPanel = null;
             RadarPanel = null;

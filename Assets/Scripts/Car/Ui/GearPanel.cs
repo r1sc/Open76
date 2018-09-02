@@ -1,5 +1,4 @@
-﻿using System;
-using Assets.Scripts.System;
+﻿using Assets.Scripts.System;
 using UnityEngine;
 
 namespace Assets.Scripts.Car.UI
@@ -8,7 +7,6 @@ namespace Assets.Scripts.Car.UI
     {
         private readonly I76Sprite _backgroundSprite;
         private readonly I76Sprite _arrowSprite;
-        private readonly Color[] _cleanBackgroundPixels;
         private char _activeGear;
 
         public GearPanel(Transform firstPersonTransform) : base(firstPersonTransform, "GER", "zgear101.map")
@@ -20,7 +18,6 @@ namespace Assets.Scripts.Car.UI
 
             _arrowSprite = SpriteManager.GetSprite("zgeare.map", "arrow");
             _backgroundSprite = SpriteManager.GetSprite("zgear2e.map", "prndback");
-            _cleanBackgroundPixels = _backgroundSprite.Pixels;
 
             ActiveGear = 'D';
         }
