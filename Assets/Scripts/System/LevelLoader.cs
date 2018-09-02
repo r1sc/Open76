@@ -92,14 +92,12 @@ namespace Assets.System
                                 default:
                                     Vdf vdf;
                                     go = cacheManager.ImportVcf(odef.Label + ".vcf", odef.TeamId == 1, out vdf);
-                                    CarAI car = go.AddComponent<CarAI>();
+                                    CarController car = go.GetComponent<CarController>();
                                     car.TeamId = odef.TeamId;
                                     car.Vdf = vdf;
                                     break;
                             }
 
-                            CarController car = go.AddComponent<CarController>();
-                            car.TeamId = odef.TeamId;
                             go.transform.parent = patchGameObject.transform;
                             go.transform.localPosition = odef.LocalPosition;
                             go.transform.localRotation = odef.LocalRotation;

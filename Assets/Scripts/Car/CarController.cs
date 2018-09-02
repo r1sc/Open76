@@ -2,6 +2,7 @@
 using Assets.Scripts.Camera;
 using Assets.Scripts.Car.UI;
 using Assets.Scripts.System;
+using Assets.System;
 using UnityEngine;
 
 namespace Assets.Scripts.Car
@@ -19,8 +20,17 @@ namespace Assets.Scripts.Car
         private CompassPanel _compassPanel;
         private int _healthGroups;
         private int _health;
+        private int _currentHealthGroup;
+        private AudioSource _engineStartSound;
+        private AudioSource _engineLoopSound;
+        private bool _engineStarting;
+        private float _engineStartTimer;
+        private GameObject _gameObject;
+        private CacheManager _cacheManager;
 
+        public bool EngineRunning { get; private set; }
         public bool Arrived { get; set; }
+        public Vdf Vdf { get; set; }
 
         public bool Alive
         {
@@ -37,11 +47,6 @@ namespace Assets.Scripts.Car
             get { return _health; }
             private set
             {
-                if (_health <= 0)
-                {
-                    return;
-                }
-
                 _health = value;
                 SetHealthGroup(_healthGroups - Mathf.FloorToInt((float) _health / (StartHealth + 1) * _healthGroups));
 
@@ -52,18 +57,44 @@ namespace Assets.Scripts.Car
             }
         }
 
+        public void ToggleEngine()
+        {
+            if (_engineStartSound.isPlaying)
+            {
+                return;
+            }
+
+            if (EngineRunning)
+            {
+                _engineLoopSound.Stop();
+                EngineRunning = false;
+            }
+            else
+            {
+                _engineStartSound.Play();
+                _engineStarting = true;
+                _engineStartTimer = 0f;
+            }
+        }
+
         private void Awake()
         {
             _transform = transform;
             _health = StartHealth;
+            _currentHealthGroup = 1;
+            _gameObject = gameObject;
+            _cacheManager = FindObjectOfType<CacheManager>();
             Movement = new CarMovement(this);
             AI = new CarAI(this);
             _rigidBody = GetComponent<Rigidbody>();
 
-            if (_transform.childCount > 0)
-            {
-                _healthGroups = _transform.Find("Chassis/ThirdPerson").childCount;
-            }
+            EngineRunning = true;
+        }
+
+        private void Start()
+        {
+            UpdateEngineSounds();
+            _healthGroups = Vdf.PartsThirdPerson.Count;
         }
 
         public void InitPanels(VcfParser.Vcf vcf)
@@ -83,6 +114,37 @@ namespace Assets.Scripts.Car
                 return;
             }
 
+            if (EngineRunning)
+            {
+                // Simple and temporary engine pitch adjustment code based on rigidbody velocity - should be using wheels.
+                const float firstGearTopSpeed = 40f;
+                const float gearRatioAdjustment = 1.5f;
+                const float minPitch = 0.6f;
+                const float maxPitch = 1.2f;
+
+                float velocity = _rigidBody.velocity.magnitude;
+                float gearMaxSpeed = firstGearTopSpeed;
+                while (velocity / gearMaxSpeed > maxPitch - minPitch)
+                {
+                    gearMaxSpeed *= gearRatioAdjustment;
+                }
+
+                float enginePitch = minPitch + velocity / gearMaxSpeed;
+                _engineLoopSound.pitch = enginePitch;
+            }
+
+            if (_engineStarting)
+            {
+                _engineStartTimer += Time.deltaTime;
+                if (_engineStartTimer > _engineStartSound.clip.length - 0.5f)
+                {
+                    _engineLoopSound.Play();
+                    EngineRunning = true;
+                    _engineStarting = false;
+                    _engineStartTimer = 0f;
+                }
+            }
+            
             Movement.Update();
 
             if (_compassPanel != null)
@@ -98,15 +160,19 @@ namespace Assets.Scripts.Car
 
         private void FixedUpdate()
         {
-            Movement.FixedUpdate();
+            if (Movement != null)
+            {
+                Movement.FixedUpdate();
+            }
         }
 
         private void SetHealthGroup(int healthGroupIndex)
         {
+            _currentHealthGroup = healthGroupIndex;
             Transform parent = transform.Find("Chassis/ThirdPerson");
             for (int i = 0; i < _healthGroups; ++i)
             {
-                Transform child = parent.GetChild(i);
+                Transform child = parent.Find("Health " + i);
                 child.gameObject.SetActive(healthGroupIndex == i + 1);
             }
         }
@@ -120,6 +186,17 @@ namespace Assets.Scripts.Car
             {
                 Destroy(inputController);
             }
+
+            AudioSource explosionSource = _cacheManager.GetAudioSource(_gameObject, "xcar");
+            if (explosionSource != null)
+            {
+                explosionSource.volume = 0.9f;
+                explosionSource.Play();
+            }
+
+            EngineRunning = false;
+            Destroy(_engineLoopSound);
+            Destroy(_engineStartSound);
 
             Movement = null;
             AI = null;
@@ -159,6 +236,76 @@ namespace Assets.Scripts.Car
             if (AI != null)
             {
                 AI.SetTargetPath(path, targetSpeed);
+            }
+        }
+
+        private void UpdateEngineSounds()
+        {
+            string engineStartSound;
+            string engineLoopSound;
+
+            switch (Vdf.VehicleSize)
+            {
+                case 1: // Small car
+                    engineLoopSound = "eishp";
+                    engineStartSound = "esshp";
+                    engineStartSound += _currentHealthGroup;
+                    break;
+                case 2: // Medium car
+                    engineLoopSound = "eihp";
+                    engineStartSound = "eshp";
+                    engineStartSound += _currentHealthGroup;
+                    break;
+                case 3: // Large car
+                    engineLoopSound = "einp1";
+                    engineStartSound = "esnp";
+                    engineStartSound += _currentHealthGroup;
+                    break;
+                case 4: // Van
+                    engineLoopSound = "eisv";
+                    engineStartSound = "essv";
+                    break;
+                case 5: // Heavy vehicle
+                    engineLoopSound = "eimarx";
+                    engineStartSound = "esmarx";
+                    break;
+                case 6: // Tank
+                    engineLoopSound = "eitank";
+                    engineStartSound = "estank";
+                    break;
+                default:
+                    Debug.LogWarningFormat("Unhandled vehicle size '{0}'. No vehicle sounds loaded.", Vdf.VehicleSize);
+                    return;
+            }
+
+            engineStartSound += ".gpw";
+            engineLoopSound += ".gpw";
+            if (_engineStartSound == null || _engineStartSound.clip.name != engineStartSound)
+            {
+                if (_engineStartSound != null)
+                {
+                    Destroy(_engineStartSound);
+                }
+
+                _engineStartSound = _cacheManager.GetAudioSource(_gameObject, engineStartSound);
+                _engineStartSound.volume = 0.6f;
+            }
+
+            if (_engineLoopSound == null || _engineLoopSound.clip.name != engineLoopSound)
+            {
+                if (_engineLoopSound != null)
+                {
+                    Destroy(_engineLoopSound);
+                }
+
+                _engineLoopSound = _cacheManager.GetAudioSource(_gameObject, engineLoopSound);
+                _engineLoopSound.loop = true;
+                _engineLoopSound.volume = 0.6f;
+
+                if (EngineRunning)
+                {
+                    _engineLoopSound.Play();
+                }
             }
         }
     }

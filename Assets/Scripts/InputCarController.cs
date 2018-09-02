@@ -27,9 +27,20 @@ namespace Assets
                 return;
             }
 
+            // Start / Stop engine.
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                _car.ToggleEngine();
+            }
+
             var throttle = Input.GetAxis("Vertical");
             var brake = -Mathf.Min(0, throttle);
             throttle = Mathf.Max(0, throttle);
+
+            if (!_car.EngineRunning)
+            {
+                throttle = 0f;
+            }
 
             _movement.Throttle = throttle;
             _movement.Brake = brake;

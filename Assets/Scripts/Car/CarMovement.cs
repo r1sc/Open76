@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using Assets.System;
 using UnityEngine;
 
 namespace Assets.Scripts.Car
@@ -54,6 +54,7 @@ namespace Assets.Scripts.Car
         private AudioClip _landingAudioClip1;
         private AudioClip _landingAudioClip2;
         private CacheManager _cacheManager;
+        private readonly GameObject _gameObject;
 
         private readonly Transform _transform;
         private bool _ready;
@@ -62,6 +63,7 @@ namespace Assets.Scripts.Car
         {
             _transform = controller.transform;
             _rigidbody = controller.GetComponent<Rigidbody>();
+            _gameObject = controller.gameObject;
         }
 
         public void Initialise(Transform chassisTransform, RaySusp[] frontWheels, RaySusp[] rearWheels)
@@ -74,8 +76,8 @@ namespace Assets.Scripts.Car
             _c = Mathf.Abs(RearWheels[0].transform.localPosition.z);
             _heightRatio = 2.0f / (_b + _c);
 
-            _cacheManager = FindObjectOfType<CacheManager>();
-            _landingAudioSource = gameObject.AddComponent<AudioSource>();
+            _cacheManager = Object.FindObjectOfType<CacheManager>();
+            _landingAudioSource = _gameObject.AddComponent<AudioSource>();
             _landingAudioSource.playOnAwake = false;
             _landingAudioSource.volume = 0.8f;
             _landingAudioSource.spatialBlend = 1.0f;
@@ -87,17 +89,17 @@ namespace Assets.Scripts.Car
             _ready = true;
         }
 
-        void Destroy()
+        public void Destroy()
         {
             if (_surfaceAudioSource != null)
             {
-                Destroy(_surfaceAudioSource);
+                Object.Destroy(_surfaceAudioSource);
                 _surfaceAudioSource = null;
             }
 
             if (_landingAudioSource != null)
             {
-                Destroy(_landingAudioSource);
+                Object.Destroy(_landingAudioSource);
                 _landingAudioSource = null;
             }
         }
@@ -119,7 +121,7 @@ namespace Assets.Scripts.Car
         private void UpdateSurfaceSound()
         {
             RaycastHit hitInfo;
-            Ray terrainRay = new Ray(transform.position, Vector3.down);
+            Ray terrainRay = new Ray(_transform.position, Vector3.down);
             if (Physics.Raycast(terrainRay, out hitInfo))
             {
                 string objectTag = hitInfo.collider.gameObject.tag;
@@ -138,10 +140,10 @@ namespace Assets.Scripts.Car
                 {
                     if (_surfaceAudioSource != null)
                     {
-                        Destroy(_surfaceAudioSource);
+                        Object.Destroy(_surfaceAudioSource);
                     }
                     
-                    _surfaceAudioSource = _cacheManager.GetAudioSource(gameObject, surfaceSoundName);
+                    _surfaceAudioSource = _cacheManager.GetAudioSource(_gameObject, surfaceSoundName);
                     _surfaceAudioSource.loop = true;
                     _surfaceAudioSource.volume = 0.6f;
                     _surfaceAudioSource.Play();
