@@ -17,6 +17,11 @@ namespace Assets
 
         void Update()
         {
+            if (!CameraManager.Instance.IsMainCameraActive || !_car.Alive)
+            {
+                return;
+            }
+            
             // Kill player.
             if (Input.GetKeyDown(KeyCode.K))
             {

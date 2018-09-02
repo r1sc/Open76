@@ -246,12 +246,7 @@ namespace Assets.Scripts.Car.UI
                 {
                     if (sweepIndex == _radarImageIndex)
                     {
-                        if (!_radarAudio.isPlaying)
-                        {
-                            _radarAudio.clip = _sweepContact;
-                            _radarAudio.Play();
-                        }
-
+                        _radarAudio.PlayIfNotAlreadyPlaying(_sweepContact);
                         contact.TimeSinceSweep = 0f;
                     }
                     else

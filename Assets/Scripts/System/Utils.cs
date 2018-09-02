@@ -14,6 +14,15 @@ namespace Assets.System
             return Vector3.Normalize(Vector3.Cross(AB, AC));
         }
 
+        public static void PlayIfNotAlreadyPlaying(this AudioSource audioSource, AudioClip clip)
+        {
+            if (!audioSource.isPlaying)
+            {
+                audioSource.clip = clip;
+                audioSource.Play();
+            }
+        }
+
         public static bool EndsWithFast(this string text, string subText)
         {
             int length = text.Length;
