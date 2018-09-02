@@ -777,6 +777,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   GamePath: C:\Users\admin\Desktop\interstate 76
+  ProjectilePrefab: {fileID: 1659379701980452, guid: fd853c7e994521a4da1a1066929d87c0,
+    type: 2}
   _3DObjectPrefab: {fileID: 1723168424737596, guid: eb7818e377de6054c9bf402b84889e40,
     type: 2}
   NoColliderPrefab: {fileID: 1723168424737596, guid: 847602bb3013513499142ad90578e09d,
