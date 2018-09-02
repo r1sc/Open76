@@ -20,8 +20,9 @@ namespace Assets
 
             if (MissionFile.ToLower().StartsWith("m"))
             {
+                Vdf unused;
                 var cacheManager = CacheManager.Instance;
-                var importedVcf = cacheManager.ImportVcf(VcfToLoad, true);
+                var importedVcf = cacheManager.ImportVcf(VcfToLoad, true, out unused);
                 importedVcf.AddComponent<InputCarController>();
                 importedVcf.AddComponent<CarController>();
 

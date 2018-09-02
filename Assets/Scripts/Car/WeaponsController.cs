@@ -29,8 +29,8 @@ namespace Assets.Scripts.Car.Components
             _weapons = new Weapon[weaponCount];
             _weaponAudio = car.gameObject.AddComponent<AudioSource>();
             _weaponAudio.volume = 0.5f;
-            _weaponEmptySound = CacheManager.Instance.GetSound("cammo.gpw");
-            _weaponBrokenSound = CacheManager.Instance.GetSound("cwstat.gpw");
+            _weaponEmptySound = CacheManager.Instance.GetAudioClip("cammo.gpw");
+            _weaponBrokenSound = CacheManager.Instance.GetAudioClip("cwstat.gpw");
             _firingWeapons = new List<Weapon>(5);
             _weaponGroups = new List<int>();
 
@@ -46,13 +46,15 @@ namespace Assets.Scripts.Car.Components
                 return x.Gdf.WeaponGroup.CompareTo(y.Gdf.WeaponGroup);
             });
 
+            _panel.SetWeaponCount(weaponCount);
+
             int seperatorIndex = -1;
             for (int i = 0; i < weaponCount; ++i)
             {
                 I76Sprite onSprite, offSprite;
                 if (_panel.TryGetWeaponSprites(weaponsList[i].Gdf, out onSprite, out offSprite))
                 {
-                    AudioClip fireSound = CacheManager.Instance.GetSound(weaponsList[i].Gdf.SoundName);
+                    AudioClip fireSound = CacheManager.Instance.GetAudioClip(weaponsList[i].Gdf.SoundName);
                     _weapons[i] = new Weapon(weaponsList[i].Gdf, weaponsList[i].Transform)
                     {
                         OnSprite = onSprite,
@@ -64,20 +66,28 @@ namespace Assets.Scripts.Car.Components
                     _panel.SetWeaponHealthGroup(i, 0);
                     _panel.SetWeaponAmmoCount(i, _weapons[i].Ammo);
 
-                    if (_weapons[i].RearFacing && seperatorIndex == -1)
+                    if (_weapons[i].RearFacing)
                     {
-                        seperatorIndex = i;
-                        _panel.SeparatorIndex = seperatorIndex;
-                    }
+                        if (seperatorIndex == -1)
+                        {
+                            seperatorIndex = i;
+                            _panel.SeparatorIndex = seperatorIndex;
+                        }
 
-                    if (!_weapons[i].RearFacing && !_weaponGroups.Contains(_weapons[i].Gdf.WeaponGroup))
+                        _weapons[i].WeaponGroupOffset += 100;
+                    }
+                    
+                    if (!_weaponGroups.Contains(_weapons[i].WeaponGroupOffset))
                     {
-                        _weaponGroups.Add(_weapons[i].Gdf.WeaponGroup);
+                        _weaponGroups.Add(_weapons[i].WeaponGroupOffset);
                     }
                 }
             }
 
-            _panel.UpdateActiveWeaponGroup(_activeGroup, _weapons);
+            if (_weaponGroups.Count > 0)
+            {
+                _panel.UpdateActiveWeaponGroup(_weaponGroups[_activeGroup], _weapons);
+            }
         }
 
         public void CycleWeapon()
@@ -88,7 +98,7 @@ namespace Assets.Scripts.Car.Components
             }
 
             _activeGroup = ++_activeGroup % _weaponGroups.Count;
-            _panel.UpdateActiveWeaponGroup(_activeGroup, _weapons);
+            _panel.UpdateActiveWeaponGroup(_weaponGroups[_activeGroup], _weapons);
         }
         
         public void Fire(int weaponIndex)
@@ -100,7 +110,7 @@ namespace Assets.Scripts.Car.Components
                 for (int i = 0; i < _weapons.Length; ++i)
                 {
                     Weapon weapon = _weapons[i];
-                    if (weapon.RearFacing || weapon.Gdf.WeaponGroup != weaponGroup)
+                    if (weapon.WeaponGroupOffset != weaponGroup)
                     {
                         continue;
                     }

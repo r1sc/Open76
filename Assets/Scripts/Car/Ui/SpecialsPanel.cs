@@ -37,8 +37,6 @@ namespace Assets.Scripts.Car.UI
 
         public void SetActiveSpecial(int specialIndex, Special[] specials)
         {
-            string referenceName = "sp_dymo_" + (specialIndex + 1);
-
             for (int i = 0; i < SpecialsController.MaxSpecials; ++i)
             {
                 I76Sprite sprite;
@@ -51,7 +49,7 @@ namespace Assets.Scripts.Car.UI
                     sprite = SpriteManager.GetSprite("zdse.map", "sp_empty_off");
                 }
 
-                ReferenceImage.ApplySprite(referenceName, sprite, false);
+                ReferenceImage.ApplySprite("sp_dymo_" + (i + 1), sprite, false);
             }
 
             ReferenceImage.UploadToGpu();

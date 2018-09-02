@@ -15,6 +15,7 @@ namespace Assets.Scripts.Car.Components
         public int Index;
         public int Ammo;
         public int Health; // TODO: Damage.
+        public int WeaponGroupOffset;
         public bool Firing;
         public float LastFireTime;
         public readonly Transform Transform;
@@ -34,6 +35,7 @@ namespace Assets.Scripts.Car.Components
             Gdf = gdf;
             Health = gdf.Health;
             Ammo = gdf.AmmoCount;
+            WeaponGroupOffset = gdf.WeaponGroup;
 
             LoadProjectile();
             Transform = transform;

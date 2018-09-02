@@ -26,16 +26,27 @@ namespace Assets.Scripts.Car.UI
             for (int i = 0; i < weapons.Length; ++i)
             {
                 string referenceName = "dymo_" + (i + 1);
-
-                bool rearFacing = weapons[i].RearFacing;
-                bool sameGroup = weapons[i].Gdf.WeaponGroup == weaponGroup;
-                I76Sprite sprite = !rearFacing && sameGroup ? weapons[i].OnSprite : weapons[i].OffSprite;
+                
+                bool sameGroup = weapons[i].WeaponGroupOffset == weaponGroup;
+                I76Sprite sprite = sameGroup ? weapons[i].OnSprite : weapons[i].OffSprite;
                 ReferenceImage.ApplySprite(referenceName, sprite, false);
 
                 if (SeparatorIndex == i)
                 {
                     ReferenceImage.ApplySprite("separator_" + (i + 1), _separatorSprite, false);
                 }
+            }
+
+            ReferenceImage.UploadToGpu();
+        }
+
+        public void SetWeaponCount(int weaponCount)
+        {
+            for (int i = 0; i < weaponCount; ++i)
+            {
+                int iPlus1 = i + 1;
+                I76Sprite sprite = SpriteManager.GetSprite("zwpe.map", "housing" + iPlus1);
+                ReferenceImage.ApplySprite("bracket_" + iPlus1, sprite, false);
             }
 
             ReferenceImage.UploadToGpu();
@@ -82,6 +93,18 @@ namespace Assets.Scripts.Car.UI
                 case "30cal MG":
                     spriteName = "30cal_mg";
                     break;
+                case "50cal MG":
+                    spriteName = "50cal_mg";
+                    break;
+                case "20mm Cannnon":
+                    spriteName = "20mm_can";
+                    break;
+                case "25mm Cannon":
+                    spriteName = "25mm_can";
+                    break;
+                case "30mm Cannon":
+                    spriteName = "30mm_can";
+                    break;
                 case "Oil Slick":
                     spriteName = "oilslick";
                     break;
@@ -93,6 +116,9 @@ namespace Assets.Scripts.Car.UI
                     break;
                 case "Fire-Dropper":
                     spriteName = "firedropper";
+                    break;
+                case "Gas Launcher":
+                    spriteName = "gaslaunchr";
                     break;
                 case "7.62mm MG":
                     spriteName = "762_mg";

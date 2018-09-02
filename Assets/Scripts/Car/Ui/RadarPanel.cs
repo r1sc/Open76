@@ -235,7 +235,7 @@ namespace Assets.Scripts.Car.UI
                 float angle = Vector2.Angle(contact.Normal, Vector2.up);
                 angle = Mathf.Sign(Vector3.Cross(contact.Normal, Vector2.up).z) < 0 ? (360 - angle) % 360 : angle;
 
-                int sweepIndex = Mathf.CeilToInt(angle / DegreesPerSweep);
+                int sweepIndex = Mathf.Clamp(Mathf.CeilToInt(angle / DegreesPerSweep), 0, _targetSprites.Length);
 
                 if (_target == radarContact.Key)
                 {
