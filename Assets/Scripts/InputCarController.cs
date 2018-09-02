@@ -52,9 +52,64 @@ namespace Assets
                 _car.RadarPanel.ClearTarget();
             }
 
-            if (!CameraManager.Instance.IsMainCameraActive || !_car.Alive)
+            // Cycle weapon.
+            if (Input.GetKeyDown(KeyCode.Return))
             {
-                return;
+                _car.WeaponsController.CycleWeapon();
+            }
+
+            // Fire active weapon(s).
+            if (Input.GetKey(KeyCode.Space))
+            {
+                _car.WeaponsController.Fire(-1);
+            }
+
+            // Fire weapon 1.
+            if (Input.GetKey(KeyCode.Alpha1))
+            {
+                _car.WeaponsController.Fire(0);
+            }
+
+            // Fire weapon 2.
+            if (Input.GetKey(KeyCode.Alpha2))
+            {
+                _car.WeaponsController.Fire(1);
+            }
+
+            // Fire weapon 3.
+            if (Input.GetKey(KeyCode.Alpha3))
+            {
+                _car.WeaponsController.Fire(2);
+            }
+
+            // Fire weapon 4.
+            if (Input.GetKey(KeyCode.Alpha4))
+            {
+                _car.WeaponsController.Fire(3);
+            }
+
+            // Fire weapon 5.
+            if (Input.GetKey(KeyCode.Alpha5))
+            {
+                _car.WeaponsController.Fire(4);
+            }
+
+            // Fire special 1.
+            if (Input.GetKey(KeyCode.Alpha6))
+            {
+                _car.SpecialsController.Fire(0);
+            }
+
+            // Fire special 2.
+            if (Input.GetKey(KeyCode.Alpha7))
+            {
+                _car.SpecialsController.Fire(1);
+            }
+
+            // Fire special 3.
+            if (Input.GetKey(KeyCode.Alpha8))
+            {
+                _car.SpecialsController.Fire(2);
             }
 
             // Start / Stop engine.
