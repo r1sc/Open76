@@ -103,7 +103,7 @@ namespace Assets.Scripts.Car.UI
             _radarAudio.playOnAwake = false;
             _radarAudio.volume = 0.2f;
 
-            CacheManager cacheManager = Object.FindObjectOfType<CacheManager>();
+            CacheManager cacheManager = CacheManager.Instance;
 
             _newContact = cacheManager.GetAudioClip("cgrowl.gpw");
             _sweepContact = cacheManager.GetAudioClip("cradar.gpw");

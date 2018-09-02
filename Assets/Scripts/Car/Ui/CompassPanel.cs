@@ -24,7 +24,7 @@ namespace Assets.Scripts.Car.UI
             }
 
             // The compass is a bit special since it smoothly scrolls, so we just load the entire frame instead of the actual sprite.
-            CacheManager cacheManager = Object.FindObjectOfType<CacheManager>();
+            CacheManager cacheManager = CacheManager.Instance;
             Texture2D bearingsTexture = cacheManager.GetTexture("zcme");
             if (bearingsTexture == null)
             {

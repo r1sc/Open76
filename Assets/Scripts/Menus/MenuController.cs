@@ -22,7 +22,7 @@ namespace Assets.Menus
         // Use this for initialization
         void Start()
         {
-            _cacheManager = FindObjectOfType<CacheManager>();
+            _cacheManager = CacheManager.Instance;
 
             _canvasGroup = GetComponent<CanvasGroup>();
             _canvasGroup.alpha = 0;

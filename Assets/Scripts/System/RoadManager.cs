@@ -74,7 +74,7 @@ namespace Assets.Scripts.System
                     throw new ArgumentOutOfRangeException();
             }
 
-            CacheManager cacheManager = UnityEngine.Object.FindObjectOfType<CacheManager>();
+            CacheManager cacheManager = CacheManager.Instance;
             Material roadMaterial = cacheManager.GetTextureMaterial(roadTextureFilename, false);
             meshRenderer.material = roadMaterial;
 

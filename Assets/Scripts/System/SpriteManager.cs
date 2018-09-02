@@ -146,7 +146,7 @@ namespace Assets.Scripts.System
             }
 
             _vdf = vdf;
-            _cacheManager = Object.FindObjectOfType<CacheManager>();
+            _cacheManager = CacheManager.Instance;
 
             // Initialise with common sprites using more convenient names.
             _sprites = new Dictionary<string, I76Sprite>

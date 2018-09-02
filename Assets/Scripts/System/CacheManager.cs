@@ -32,9 +32,16 @@ namespace Assets.System
             "51RTC1"
         };
 
+        public static CacheManager Instance { get; private set; }
+
         private static readonly Dictionary<string, GeoMeshCacheEntry> _meshCache = new Dictionary<string, GeoMeshCacheEntry>();
         private readonly Dictionary<string, GameObject> _sdfCache = new Dictionary<string, GameObject>();
         private readonly Dictionary<string, Material> _materialCache = new Dictionary<string, Material>();
+
+        private void Awake()
+        {
+            Instance = this;
+        }
 
         void Start()
         {

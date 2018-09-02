@@ -57,9 +57,8 @@ public class VideoPlayer : MonoBehaviour
         {
             return;
         }
-
-        GameObject game = GameObject.Find("Game");
-        CacheManager cacheManager = game.GetComponent<CacheManager>();
+        
+        CacheManager cacheManager = CacheManager.Instance;
         string videoFolder = Path.Combine(cacheManager.GamePath, "CUTSCENE");
         if (!Directory.Exists(videoFolder))
         {

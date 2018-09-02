@@ -16,7 +16,7 @@ namespace Assets.System
         public void LoadLevel(string msnFilename)
         {
             LevelObjects = new Dictionary<int, GameObject>();
-            var cacheManager = FindObjectOfType<CacheManager>();
+            var cacheManager = CacheManager.Instance;
 
             var terrainPatches = new Terrain[80, 80];
             var mdef = MsnMissionParser.ReadMsnMission(msnFilename);

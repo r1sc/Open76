@@ -21,7 +21,7 @@ namespace Assets
             _material = GetComponent<MeshRenderer>().material;
 
 
-            var cacheManager = FindObjectOfType<CacheManager>();
+            var cacheManager = CacheManager.Instance;
             _material.mainTexture = TextureParser.ReadMapTexture(TextureFilename, cacheManager.Palette);
         }
 

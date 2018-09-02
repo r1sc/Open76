@@ -18,7 +18,7 @@ namespace Assets
         // Use this for initialization
         void Start()
         {
-            _cacheManager = FindObjectOfType<CacheManager>();
+            _cacheManager = CacheManager.Instance;
             _cacheManager.Palette = ActPaletteParser.ReadActPalette("t01.act");
 
             SdfFiles = VirtualFilesystem.Instance.FindAllWithExtension(".sdf").ToArray();
