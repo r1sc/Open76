@@ -405,12 +405,6 @@ namespace Assets.System
             chassisCollider.transform.parent = carObject.transform;
             ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[0], CarBodyPrefab, true);
             
-            if (importFirstPerson)
-            {
-                WeaponsPanel weaponsPanel = carObject.gameObject.AddComponent<WeaponsPanel>();
-                weaponsPanel.InitWeapons(vcf);
-            }
-
             for (int i = 0; i < vcf.Weapons.Count; ++i)
             {
                 VcfParser.VcfWeapon weapon = vcf.Weapons[i];
