@@ -1,14 +1,9 @@
-﻿using Assets;
-using Assets.Car;
-using Assets.Fileparsers;
+﻿using Assets.Fileparsers;
 using Assets.Scripts.System;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Assets.Scripts.Camera;
+using Assets.Scripts.Car;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Assets.System
 {
@@ -97,7 +92,7 @@ namespace Assets.System
                                 default:
                                     Vdf vdf;
                                     go = cacheManager.ImportVcf(odef.Label + ".vcf", odef.TeamId == 1, out vdf);
-                                    CarAI car = go.AddComponent<CarAI>();
+                                    CarController car = go.GetComponent<CarController>();
                                     car.TeamId = odef.TeamId;
                                     car.Vdf = vdf;
                                     break;
@@ -188,7 +183,7 @@ namespace Assets.System
             RenderSettings.fogColor = cacheManager.Palette[239];
             RenderSettings.ambientLight = cacheManager.Palette[247];
 
-            var cars = FindObjectsOfType<NewCar>();
+            var cars = FindObjectsOfType<CarController>();
             foreach (var car in cars)
             {
                 car.transform.parent = null;

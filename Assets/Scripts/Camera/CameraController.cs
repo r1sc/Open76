@@ -1,5 +1,5 @@
-﻿using Assets.Car;
-using Assets.Scripts.Camera;
+﻿using Assets.Scripts.Camera;
+using Assets.Scripts.Car;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -9,8 +9,9 @@ namespace Assets
     public class CameraController : MonoBehaviour
     {
         private SmoothFollow _smoothFollow;
-        private bool _firstPerson = false;
-        private CarAI _player;
+        private CarController _player;
+
+        public bool FirstPerson { get; private set; }
 
         private enum ChassisView
         {
@@ -38,7 +39,7 @@ namespace Assets
                 Transform target = _smoothFollow.Target;
                 if (target != null)
                 {
-                    _player = target.GetComponent<CarAI>();
+                    _player = target.GetComponent<CarController>();
                 }
             }
             else
@@ -46,7 +47,7 @@ namespace Assets
                 if (!_player.Alive)
                 {
                     SetCameraThirdPerson();
-                    _firstPerson = false;
+                    FirstPerson = false;
                     return;
                 }
             }
@@ -55,42 +56,42 @@ namespace Assets
             {
                 SetCameraFirstPersonAtVLOCIndex(0);
                 SetVisibleChassisModel(ChassisView.FirstPerson);
-                _firstPerson = true;
+                FirstPerson = true;
             }
             else if (Input.GetKeyDown(KeyCode.F2))
             {
                 SetCameraThirdPerson();
-                _firstPerson = false;
+                FirstPerson = false;
             }
             else if (Input.GetKeyDown(KeyCode.F3))
             {
                 SetCameraFirstPersonAtVLOCIndex(1);
                 SetVisibleChassisModel(ChassisView.AllHidden);
-                _firstPerson = false;
+                FirstPerson = false;
             }
             else if (Input.GetKeyDown(KeyCode.F4))
             {
                 SetCameraAtWheelIndex(0);
                 SetVisibleChassisModel(ChassisView.ThirdPerson);
-                _firstPerson = false;
+                FirstPerson = false;
             }
             else if (Input.GetKeyDown(KeyCode.F5))
             {
                 SetCameraAtWheelIndex(1);
                 SetVisibleChassisModel(ChassisView.ThirdPerson);
-                _firstPerson = false;
+                FirstPerson = false;
             }
             else if (Input.GetKeyDown(KeyCode.F6))
             {
                 SetCameraAtWheelIndex(2);
                 SetVisibleChassisModel(ChassisView.ThirdPerson);
-                _firstPerson = false;
+                FirstPerson = false;
             }
             else if (Input.GetKeyDown(KeyCode.F7))
             {
                 SetCameraAtWheelIndex(3);
                 SetVisibleChassisModel(ChassisView.ThirdPerson);
-                _firstPerson = false;
+                FirstPerson = false;
             }
 
             if(Input.GetKeyDown(KeyCode.R))
@@ -98,7 +99,7 @@ namespace Assets
                 InputTracking.Recenter();
             }
 
-            if (_firstPerson)
+            if (FirstPerson)
             {
                 var targetRotation = Quaternion.Euler(-14, 0, 0);
                 if (Input.GetKey(KeyCode.Keypad6))

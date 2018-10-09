@@ -67,6 +67,24 @@ namespace Assets.Fileparsers
             }
         }
 
+        public bool TryFindNext(string recordName)
+        {
+            Tag tag = Current.Next;
+            while (tag != null)
+            {
+                if (tag.Name == recordName)
+                {
+                    Current = tag;
+                    Position = Current.DataPosition;
+                    return true;
+                }
+
+                tag = tag.Next;
+            }
+
+            return false;
+        }
+
         public void Next()
         {
             Current = Current.Next;

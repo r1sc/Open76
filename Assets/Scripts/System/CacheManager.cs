@@ -2,8 +2,8 @@
 using System.Linq;
 using Assets.Fileparsers;
 using UnityEngine;
-using Assets.Car;
 using System.IO;
+using Assets.Scripts.Car;
 
 namespace Assets.System
 {
@@ -15,7 +15,7 @@ namespace Assets.System
         public RaySusp SteerWheelPrefab;
         public RaySusp DriveWheelPrefab;
         public GameObject CarBodyPrefab;
-        public NewCar CarPrefab;
+        public CarController CarPrefab;
         public Color32[] Palette;
         
         private Material _colorMaterialPrefab;
@@ -372,10 +372,7 @@ namespace Assets.System
                 weaponMountTransforms[i] = mountPoint;
             }
 
-            var firstPerson = new GameObject("FirstPerson");
-            firstPerson.transform.parent = chassis.transform;
-            firstPerson.SetActive(false);
-
+            
             for (int i = 0; i < vdf.PartsThirdPerson.Count; ++i)
             {
                 GameObject healthObject = new GameObject("Health " + i);
@@ -388,7 +385,14 @@ namespace Assets.System
             }
 
             if (importFirstPerson)
+            {
+                var firstPerson = new GameObject("FirstPerson");
+                firstPerson.transform.parent = chassis.transform;
                 ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
+
+                carObject.InitPanels(vcf);
+                firstPerson.SetActive(false);
+            }
 
             var meshFilters = thirdPerson.GetComponentsInChildren<MeshFilter>();
             var bounds = new Bounds();
@@ -403,7 +407,7 @@ namespace Assets.System
             var chassisCollider = new GameObject("ChassisColliders");
             chassisCollider.transform.parent = carObject.transform;
             ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[0], CarBodyPrefab, true);
-
+            
             for (int i = 0; i < vcf.Weapons.Count; ++i)
             {
                 VcfParser.VcfWeapon weapon = vcf.Weapons[i];
@@ -459,23 +463,27 @@ namespace Assets.System
             //var outerBox = chassisCollider.AddComponent<BoxCollider>();
             //outerBox.center = vdf.BoundsOuter.center;
             //outerBox.size = vdf.BoundsOuter.size;
-            
+
+            RaySusp[] frontWheels = null;
             if (vcf.FrontWheelDef != null)
             {
-                var frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
-                carObject.FrontWheels = frontWheels;
+                frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
+                carObject.Movement.FrontWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
                 CreateWheelPair("Mid", 2, carObject.gameObject, vdf, vtf, vcf.MidWheelDef);
             }
+
+            RaySusp[] rearWheels = null;
             if (vcf.BackWheelDef != null)
             {
-                var rearWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
-                carObject.RearWheels = rearWheels;
+                rearWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
+                carObject.Movement.RearWheels = rearWheels;
             }
-            carObject.Chassis = chassis.transform;
 
+            carObject.Movement.Initialise(chassis.transform, frontWheels, rearWheels);
+            
             return carObject.gameObject;
         }
 

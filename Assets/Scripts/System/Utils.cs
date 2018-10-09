@@ -31,6 +31,14 @@ namespace Assets.System
             return true;
         }
 
+        public static Vector2 RotateVector(Vector2 v, float angle)
+        {
+            float radian = angle * Mathf.Deg2Rad;
+            float x = v.x * Mathf.Cos(radian) - v.y * Mathf.Sin(radian);
+            float y = v.x * Mathf.Sin(radian) + v.y * Mathf.Cos(radian);
+            return new Vector2(x, y);
+        }
+
         public static T RandomElement<T>(T[] array)
         {
             return array[Random.Range(0, array.Length)];

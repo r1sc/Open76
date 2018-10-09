@@ -64,29 +64,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1973179770006884}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 51dd92fcc65b6eb48b85df03bc337937, type: 3}
+  m_Script: {fileID: 11500000, guid: 96d48900858b31e49b19ff0b84c44d5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Throttle: 0
-  Brake: -0
-  EBrake: 0
-  Steer: 0
-  MaxSteer: 0.5
-  SteerSpeedBias: 55
-  EngineForce: 2000
-  BrakeConstant: 1000
-  DragConstant: 0
-  RollingResistanceConstant: 15
-  WheelRadius: 0.33
-  FrontWheels: []
-  RearWheels: []
-  Chassis: {fileID: 0}
-  SteerAngle: 0
-  CorneringStiffnessFront: -5
-  CorneringStiffnessRear: -5.2
-  MaxGrip: 4
-  EngineMaxTorque: 0
-  RPM: 0
-  GearRatios: []
-  ReverseGearRatio: 0
-  DifferentialRatio: 0
