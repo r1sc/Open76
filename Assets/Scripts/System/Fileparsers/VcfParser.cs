@@ -21,44 +21,45 @@ namespace Assets.Fileparsers
         CupHolders
     }
 
+
+    public class Vcf
+    {
+        public string VariantName { get; set; }
+        public string VdfFilename { get; set; }
+        public string VtfFilename { get; set; }
+        public uint EngineType { get; set; }
+        public uint SuspensionType { get; set; }
+        public uint BrakesType { get; set; }
+        public string WdfFrontFilename { get; set; }
+        public string WdfMidFilename { get; set; }
+        public string WdfBackFilename { get; set; }
+        public uint ArmorFront { get; set; }
+        public uint ArmorLeft { get; set; }
+        public uint ArmorRight { get; set; }
+        public uint ArmorRear { get; set; }
+        public uint ChassisFront { get; set; }
+        public uint ChassisLeft { get; set; }
+        public uint ChassisRight { get; set; }
+        public uint ChassisRear { get; set; }
+        public uint ArmorOrChassisLeftToAdd { get; set; }
+        public List<VcfWeapon> Weapons { get; set; }
+        public List<SpecialType> Specials { get; set; }
+        public Wdf FrontWheelDef { get; set; }
+        public Wdf MidWheelDef { get; set; }
+        public Wdf BackWheelDef { get; set; }
+    }
+
+    public class VcfWeapon
+    {
+        public int MountPoint { get; set; }
+        public string GdfFilename { get; set; }
+        public Gdf Gdf { get; set; }
+        public bool RearFacing { get; set; }
+        public Transform Transform { get; set; }
+    }
+
     public class VcfParser
     {
-        public class Vcf
-        {
-            public string VariantName { get; set; }
-            public string VdfFilename { get; set; }
-            public string VtfFilename { get; set; }
-            public uint EngineType { get; set; }
-            public uint SuspensionType { get; set; }
-            public uint BrakesType { get; set; }
-            public string WdfFrontFilename { get; set; }
-            public string WdfMidFilename { get; set; }
-            public string WdfBackFilename { get; set; }
-            public uint ArmorFront { get; set; }
-            public uint ArmorLeft { get; set; }
-            public uint ArmorRight { get; set; }
-            public uint ArmorRear { get; set; }
-            public uint ChassisFront { get; set; }
-            public uint ChassisLeft { get; set; }
-            public uint ChassisRight { get; set; }
-            public uint ChassisRear { get; set; }
-            public uint ArmorOrChassisLeftToAdd { get; set; }
-            public List<VcfWeapon> Weapons { get; set; }
-            public List<SpecialType> Specials { get; set; }
-            public Wdf FrontWheelDef { get; set; }
-            public Wdf MidWheelDef { get; set; }
-            public Wdf BackWheelDef { get; set; }
-        }
-
-        public class VcfWeapon
-        {
-            public int MountPoint { get; set; }
-            public string GdfFilename { get; set; }
-            public Gdf Gdf { get; set; }
-            public bool RearFacing { get; set; }
-            public Transform Transform { get; set; }
-        }
-
         public static Vcf ParseVcf(string filename)
         {
             var vcf = new Vcf();

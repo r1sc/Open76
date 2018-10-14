@@ -4,27 +4,28 @@ using UnityEngine;
 
 namespace Assets.Scripts.Car.UI
 {
+    public enum SystemType
+    {
+        Vehicle,
+        FrontArmor,
+        LeftArmor,
+        RightArmor,
+        BackArmor,
+        FrontChassis,
+        LeftChassis,
+        RightChassis,
+        BackChassis,
+        Engine,
+        Brakes,
+        Suspension,
+        TireFL,
+        TireFR,
+        TireBL,
+        TireBR
+    };
+
     public class SystemsPanel : Panel
     {
-        public enum Systems
-        {
-            Engine,
-            Brakes,
-            Suspension,
-            FrontArmor,
-            LeftArmor,
-            RightArmor,
-            BackArmor,
-            FrontChassis,
-            LeftChassis,
-            RightChassis,
-            BackChassis,
-            TireFL,
-            TireFR,
-            TireBL,
-            TireBR
-        };
-        
         public SystemsPanel(Transform firstPersonTransform) : base(firstPersonTransform, "SYS", "zsy_.map")
         {
             if (ReferenceImage == null)
@@ -32,8 +33,8 @@ namespace Assets.Scripts.Car.UI
                 return;
             }
 
-            Array values = Enum.GetValues(typeof(Systems));
-            foreach (Systems system in values)
+            Array values = Enum.GetValues(typeof(SystemType));
+            foreach (SystemType system in values)
             {
                 SetSystemHealthGroup(system, 0, false);
             }
@@ -41,53 +42,7 @@ namespace Assets.Scripts.Car.UI
             ReferenceImage.UploadToGpu();
         }
 
-        public Systems GetSystemForDamage(DamageType damageType, float angle)
-        {
-            switch (damageType)
-            {
-                case DamageType.Force:
-                    if (angle < 90f)
-                    {
-                        return Systems.FrontChassis;
-                    }
-                    else if (angle < 180)
-                    {
-                        return Systems.RightChassis;
-                    }
-                    else if (angle < 270)
-                    {
-                        return Systems.BackChassis;
-                    }
-                    else
-                    {
-                        return Systems.LeftChassis;
-                    }
-
-                case DamageType.Projectile:
-                    if (angle < 90f)
-                    {
-                        return Systems.FrontArmor;
-                    }
-                    else if (angle < 180)
-                    {
-                        return Systems.RightArmor;
-                    }
-                    else if (angle < 270)
-                    {
-                        return Systems.BackArmor;
-                    }
-                    else
-                    {
-                        return Systems.LeftArmor;
-                    }
-
-                default:
-                    Debug.LogWarning("Unhandled damage type.");
-                    throw new NotSupportedException();
-            }
-        }
-
-        public void SetSystemHealthGroup(Systems system, int healthGroup, bool uploadToGpu)
+        public void SetSystemHealthGroup(SystemType systemType, int healthGroup, bool uploadToGpu)
         {
             string spriteName;
             string referenceName = null;
@@ -115,59 +70,59 @@ namespace Assets.Scripts.Car.UI
                     return;
             }
 
-            switch (system)
+            switch (systemType)
             {
-                case Systems.Brakes:
+                case SystemType.Brakes:
                     spriteName = "brakes";
                     break;
-                case Systems.Engine:
+                case SystemType.Engine:
                     spriteName = "engine";
                     break;
-                case Systems.Suspension:
+                case SystemType.Suspension:
                     spriteName = "suspen";
                     break;
-                case Systems.FrontArmor:
+                case SystemType.FrontArmor:
                     spriteName = "farm";
                     break;
-                case Systems.LeftArmor:
+                case SystemType.LeftArmor:
                     spriteName = "larm";
                     break;
-                case Systems.RightArmor:
+                case SystemType.RightArmor:
                     spriteName = "rarm";
                     break;
-                case Systems.BackArmor:
+                case SystemType.BackArmor:
                     spriteName = "barm";
                     break;
-                case Systems.FrontChassis:
+                case SystemType.FrontChassis:
                     spriteName = "fchas";
                     break;
-                case Systems.LeftChassis:
+                case SystemType.LeftChassis:
                     spriteName = "lchas";
                     break;
-                case Systems.RightChassis:
+                case SystemType.RightChassis:
                     spriteName = "rchas";
                     break;
-                case Systems.BackChassis:
+                case SystemType.BackChassis:
                     spriteName = "bchas";
                     break;
-                case Systems.TireFL:
+                case SystemType.TireFL:
                     spriteName = "tire";
                     referenceName = "fltire";
                     break;
-                case Systems.TireFR:
+                case SystemType.TireFR:
                     spriteName = "tire";
                     referenceName = "frtire";
                     break;
-                case Systems.TireBL:
+                case SystemType.TireBL:
                     spriteName = "tire";
                     referenceName = "rltire";
                     break;
-                case Systems.TireBR:
+                case SystemType.TireBR:
                     spriteName = "tire";
                     referenceName = "rrtire";
                     break;
                 default:
-                    Debug.LogWarning("Unknown system in SystemsPanel.");
+                    Debug.LogWarning("Unknown systemType in SystemsPanel.");
                     return;
             }
 

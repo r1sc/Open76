@@ -42,7 +42,7 @@ namespace Assets.Scripts.Car
 
         public void DrawGizmos()
         {
-            if (_currentPath == null || _controller.Health <= 0)
+            if (_currentPath == null || !_controller.Alive)
             {
                 return;
             }

@@ -21,7 +21,7 @@ namespace Assets.Scripts.Car.Components
         private readonly List<int> _weaponGroups;
         private readonly WeaponsPanel _panel;
 
-        public WeaponsController(CarController car, VcfParser.Vcf vcf, Transform firstPersonTransform)
+        public WeaponsController(CarController car, Vcf vcf, Transform firstPersonTransform)
         {
             _panel = new WeaponsPanel(firstPersonTransform);
 
@@ -35,7 +35,7 @@ namespace Assets.Scripts.Car.Components
             _firingWeapons = new List<Weapon>(5);
             _weaponGroups = new List<int>();
 
-            List<VcfParser.VcfWeapon> weaponsList = vcf.Weapons;
+            List<VcfWeapon> weaponsList = vcf.Weapons;
             weaponsList.Sort((x, y) =>
             {
                 int compare = x.RearFacing.CompareTo(y.RearFacing);

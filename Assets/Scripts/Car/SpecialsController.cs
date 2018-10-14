@@ -14,7 +14,7 @@ namespace Assets.Scripts.Car.Components
         private readonly Special[] _specials;
         private readonly SpecialsPanel _panel;
 
-        public SpecialsController(VcfParser.Vcf vcf, Transform firstPersonTransform)
+        public SpecialsController(Vcf vcf, Transform firstPersonTransform)
         {
             _panel = new SpecialsPanel(firstPersonTransform);
 

@@ -94,7 +94,6 @@ namespace Assets.System
                                     go = cacheManager.ImportVcf(vcfName + ".vcf", odef.TeamId == 1, out vdf);
                                     CarController car = go.GetComponent<CarController>();
                                     car.TeamId = odef.TeamId;
-                                    car.Vdf = vdf;
                                     break;
                             }
 

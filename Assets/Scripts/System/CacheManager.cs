@@ -353,6 +353,7 @@ namespace Assets.System
             var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
 
             var carObject = Instantiate(CarPrefab); //ImportGeo(vdf.SOBJGeoName + ".geo", vtf, CarPrefab.gameObject).GetComponent<ArcadeCar>();
+            carObject.Configure(vdf, vcf);
             carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
 
             foreach (var vLoc in vdf.VLocs)
@@ -407,7 +408,7 @@ namespace Assets.System
             
             for (int i = 0; i < vcf.Weapons.Count; ++i)
             {
-                VcfParser.VcfWeapon weapon = vcf.Weapons[i];
+                VcfWeapon weapon = vcf.Weapons[i];
                 int mountPoint = weapon.MountPoint;
                 HLoc hloc = vdf.HLocs[mountPoint];
                 weapon.RearFacing = hloc.FacingDirection == 2;
@@ -491,7 +492,7 @@ namespace Assets.System
                 firstPerson.transform.parent = chassis.transform;
                 ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
 
-                carObject.InitPanels(vcf);
+                carObject.InitPanels();
                 firstPerson.SetActive(false);
             }
 
