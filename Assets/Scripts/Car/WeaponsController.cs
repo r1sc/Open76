@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Assets.Fileparsers;
 using Assets.Scripts.Car.UI;
+using Assets.Scripts.Entities;
 using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;

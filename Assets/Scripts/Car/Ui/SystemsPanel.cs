@@ -40,7 +40,53 @@ namespace Assets.Scripts.Car.UI
 
             ReferenceImage.UploadToGpu();
         }
-        
+
+        public Systems GetSystemForDamage(DamageType damageType, float angle)
+        {
+            switch (damageType)
+            {
+                case DamageType.Force:
+                    if (angle < 90f)
+                    {
+                        return Systems.FrontChassis;
+                    }
+                    else if (angle < 180)
+                    {
+                        return Systems.RightChassis;
+                    }
+                    else if (angle < 270)
+                    {
+                        return Systems.BackChassis;
+                    }
+                    else
+                    {
+                        return Systems.LeftChassis;
+                    }
+
+                case DamageType.Projectile:
+                    if (angle < 90f)
+                    {
+                        return Systems.FrontArmor;
+                    }
+                    else if (angle < 180)
+                    {
+                        return Systems.RightArmor;
+                    }
+                    else if (angle < 270)
+                    {
+                        return Systems.BackArmor;
+                    }
+                    else
+                    {
+                        return Systems.LeftArmor;
+                    }
+
+                default:
+                    Debug.LogWarning("Unhandled damage type.");
+                    throw new NotSupportedException();
+            }
+        }
+
         public void SetSystemHealthGroup(Systems system, int healthGroup, bool uploadToGpu)
         {
             string spriteName;

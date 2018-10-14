@@ -8,6 +8,12 @@ using UnityEngine;
 
 namespace Assets.Scripts.Car
 {
+    public enum DamageType
+    {
+        Projectile,
+        Force
+    }
+
     public class CarController : MonoBehaviour
     {
         private const int StartHealth = 100;
@@ -51,6 +57,11 @@ namespace Assets.Scripts.Car
             get { return _health; }
             private set
             {
+                if (_health <= 0)
+                {
+                    return;
+                }
+
                 _health = value;
                 SetHealthGroup(_healthGroups - Mathf.FloorToInt((float) _health / (StartHealth + 1) * _healthGroups));
 
@@ -58,6 +69,22 @@ namespace Assets.Scripts.Car
                 {
                     Explode();
                 }
+            }
+        }
+
+        public void ApplyDamage(DamageType damageType, Vector3 normal, int damageAmount)
+        {
+            float angle = Vector3.Angle(_transform.forward, normal);
+            angle = (Vector3.Angle(_transform.up, normal) > 90f) ? 360f - angle : angle;
+
+            // TODO: Apply damage to specific components.
+            Health -= damageAmount;
+
+            if (SystemsPanel != null)
+            {
+                // Update UI
+                SystemsPanel.Systems system = SystemsPanel.GetSystemForDamage(damageType, angle);
+                SystemsPanel.SetSystemHealthGroup(system, 1, true);
             }
         }
 

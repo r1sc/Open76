@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Car;
+using UnityEngine;
 
-namespace Assets.Scripts
+namespace Assets.Scripts.Entities
 {
     public class Projectile : MonoBehaviour
     {
@@ -41,6 +42,12 @@ namespace Assets.Scripts
                 return;
             }
 
+            CarController car = other.GetComponentInParent<CarController>();
+            if (car != null)
+            {
+                Vector3 hitNormal = (transform.position - other.transform.position).normalized;
+                car.ApplyDamage(DamageType.Projectile, hitNormal, (int)Damage);
+            }
             // TODO: Deal damage.
             // TODO: Spawn impact sprite.
             Destroy(gameObject);
