@@ -1,17 +1,17 @@
 ﻿using Assets.Scripts.Camera;
-using Assets.Scripts.Car;
+using Assets.Scripts.CarSystems;
 using UnityEngine;
 
 namespace Assets
 {
-    class InputCarController : MonoBehaviour
+    class CarInput : MonoBehaviour
     {
-        private CarController _car;
-        private CarMovement _movement;
+        private Car _car;
+        private CarPhysics _movement;
 
         void Start()
         {
-            _car = GetComponent<CarController>();
+            _car = GetComponent<Car>();
             _movement = _car.Movement;
         }
 
@@ -26,6 +26,12 @@ namespace Assets
             if (Input.GetKeyDown(KeyCode.K))
             {
                 _car.Kill();
+            }
+
+            // Debug: Toggle all AI cars to fire.
+            if (Input.GetKeyDown(KeyCode.Z))
+            {
+                Car.FireWeapons = !Car.FireWeapons;
             }
 
             // Cycle radar target.

@@ -1,13 +1,15 @@
 ﻿using System;
 using Assets.Fileparsers;
 using Assets.Scripts.Camera;
-using Assets.Scripts.Car.Components;
-using Assets.Scripts.Car.UI;
+using Assets.Scripts.CarSystems.Components;
+using Assets.Scripts.CarSystems.UI;
+using Assets.Scripts.Entities;
 using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
-namespace Assets.Scripts.Car
+namespace Assets.Scripts.CarSystems
 {
     public enum DamageType
     {
@@ -15,9 +17,13 @@ namespace Assets.Scripts.Car
         Force
     }
 
-    public class CarController : MonoBehaviour
+    public class Car : WorldEntity
     {
-        private const int VehicleStartHealth = 1000;
+        public static bool FireWeapons;
+
+        private const int VehicleStartHealth = 550; // TODO: Figure out where this is stored?
+        private const int CoreStartHealth = 250; // TODO: Figure out where this is stored?
+        private const int TireStartHealth = 100; // TODO: Parse.
 
         private Transform _transform;
         private Rigidbody _rigidBody;
@@ -45,14 +51,18 @@ namespace Assets.Scripts.Car
         public Vdf Vdf { get; private set; }
         public Vcf Vcf { get; private set; }
 
-        public bool Alive
+        public override bool Alive
         {
             get { return GetComponentHealth(SystemType.Vehicle) > 0; }
         }
 
         public bool Attacked { get; private set; }
         public int TeamId { get; set; }
-        public CarMovement Movement { get; private set; }
+        public bool IsPlayer { get; set; }
+        public int Skill1 { get; set; }
+        public int Skill2 { get; set; }
+        public int Aggressiveness { get; set; }
+        public CarPhysics Movement { get; private set; }
         public CarAI AI { get; private set; }
 
         private int GetComponentHealth(SystemType healthType)
@@ -109,55 +119,92 @@ namespace Assets.Scripts.Car
                 int newValue = _vehicleHitPoints[(int)system];
                 if (newValue < 0)
                 {
-                    SetComponentHealth(SystemType.Vehicle, _vehicleHitPoints[(int)SystemType.Vehicle] + newValue);
-                    // TODO: Randomly pick between nearby components to damage, not just vehicle's core health.
+                    SystemType coreComponent = GetCoreComponent();
+                    SetComponentHealth(coreComponent, _vehicleHitPoints[(int)coreComponent] + newValue);
                     _vehicleHitPoints[(int)system] = 0;
                 }
             }
+
+            // Update UI
+            if (SystemsPanel != null && system != SystemType.Vehicle)
+            {
+                SystemsPanel.SetSystemHealthGroup(system, GetHealthGroup(system), true);
+            }
+        }
+
+        private SystemType GetCoreComponent()
+        {
+            SystemType system;
+
+            SystemType[] coreSystems =
+            {
+                SystemType.Vehicle,
+                SystemType.Brakes,
+                SystemType.Engine,
+                SystemType.Suspension
+            };
+
+            int iterations = 0;
+            const int maxIterations = 20;
+
+            do
+            {
+                int coreIndex = Random.Range(0, coreSystems.Length);
+                system = coreSystems[coreIndex];
+                ++iterations;
+            } while (GetComponentHealth(system) == 0 && iterations < maxIterations);
+
+            if (iterations == maxIterations)
+            {
+                return SystemType.Vehicle;
+            }
+
+            return system;
         }
 
         public void ApplyDamage(DamageType damageType, Vector3 normal, int damageAmount)
         {
-            float angle = Vector3.Angle(_transform.forward, normal);
-            angle = Vector3.Angle(_transform.up, normal) > 90f ? 360f - angle : angle;
+            float angle = Quaternion.FromToRotation(Vector3.up, normal).eulerAngles.z;
+
+            // TODO: Figure out how tire damage should be applied here.
 
             SystemType system;
             switch (damageType)
             {
                 case DamageType.Force:
-                    if (angle < 90)
-                    {
-                        system = SystemType.FrontChassis;
-                    }
-                    else if (angle < 180)
+                    if (angle >= 45f && angle < 135f)
                     {
                         system = SystemType.RightChassis;
                     }
-                    else if (angle < 270)
+                    else if (angle >= 135f && angle < 225f)
                     {
                         system = SystemType.BackChassis;
                     }
-                    else
+                    else if (angle >= 225f && angle < 315f)
                     {
                         system = SystemType.LeftChassis;
                     }
+                    else
+                    {
+                        system = SystemType.FrontChassis;
+                    }
                     break;
                 case DamageType.Projectile:
-                    if (angle < 90)
-                    {
-                        system = SystemType.FrontArmor;
-                    }
-                    else if (angle < 180)
+                    if (angle >= 45f && angle < 135f)
                     {
                         system = SystemType.RightArmor;
                     }
-                    else if (angle < 270)
+                    else if (angle >= 135f && angle < 225f)
                     {
                         system = SystemType.BackArmor;
                     }
-                    else
+                    else if (angle >= 225f && angle < 315f)
                     {
                         system = SystemType.LeftArmor;
+                    }
+                    else
+                    {
+                        system = SystemType.FrontArmor;
                     }
                     break;
                 default:
@@ -166,12 +213,6 @@ namespace Assets.Scripts.Car
 
             int currentHealth = GetComponentHealth(system);
             SetComponentHealth(system, currentHealth - damageAmount);
-
-            // Update UI
-            if (SystemsPanel != null)
-            {
-                SystemsPanel.SetSystemHealthGroup(system, GetHealthGroup(system), true);
-            }
         }
 
         public void ToggleEngine()
@@ -198,8 +239,8 @@ namespace Assets.Scripts.Car
         {
             _transform = transform;
             _gameObject = gameObject;
-            _cacheManager = FindObjectOfType<CacheManager>();
-            Movement = new CarMovement(this);
+            _cacheManager = CacheManager.Instance;
+            Movement = new CarPhysics(this);
             AI = new CarAI(this);
             _camera = CameraManager.Instance.MainCamera.GetComponent<CameraController>();
             _rigidBody = GetComponent<Rigidbody>();
@@ -214,20 +255,31 @@ namespace Assets.Scripts.Car
 
             _vehicleHealthGroups = Vdf.PartsThirdPerson.Count;
 
-            _vehicleHitPoints = new int[9];
-            _vehicleStartHitPoints = new int[9];
+            int systemCount = (int) SystemType.TotalSystems;
+            _vehicleHitPoints = new int[systemCount];
+            _vehicleStartHitPoints = new int[systemCount];
 
             _vehicleStartHitPoints[(int)SystemType.Vehicle] = VehicleStartHealth;
+            _vehicleStartHitPoints[(int)SystemType.Suspension] = CoreStartHealth;
+            _vehicleStartHitPoints[(int)SystemType.Brakes] = CoreStartHealth;
+            _vehicleStartHitPoints[(int)SystemType.Engine] = CoreStartHealth;
+
             _vehicleStartHitPoints[(int)SystemType.FrontArmor] = (int)vcf.ArmorFront;
             _vehicleStartHitPoints[(int)SystemType.RightArmor] = (int)vcf.ArmorRight;
             _vehicleStartHitPoints[(int)SystemType.BackArmor] = (int)vcf.ArmorRear;
             _vehicleStartHitPoints[(int)SystemType.LeftArmor] = (int)vcf.ArmorLeft;
+
             _vehicleStartHitPoints[(int)SystemType.FrontChassis] = (int)vcf.ChassisFront;
             _vehicleStartHitPoints[(int)SystemType.RightChassis] = (int)vcf.ChassisRight;
             _vehicleStartHitPoints[(int)SystemType.BackChassis] = (int)vcf.ChassisRear;
             _vehicleStartHitPoints[(int)SystemType.LeftChassis] = (int)vcf.ChassisLeft;
 
-            for (int i = 0; i < 9; ++i)
+            _vehicleStartHitPoints[(int)SystemType.TireFL] = TireStartHealth;
+            _vehicleStartHitPoints[(int)SystemType.TireFR] = TireStartHealth;
+            _vehicleStartHitPoints[(int)SystemType.TireBL] = TireStartHealth;
+            _vehicleStartHitPoints[(int)SystemType.TireBR] = TireStartHealth;
+
+            for (int i = 0; i < systemCount; ++i)
             {
                 _vehicleHitPoints[i] = _vehicleStartHitPoints[i];
             }
@@ -235,14 +287,18 @@ namespace Assets.Scripts.Car
 
         private void Start()
         {
+            EntityManager.Instance.RegisterCar(this);
+
             UpdateEngineSounds();
+
+            Transform firstPersonTransform = _transform.Find("Chassis/FirstPerson");
+            WeaponsController = new WeaponsController(this, Vcf, firstPersonTransform);
+            SpecialsController = new SpecialsController(Vcf, firstPersonTransform);
         }
 
         public void InitPanels()
         {
             Transform firstPersonTransform = _transform.Find("Chassis/FirstPerson");
-            WeaponsController = new WeaponsController(this, Vcf, firstPersonTransform);
-            SpecialsController = new SpecialsController(Vcf, firstPersonTransform);
             SystemsPanel = new SystemsPanel(firstPersonTransform);
             GearPanel = new GearPanel(firstPersonTransform);
             _compassPanel = new CompassPanel(firstPersonTransform);
@@ -303,9 +359,17 @@ namespace Assets.Scripts.Car
                 RadarPanel.Update();
             }
 
-            if (TeamId != 1 || !CameraManager.Instance.IsMainCameraActive)
+            if (!IsPlayer || !CameraManager.Instance.IsMainCameraActive)
             {
                 AI.Navigate();
+            }
+
+            if (!IsPlayer && FireWeapons)
+            {
+                if (WeaponsController != null)
+                {
+                    WeaponsController.Fire(0);
+                }
             }
         }
 
@@ -332,10 +396,10 @@ namespace Assets.Scripts.Car
         {
             _rigidBody.AddForce(Vector3.up * _rigidBody.mass * 5f, ForceMode.Impulse);
 
-            InputCarController inputController = GetComponent<InputCarController>();
-            if (inputController != null)
+            CarInput carInputController = GetComponent<CarInput>();
+            if (carInputController != null)
             {
-                Destroy(inputController);
+                Destroy(carInputController);
             }
 
             AudioSource explosionSource = _cacheManager.GetAudioSource(_gameObject, "xcar");
@@ -385,9 +449,32 @@ namespace Assets.Scripts.Car
             }
         }
 
+        private void OnDestroy()
+        {
+            EntityManager.Instance.UnregisterCar(this);
+        }
+
         public void SetSpeed(int targetSpeed)
         {
             _rigidBody.velocity = _transform.forward * targetSpeed;
+        }
+
+        public bool AtFollowTarget()
+        {
+            if (AI != null)
+            {
+                return AI.AtFollowTarget();
+            }
+
+            return false;
+        }
+
+        public void SetFollowTarget(Car targetCar, int xOffset, int targetSpeed)
+        {
+            if (AI != null)
+            {
+                AI.SetFollowTarget(targetCar, xOffset, targetSpeed);
+            }
         }
 
         public void SetTargetPath(FSMPath path, int targetSpeed)
@@ -396,6 +483,16 @@ namespace Assets.Scripts.Car
             {
                 AI.SetTargetPath(path, targetSpeed);
             }
+        }
+
+        public bool IsWithinNav(FSMPath path, int distance)
+        {
+            if (AI != null)
+            {
+                return AI.IsWithinNav(path, distance);
+            }
+
+            return false;
         }
 
         private void UpdateEngineSounds()

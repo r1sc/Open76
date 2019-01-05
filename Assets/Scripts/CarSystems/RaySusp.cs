@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Assets.Scripts.Car
+namespace Assets.Scripts.CarSystems
 {
     public class RaySusp : MonoBehaviour
     {

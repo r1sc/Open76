@@ -1,17 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using Assets.Scripts.I76Types;
 using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car
+namespace Assets.Scripts.CarSystems
 {
     public class CarAI
     {
+        private const float FollowDistanceTreshold = 10f;
         private const float SteeringSensitivity = 1.5f;
+        private const float RoadOffsetDistance = 2f;
 
-        private readonly CarController _controller;
-        private readonly CarMovement _movement;
+        private readonly Car _controller;
+        private readonly CarPhysics _movement;
         private readonly Transform _transform;
         private readonly Rigidbody _rigidBody;
         private FSMPath _currentPath;
@@ -25,8 +28,11 @@ namespace Assets.Scripts.Car
         private int _nodeIndex;
         private float _angleVelocity;
         private float _steerAngle;
+        private Car _followTarget;
+        private int _followXOffset;
+        private Vector2 _lastRoadOffset;
 
-        public CarAI(CarController controller)
+        public CarAI(Car controller)
         {
             _controller = controller;
             _transform = _controller.transform;
@@ -67,22 +73,43 @@ namespace Assets.Scripts.Car
 
         public void Navigate()
         {
-            if (_controller.Arrived || _currentPath == null)
+            float adjustedTargetSpeed = _targetSpeed;
+
+            if (_followTarget != null)
+            {
+                Vector3 localPos = _transform.position;
+                Vector3 carPos = _followTarget.transform.position;
+                Vector3 direction = _followTarget.transform.forward;
+                _targetPos.x = carPos.x + direction.x * 20f;
+                _targetPos.y = carPos.z + direction.z * 20f;
+
+                float distance = Vector2.Distance(_targetPos, new Vector2(localPos.x, localPos.z));
+
+                if (distance > 10f)
+                {
+                    adjustedTargetSpeed = float.MaxValue;
+                }
+                else if (distance < 5f)
+                {
+                    adjustedTargetSpeed = _followTarget.AI._targetSpeed - 5;
+                }
+            }
+
+            if (_controller.Arrived || (_currentPath == null && _followTarget == null))
             {
                 return;
             }
 
             Vector3 pos = _transform.position;
             Vector2 pos2D;
-            pos2D.x = pos.x;
-            pos2D.y = pos.z;
+            pos2D.x = pos.x - _lastRoadOffset.x;
+            pos2D.y = pos.z - _lastRoadOffset.y;
 
             float velocity = _rigidBody.velocity.magnitude;
-            float adjustedTargetSpeed = _targetSpeed;
             float distanceTreshold = Constants.PathMinDistanceTreshold;
 
             // Find the closest road point.
-            Road[] closestRoads = RoadManager.Instance.GetRoadsAroundPoint(pos);
+            List<Road> closestRoads = RoadManager.Instance.GetRoadsAroundPoint(pos);
             Vector2 targetVector = (_targetPos - pos2D).normalized;
             Vector2 lineOffset = targetVector * Mathf.Max(5f, velocity);
             Road nextRoad = null;
@@ -96,11 +123,13 @@ namespace Assets.Scripts.Car
             float nextClosestSegmentDistance = minRoadDistance;
 
             Vector2 vecOffset;
-            for (int i = 0; i < closestRoads.Length; ++i)
+            int roadCount = closestRoads.Count;
+            for (int i = 0; i < roadCount; ++i)
             {
-                for (int j = 0; j < closestRoads[i].Segments.Length; ++j)
+                Road closestRoad = closestRoads[i];
+                for (int j = 0; j < closestRoad.Segments.Length; ++j)
                 {
-                    Vector2 segmentPos = closestRoads[i].Segments[j];
+                    Vector2 segmentPos = closestRoad.Segments[j];
 
                     Vector2 lineStartPoint;
                     lineStartPoint.x = pos2D.x + lineOffset.x;
@@ -127,7 +156,7 @@ namespace Assets.Scripts.Car
                     {
                         nextClosestSegmentDistance = nextRoadDistance;
                         _nextRoadSegment = segmentPos;
-                        nextRoad = closestRoads[i];
+                        nextRoad = closestRoad;
                     }
                 }
             }
@@ -161,24 +190,81 @@ namespace Assets.Scripts.Car
             // Brake if we're going too fast.
             _movement.Brake = (velocity > adjustedTargetSpeed + 5.0f) ? 1.0f : 0.0f;
 
+            // Offset to right side of road.
+            if (_followTarget == null)
+            { 
+                Vector2 roadVector = (_nextRoadSegment - _targetRoadSegment).normalized;
+                Vector3 roadCross = Vector3.Cross(Vector3.up, new Vector3(roadVector.x, 0f, roadVector.y)) * RoadOffsetDistance;
+                _lastRoadOffset.x = roadCross.x;
+                _lastRoadOffset.y = roadCross.z;
+            }
+
             // Steer towards target.
-            Vector2 segmentVector = (_targetRoadSegment - pos2D).normalized;
+            Vector2 segmentVector;
+            if (_followXOffset != 0 && _followTarget != null)
+            {
+                Vector3 relativeRight = Vector3.Cross(Vector3.up, (_followTarget.transform.position - _transform.position).normalized) * _followXOffset * 0.5f;
+                segmentVector = ((_targetRoadSegment + new Vector2(relativeRight.x, relativeRight.z)) - pos2D).normalized;
+            }
+            else
+            {
+                segmentVector = (_targetRoadSegment - pos2D).normalized;
+            }
+
             Vector3 segmentVector3D = new Vector3(segmentVector.x, 0.0f, segmentVector.y);
             float dot = Vector3.Dot(_transform.right, segmentVector3D) * SteeringSensitivity;
             _steerAngle = Mathf.SmoothDampAngle(_steerAngle, dot, ref _angleVelocity, 0.1f);
             _movement.Steer = _steerAngle;
 
             // Check if we've reached the next node in path.
-            vecOffset.x = pos2D.x - _targetPos.x;
-            vecOffset.y = pos2D.y - _targetPos.y;
-            if ((float)Math.Sqrt(vecOffset.x * vecOffset.x + vecOffset.y * vecOffset.y) < distanceTreshold)
+            if (_followTarget == null)
             {
-                NextWaypoint();
+                vecOffset.x = pos2D.x - _targetPos.x;
+                vecOffset.y = pos2D.y - _targetPos.y;
+                if ((float) Math.Sqrt(vecOffset.x * vecOffset.x + vecOffset.y * vecOffset.y) < distanceTreshold)
+                {
+                    NextWaypoint();
+                }
             }
+        }
+
+        public bool AtFollowTarget()
+        {
+            if (_followTarget == null)
+            {
+                return false;
+            }
+
+            Vector3 offset = _followTarget.transform.forward * 20f;
+            float distance = Vector3.Distance(_transform.position, _followTarget.transform.position + offset);
+            return distance < FollowDistanceTreshold;
+        }
+
+        public void SetFollowTarget(Car car, int xOffset, int targetSpeed)
+        {
+            _targetSpeed = targetSpeed;
+            _followXOffset = xOffset;
+
+            if (_followTarget == car)
+            {
+                return;
+            }
+
+            _followTarget = null;
+            _currentPath = null;
+
+            if (!car.Alive)
+            {
+                return;
+            }
+
+            _followTarget = car;
         }
 
         public void SetTargetPath(FSMPath path, int targetSpeed)
         {
+            _followTarget = null;
+
             // Ignore instruction if path is the current path.
             if (path == _currentPath)
             {
@@ -228,6 +314,41 @@ namespace Assets.Scripts.Car
                 _targetPos.x = worldPos.x + _currentPath.Nodes[_nodeIndex].x;
                 _targetPos.y = worldPos.z + _currentPath.Nodes[_nodeIndex].z;
             }
+        }
+
+        public bool IsWithinNav(FSMPath path, int distance)
+        {
+            I76Vector3[] nodes = path.Nodes;
+            int nodeCountMin1 = nodes.Length - 1;
+
+            Vector3 worldPos = _worldTransform.position;
+            Vector3 carPos = _transform.position;
+            Vector2 pos2D = new Vector2(carPos.x, carPos.z);
+            
+            if (nodeCountMin1 == 0)
+            {
+                Vector2 nodePos;
+                nodePos.x = worldPos.x + nodes[0].x;
+                nodePos.y = worldPos.z + nodes[0].z;
+                return Vector2.Distance(nodePos, pos2D) < distance;
+            }
+
+            for (int i = 0; i < nodeCountMin1; ++i)
+            {
+                Vector2 nodeStart, nodeEnd;
+                nodeStart.x = worldPos.x + nodes[i].x;
+                nodeStart.y = worldPos.z + nodes[i].z;
+                nodeEnd.x = worldPos.x + nodes[i + 1].x;
+                nodeEnd.y = worldPos.z + nodes[i + 1].z;
+
+                float navDistance = Utils.DistanceFromPointToLine(nodeStart, nodeEnd, pos2D);
+                if (navDistance < distance)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

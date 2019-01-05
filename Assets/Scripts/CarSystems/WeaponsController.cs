@@ -1,13 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Assets.Fileparsers;
-using Assets.Scripts.Car.UI;
+using Assets.Scripts.CarSystems.UI;
 using Assets.Scripts.Entities;
-using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car.Components
+namespace Assets.Scripts.CarSystems.Components
 {
     public class WeaponsController
     {
@@ -16,15 +15,13 @@ namespace Assets.Scripts.Car.Components
         private readonly AudioSource _weaponAudio;
         private readonly AudioClip _weaponEmptySound;
         private readonly AudioClip _weaponBrokenSound;
-        private readonly CarController _car;
+        private readonly Car _car;
         private readonly List<Weapon> _firingWeapons;
         private readonly List<int> _weaponGroups;
         private readonly WeaponsPanel _panel;
 
-        public WeaponsController(CarController car, Vcf vcf, Transform firstPersonTransform)
+        public WeaponsController(Car car, Vcf vcf, Transform firstPersonTransform)
         {
-            _panel = new WeaponsPanel(firstPersonTransform);
-
             _car = car;
             int weaponCount = vcf.Weapons.Count;
             _weapons = new Weapon[weaponCount];
@@ -47,47 +44,54 @@ namespace Assets.Scripts.Car.Components
                 return x.Gdf.WeaponGroup.CompareTo(y.Gdf.WeaponGroup);
             });
 
-            _panel.SetWeaponCount(weaponCount);
 
             int seperatorIndex = -1;
             for (int i = 0; i < weaponCount; ++i)
             {
-                I76Sprite onSprite, offSprite;
-                if (_panel.TryGetWeaponSprites(weaponsList[i].Gdf, out onSprite, out offSprite))
+                AudioClip fireSound = CacheManager.Instance.GetAudioClip(weaponsList[i].Gdf.SoundName);
+                _weapons[i] = new Weapon(weaponsList[i].Gdf, weaponsList[i].Transform)
                 {
-                    AudioClip fireSound = CacheManager.Instance.GetAudioClip(weaponsList[i].Gdf.SoundName);
-                    _weapons[i] = new Weapon(weaponsList[i].Gdf, weaponsList[i].Transform)
-                    {
-                        OnSprite = onSprite,
-                        OffSprite = offSprite,
-                        FireSound = fireSound,
-                        RearFacing = weaponsList[i].RearFacing,
-                        Index = i
-                    };
-                    _panel.SetWeaponHealthGroup(i, 0);
-                    _panel.SetWeaponAmmoCount(i, _weapons[i].Ammo);
+                    FireSound = fireSound,
+                    RearFacing = weaponsList[i].RearFacing,
+                    Index = i
+                };
 
-                    if (_weapons[i].RearFacing)
+                if (_weapons[i].RearFacing)
+                {
+                    if (seperatorIndex == -1)
                     {
-                        if (seperatorIndex == -1)
-                        {
-                            seperatorIndex = i;
-                            _panel.SeparatorIndex = seperatorIndex;
-                        }
+                        seperatorIndex = i;
+                    }
 
-                        _weapons[i].WeaponGroupOffset += 100;
-                    }
-                    
-                    if (!_weaponGroups.Contains(_weapons[i].WeaponGroupOffset))
-                    {
-                        _weaponGroups.Add(_weapons[i].WeaponGroupOffset);
-                    }
+                    _weapons[i].WeaponGroupOffset += 100;
+                }
+                
+                if (!_weaponGroups.Contains(_weapons[i].WeaponGroupOffset))
+                {
+                    _weaponGroups.Add(_weapons[i].WeaponGroupOffset);
                 }
             }
 
-            if (_weaponGroups.Count > 0)
+            if (firstPersonTransform != null)
             {
-                _panel.UpdateActiveWeaponGroup(_weaponGroups[_activeGroup], _weapons);
+                _panel = new WeaponsPanel(firstPersonTransform);
+                _panel.SetWeaponCount(weaponCount);
+                for (int i = 0; i < weaponCount; ++i)
+                {
+                    _panel.SetWeaponHealthGroup(i, 0);
+                    _panel.SetWeaponAmmoCount(i, _weapons[i].Ammo);
+                    _panel.TryGetWeaponSprites(weaponsList[i].Gdf, out _weapons[i].OnSprite, out _weapons[i].OffSprite);
+                }
+
+                if (seperatorIndex != -1)
+                {
+                    _panel.SeparatorIndex = seperatorIndex;
+                }
+
+                if (_weaponGroups.Count > 0)
+                {
+                    _panel.UpdateActiveWeaponGroup(_weaponGroups[_activeGroup], _weapons);
+                }
             }
         }
 
@@ -99,7 +103,11 @@ namespace Assets.Scripts.Car.Components
             }
 
             _activeGroup = ++_activeGroup % _weaponGroups.Count;
-            _panel.UpdateActiveWeaponGroup(_weaponGroups[_activeGroup], _weapons);
+
+            if (_panel != null)
+            {
+                _panel.UpdateActiveWeaponGroup(_weaponGroups[_activeGroup], _weapons);
+            }
         }
         
         public void Fire(int weaponIndex)
@@ -171,8 +179,13 @@ namespace Assets.Scripts.Car.Components
             projObj.SetActive(true);
 
             weapon.LastFireTime = Time.time;
-            _panel.SetWeaponAmmoCount(weapon.Index, --weapon.Ammo);
             _weaponAudio.PlayIfNotAlreadyPlaying(weapon.FireSound);
+            --weapon.Ammo;
+
+            if (_panel != null)
+            {
+                _panel.SetWeaponAmmoCount(weapon.Index, weapon.Ammo);
+            }
         }
 
         private IEnumerator BurstFire(Weapon weapon)

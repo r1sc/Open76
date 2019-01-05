@@ -1,7 +1,7 @@
 ﻿using Assets.Fileparsers;
 using Assets.Scripts.System;
 
-namespace Assets.Scripts.Car.Components
+namespace Assets.Scripts.CarSystems.Components
 {
     public class Special
     {

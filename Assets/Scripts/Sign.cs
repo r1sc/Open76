@@ -1,15 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Assets.Scripts.Entities;
 using UnityEngine;
 
-namespace Assets
+namespace Assets.Scripts.Entities
 {
-    public class FlyOffOnImpact : MonoBehaviour
+    public class Sign : WorldEntity
     {
-        private bool _dead = false;
+        private bool _dead;
         private Rigidbody _rigidbody;
 
         private MeshCollider[] _colliders;
+
+        public override bool Alive
+        {
+            get { return !_dead; }
+        }
 
         // Use this for initialization
         void Start()
@@ -30,13 +34,7 @@ namespace Assets
             _rigidbody.mass = 1;
             _rigidbody.isKinematic = true;
         }
-
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
-
+        
         void OnTriggerEnter(Collider collider)
         {
             if (_dead)

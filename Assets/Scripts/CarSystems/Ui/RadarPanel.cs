@@ -4,7 +4,7 @@ using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car.UI
+namespace Assets.Scripts.CarSystems.UI
 {
     public class RadarPanel : Panel
     {
@@ -19,14 +19,14 @@ namespace Assets.Scripts.Car.UI
         private static readonly Color32 RadarContactNewColour = new Color32(82, 155, 82, 255);
         private static readonly Color32 RadarContactOldColour = new Color32(0, 66, 0, 255);
         private bool _longRange;
-        private CarController _target;
+        private Car _target;
         private int _targetIndex;
         private AudioSource _radarAudio;
         private AudioClip _newContact;
         private AudioClip _sweepContact;
 
-        private readonly CarController _car;
-        private readonly Dictionary<CarController, RadarContact> _radarContacts;
+        private readonly Car _car;
+        private readonly Dictionary<Car, RadarContact> _radarContacts;
         private readonly Color32[] _blipPixels;
 
         private readonly I76Sprite[] _sweepSprites;
@@ -57,7 +57,7 @@ namespace Assets.Scripts.Car.UI
             }
 
             float nearest = float.MaxValue;
-            foreach (KeyValuePair<CarController, RadarContact> contacts in _radarContacts)
+            foreach (KeyValuePair<Car, RadarContact> contacts in _radarContacts)
             {
                 if (contacts.Value.Distance < nearest)
                 {
@@ -83,7 +83,7 @@ namespace Assets.Scripts.Car.UI
             _target = null;
         }
 
-        public RadarPanel(CarController car, Transform firstPersonTransform) : base(firstPersonTransform, "RAD", "zrad.map")
+        public RadarPanel(Car car, Transform firstPersonTransform) : base(firstPersonTransform, "RAD", "zrad.map")
         {
             if (ReferenceImage == null)
             {
@@ -98,7 +98,7 @@ namespace Assets.Scripts.Car.UI
 
             _longRange = true;
             _car = car;
-            _radarContacts = new Dictionary<CarController, RadarContact>();
+            _radarContacts = new Dictionary<Car, RadarContact>();
             _radarAudio = _car.gameObject.AddComponent<AudioSource>();
             _radarAudio.playOnAwake = false;
             _radarAudio.volume = 0.2f;
@@ -132,14 +132,14 @@ namespace Assets.Scripts.Car.UI
                 {
                     Width = sweepTexture.width,
                     Height = sweepTexture.height,
-                    Pixels = sweepTexture.GetPixels()
+                    Pixels = sweepTexture.GetPixels32()
                 };
 
                 I76Sprite targetSprite = new I76Sprite
                 {
                     Width = targetTexture.width,
                     Height = targetTexture.height,
-                    Pixels = targetTexture.GetPixels()
+                    Pixels = targetTexture.GetPixels32()
                 };
 
                 _sweepSprites[i] = sweepSprite;
@@ -152,11 +152,11 @@ namespace Assets.Scripts.Car.UI
             float radarRange = _longRange ? LongRangeRadius : ShortRangeRadius;
             Vector3 pos = _car.transform.position;
 
-            CarController[] cars = Object.FindObjectsOfType<CarController>();
-            int carCount = cars.Length;
+            List<Car> cars = EntityManager.Instance.Cars;
+            int carCount = cars.Count;
             for (int i = 0; i < carCount; ++i)
             {
-                CarController car = cars[i];
+                Car car = cars[i];
                 if (car == _car)
                 {
                     continue;
@@ -221,7 +221,7 @@ namespace Assets.Scripts.Car.UI
 
             // Process radar contacts.
             float deltaTime = Time.deltaTime;
-            foreach (KeyValuePair<CarController, RadarContact> radarContact in _radarContacts)
+            foreach (KeyValuePair<Car, RadarContact> radarContact in _radarContacts)
             {
                 RadarContact contact = radarContact.Value;
 

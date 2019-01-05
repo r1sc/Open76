@@ -3,7 +3,7 @@ using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car.Components
+namespace Assets.Scripts.CarSystems.Components
 {
     public class Weapon
     {

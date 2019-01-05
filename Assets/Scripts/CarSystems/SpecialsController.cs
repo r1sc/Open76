@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using Assets.Fileparsers;
-using Assets.Scripts.Car.UI;
-using Assets.Scripts.System;
+using Assets.Scripts.CarSystems.UI;
 using UnityEngine;
 
-namespace Assets.Scripts.Car.Components
+namespace Assets.Scripts.CarSystems.Components
 {
     public class SpecialsController
     {
@@ -16,36 +15,35 @@ namespace Assets.Scripts.Car.Components
 
         public SpecialsController(Vcf vcf, Transform firstPersonTransform)
         {
-            _panel = new SpecialsPanel(firstPersonTransform);
-
             int specialsCount = vcf.Specials.Count;
             _specials = new Special[specialsCount];
 
             List<SpecialType> specialsList = vcf.Specials;
-            for (int i = 0; i < MaxSpecials; ++i)
+            for (int i = 0; i < specialsCount; ++i)
             {
-                if (i < specialsCount)
-                {
-                    I76Sprite onSprite, offSprite;
-                    if (_panel.TryGetSpecialSprites(specialsList[i], out onSprite, out offSprite))
-                    {
-                        _specials[i] = new Special(specialsList[i])
-                        {
-                            OnSprite = onSprite,
-                            OffSprite = offSprite
-                        };
+                _specials[i] = new Special(specialsList[i]);
+            }
 
+            if (firstPersonTransform != null)
+            {
+                _panel = new SpecialsPanel(firstPersonTransform);
+
+                for (int i = 0; i < MaxSpecials; ++i)
+                {
+                    if (i < specialsCount)
+                    {
+                        _panel.TryGetSpecialSprites(specialsList[i], out _specials[i].OnSprite, out _specials[i].OffSprite);
                         _panel.SetSpecialHealthGroup(i, 0);
                         _panel.SetSpecialAmmoCount(i, _specials[i].Ammo);
                     }
+                    else
+                    {
+                        _panel.SetSpecialHealthGroup(i, 0);
+                    }
                 }
-                else
-                {
-                    _panel.SetSpecialHealthGroup(i, 0);
-                }
-            }
 
-            _panel.SetActiveSpecial(_activeSpecial, _specials);
+                _panel.SetActiveSpecial(_activeSpecial, _specials);
+            }
         }
 
         public void CycleSpecial()
@@ -56,7 +54,11 @@ namespace Assets.Scripts.Car.Components
             }
 
             _activeSpecial = ++_activeSpecial % _specials.Length;
-            _panel.SetActiveSpecial(_activeSpecial, _specials);
+
+            if (_panel != null)
+            {
+                _panel.SetActiveSpecial(_activeSpecial, _specials);
+            }
         }
 
         public void Fire(int specialIndex)
@@ -90,7 +92,12 @@ namespace Assets.Scripts.Car.Components
             }
 
             special.LastUseTime = currentTime;
-            _panel.SetSpecialAmmoCount(specialIndex, --special.Ammo);
+            --special.Ammo;
+
+            if (_panel != null)
+            {
+                _panel.SetSpecialAmmoCount(specialIndex, special.Ammo);
+            }
         }
     }
 }

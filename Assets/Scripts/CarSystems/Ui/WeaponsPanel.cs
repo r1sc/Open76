@@ -1,9 +1,9 @@
 ﻿using Assets.Fileparsers;
-using Assets.Scripts.Car.Components;
+using Assets.Scripts.CarSystems.Components;
 using Assets.Scripts.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car.UI
+namespace Assets.Scripts.CarSystems.UI
 {
     public class WeaponsPanel : Panel
     {

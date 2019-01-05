@@ -2,26 +2,31 @@
 using Assets.Scripts.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car.UI
+namespace Assets.Scripts.CarSystems.UI
 {
     public enum SystemType
     {
         Vehicle,
+        Engine,
+        Brakes,
+        Suspension,
+
         FrontArmor,
         LeftArmor,
         RightArmor,
         BackArmor,
+
         FrontChassis,
         LeftChassis,
         RightChassis,
         BackChassis,
-        Engine,
-        Brakes,
-        Suspension,
+
         TireFL,
         TireFR,
         TireBL,
-        TireBR
+        TireBR,
+
+        TotalSystems
     };
 
     public class SystemsPanel : Panel
@@ -36,6 +41,11 @@ namespace Assets.Scripts.Car.UI
             Array values = Enum.GetValues(typeof(SystemType));
             foreach (SystemType system in values)
             {
+                if (system == SystemType.Vehicle || system == SystemType.TotalSystems)
+                {
+                    continue;
+                }
+
                 SetSystemHealthGroup(system, 0, false);
             }
 
@@ -122,7 +132,7 @@ namespace Assets.Scripts.Car.UI
                     referenceName = "rrtire";
                     break;
                 default:
-                    Debug.LogWarning("Unknown systemType in SystemsPanel.");
+                    Debug.LogWarning("Unknown systemType in SystemsPanel. - " + systemType);
                     return;
             }
 

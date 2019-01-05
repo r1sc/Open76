@@ -1,9 +1,9 @@
 ﻿using Assets.System;
 using UnityEngine;
 
-namespace Assets.Scripts.Car
+namespace Assets.Scripts.CarSystems
 {
-    public class CarMovement
+    public class CarPhysics
     {
         private const float AirTimeLandingTreshold = 0.75f;
         private readonly Rigidbody _rigidbody;
@@ -15,7 +15,7 @@ namespace Assets.Scripts.Car
         public float MaxSteer = 0.5f;
         public float SteerSpeedBias = 55f;
 
-        public float EngineForce = 2000f;
+        public float EngineForce = 1000f;
         public float BrakeConstant = 1000f;
         public float DragConstant = 0f;
         public float RollingResistanceConstant = 15f;
@@ -59,7 +59,7 @@ namespace Assets.Scripts.Car
         private readonly Transform _transform;
         private bool _ready;
 
-        public CarMovement(CarController controller)
+        public CarPhysics(Car controller)
         {
             _transform = controller.transform;
             _rigidbody = controller.GetComponent<Rigidbody>();
@@ -76,7 +76,7 @@ namespace Assets.Scripts.Car
             _c = Mathf.Abs(RearWheels[0].transform.localPosition.z);
             _heightRatio = 2.0f / (_b + _c);
 
-            _cacheManager = Object.FindObjectOfType<CacheManager>();
+            _cacheManager = CacheManager.Instance;
             _landingAudioSource = _gameObject.AddComponent<AudioSource>();
             _landingAudioSource.playOnAwake = false;
             _landingAudioSource.volume = 0.8f;
