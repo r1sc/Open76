@@ -1,4 +1,4 @@
-﻿using Assets.Scripts.Car;
+﻿using Assets.Scripts.CarSystems;
 using UnityEngine;
 
 namespace Assets.Scripts.Entities
@@ -31,24 +31,18 @@ namespace Assets.Scripts.Entities
 
         private void OnTriggerEnter(Collider other)
         {
-            Transform parent = other.transform;
-            while (parent.parent != null)
-            {
-                parent = parent.parent;
-            }
-
-            if (parent == Owner)
-            {
-                return;
-            }
-
-            CarController car = other.GetComponentInParent<CarController>();
+            Car car = other.GetComponentInParent<Car>();
             if (car != null)
             {
-                Vector3 hitNormal = (transform.position - other.transform.position).normalized;
+                if (car.transform == Owner)
+                {
+                    return;
+                }
+
+                Vector3 hitNormal = (car.transform.position - transform.position).normalized;
                 car.ApplyDamage(DamageType.Projectile, hitNormal, (int)Damage);
             }
-            // TODO: Deal damage.
+
             // TODO: Spawn impact sprite.
             Destroy(gameObject);
         }
