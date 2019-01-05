@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Assets.Scripts.CarSystems;
 using Assets.System;
 using UnityEngine;
 
@@ -6,12 +7,19 @@ namespace Assets.Scripts.System
 {
     public class RadioManager : MonoBehaviour
     {
-        private Queue<string> _radioMessageQueue;
+        private Queue<RadioData> _radioMessageQueue;
         private AudioSource _radioSource;
+        private Car _currentOwner;
+
+        struct RadioData
+        {
+            public string ClipName;
+            public int Owner;
+        }
 
         private void Awake()
         {
-            _radioMessageQueue = new Queue<string>();
+            _radioMessageQueue = new Queue<RadioData>();
             _radioSource = gameObject.AddComponent<AudioSource>();
             _radioSource.dopplerLevel = 0f;
             _radioSource.spatialize = false;
@@ -33,6 +41,7 @@ namespace Assets.Scripts.System
 
         private void DestroyAudioClip()
         {
+            _currentOwner = null;
             if (_radioSource.clip != null)
             {
                 Destroy(_radioSource.clip);
@@ -45,17 +54,21 @@ namespace Assets.Scripts.System
             return _radioMessageQueue.Count == 0 && _radioSource.clip == null;
         }
 
-        public void QueueRadioMessage(string radioClip, bool endOfQueue)
+        public void QueueRadioMessage(string radioClip, bool endOfQueue, int owner)
         {
+            RadioData data = new RadioData();
+            data.ClipName = radioClip;
+            data.Owner = owner;
+
             if (endOfQueue)
             {
-                _radioMessageQueue.Enqueue(radioClip);
+                _radioMessageQueue.Enqueue(data);
             }
             else
             {
-                Queue<string> tempQueue = new Queue<string>(_radioMessageQueue);
+                Queue<RadioData> tempQueue = new Queue<RadioData>(_radioMessageQueue);
                 _radioMessageQueue.Clear();
-                _radioMessageQueue.Enqueue(radioClip);
+                _radioMessageQueue.Enqueue(data);
                 while (tempQueue.Count > 0)
                 {
                     _radioMessageQueue.Enqueue(tempQueue.Dequeue());
@@ -73,15 +86,32 @@ namespace Assets.Scripts.System
         {
             if (_radioSource.isPlaying)
             {
-                return;
+                if (_currentOwner == null || _currentOwner.Alive)
+                {
+                    return;
+                }
+
+                _radioSource.Stop();
+                _currentOwner = null;
             }
 
             DestroyAudioClip();
             if (_radioMessageQueue.Count > 0)
             {
-                string fileName = _radioMessageQueue.Dequeue();
+                RadioData radioData = _radioMessageQueue.Dequeue();
 
-                AudioClip clip = VirtualFilesystem.Instance.GetAudioClip(fileName);
+                if (radioData.Owner != -1)
+                {
+                    Car car = EntityManager.Instance.GetCar(radioData.Owner);
+                    if (car == null || !car.Alive)
+                    {
+                        return;
+                    }
+
+                    _currentOwner = car;
+                }
+
+                AudioClip clip = VirtualFilesystem.Instance.GetAudioClip(radioData.ClipName);
                 if (clip != null)
                 {
                     _radioSource.clip = clip;
