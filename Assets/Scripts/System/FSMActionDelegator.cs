@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.Camera;
-using Assets.Scripts.Car;
+using Assets.Scripts.CarSystems;
+using Assets.Scripts.Entities;
 using Assets.System;
 using UnityEngine;
 
@@ -22,6 +23,63 @@ namespace Assets.Scripts.System
                     break;
                 case "true":
                     return 1;
+                case "inc":
+                    {
+                        var offset = args.Dequeue();
+                        var index = machine.IP - machine.StartAddress + offset;
+                        ++fsmRunner.FSM.Constants[index].Value;
+                        Debug.Log("Called 'inc' - new value is " + fsmRunner.FSM.Constants[index].Value);
+                    }
+                    break;
+                case "dec":
+                    {
+                        var offset = args.Dequeue();
+                        var index = machine.IP - machine.StartAddress + offset;
+                        --fsmRunner.FSM.Constants[index].Value;
+                        Debug.Log("Called 'dec' - new value is " + fsmRunner.FSM.Constants[index].Value);
+                    }
+                    break;
+                case "set":
+                    {
+                        var offset = args.Dequeue();
+                        var index = machine.IP - machine.StartAddress + offset;
+                        var val = args.Dequeue();
+
+                        if (index >= fsmRunner.FSM.Constants.Length)
+                        {
+                            Debug.LogError($"Tried to set value index at {index} when length is {fsmRunner.FSM.Constants.Length}.");
+                        }
+
+                        fsmRunner.FSM.Constants[index].Value = val;
+
+                        Debug.Log("Called 'set' - index " + index + " - new value is " + fsmRunner.FSM.Constants[index].Value);
+                    }
+                    break;
+                case "isGreater":
+                {
+                    var offset = args.Dequeue();
+                    var index = machine.IP - machine.StartAddress + offset;
+                    var val = args.Dequeue();
+                    bool greater = fsmRunner.FSM.Constants[index].Value > val;
+                    return greater ? 1 : 0;
+                }
+                case "isLesser":
+                {
+                    var offset = args.Dequeue();
+                    var index = machine.IP - machine.StartAddress + offset;
+                    var val = args.Dequeue();
+                    bool lesser = fsmRunner.FSM.Constants[index].Value < val;
+                    return lesser ? 1 : 0;
+                }
+                case "isEqual":
+                {
+                    var offset = args.Dequeue();
+                    int index = (int)(machine.IP - machine.StartAddress + offset);
+                    var val = args.Dequeue();
+
+                    bool equal = fsmRunner.FSM.Constants[index].Value == val;
+                    return equal ? 1 : 0;
+                }
                 case "pushCam":
                     CameraManager.Instance.PushCamera();
                     break;
@@ -87,6 +145,28 @@ namespace Assets.Scripts.System
                         camera.transform.LookAt(entity.transform, Vector3.up);
                     }
                     break;
+                case "camObjObj":
+                    {
+                        if (CameraManager.Instance.IsMainCameraActive)
+                        {
+                            break;
+                        }
+
+                        int objectIndex = args.Dequeue();
+                        float xPos = args.Dequeue();
+                        float yPos = args.Dequeue();
+                        float zPos = args.Dequeue();
+                        int watchTarget = args.Dequeue();
+                        
+                        FSMEntity anchorEntity = fsmRunner.FSM.EntityTable[objectIndex];
+                        FSMEntity targetEntity = fsmRunner.FSM.EntityTable[watchTarget];
+
+                        UnityEngine.Camera camera = CameraManager.Instance.ActiveCamera;
+                        camera.transform.SetParent(anchorEntity.Object.transform);
+                        camera.transform.localPosition = new Vector3(xPos * 0.01f, zPos * 0.01f, yPos * 0.01f);
+                        camera.transform.LookAt(targetEntity.Object.transform, Vector3.up);
+                    }
+                    break;
                 case "goto":
                     {
                         var entityIndex = args.Dequeue();
@@ -96,11 +176,88 @@ namespace Assets.Scripts.System
                         var entity = fsmRunner.FSM.EntityTable[entityIndex];
                         var path = fsmRunner.FSM.Paths[pathIndex];
 
-                        CarController car = entity.Object.GetComponent<CarController>();
+                        Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
                         {
                             car.SetTargetPath(path, targetSpeed);
                             break;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "isWithinNav":
+                    {
+                        var pathIndex = args.Dequeue();
+                        var entityIndex = args.Dequeue();
+                        var distance = args.Dequeue();
+
+                        var path = fsmRunner.FSM.Paths[pathIndex];
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                            
+                        Car car = entity.Object.GetComponent<Car>();
+                        if (car != null)
+                        {
+                            // NOTE: Despite the action name 'IsWithinNav', it looks like it should return 0 when true, on comparing results with the original game.
+                            bool within = car.IsWithinNav(path, distance);
+                            return within ? 1 : 0;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "isWithinSqNav":
+                    {
+                        var pathIndex = args.Dequeue();
+                        var entityIndex = args.Dequeue();
+                        var distance = args.Dequeue();
+
+                        var path = fsmRunner.FSM.Paths[pathIndex];
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+
+                        Car car = entity.Object.GetComponent<Car>();
+                        if (car != null)
+                        {
+                            bool within = car.IsWithinNav(path, (int)Mathf.Sqrt(distance));
+                            return within ? 1 : 0;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "follow":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var targetIndex = args.Dequeue();
+                        var unk1 = args.Dequeue();
+                        var unk2 = args.Dequeue();
+                        var xOffset = args.Dequeue();
+                        var targetSpeed = args.Dequeue();
+
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        var targetEntity = fsmRunner.FSM.EntityTable[targetIndex];
+
+                        Car car = entity.Object.GetComponent<Car>();
+                        Car targetCar = targetEntity.Object.GetComponent<Car>();
+                        if (car != null && targetCar != null)
+                        {
+                            car.SetFollowTarget(targetCar, xOffset, targetSpeed);
+                            break;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "isAtFollow":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+
+                        Car car = entity.Object.GetComponent<Car>();
+                        if (car != null)
+                        {
+                            bool atFollow = car.AtFollowTarget();
+                            return atFollow ? 1 : 0;
                         }
 
                         LogUnhandledEntity(actionName, entityIndex, entity, machine);
@@ -121,7 +278,7 @@ namespace Assets.Scripts.System
                         nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
                         entity.Object.transform.position = nodePos;
 
-                        CarController car = entity.Object.GetComponent<CarController>();
+                        Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
                         {
                             car.SetSpeed(targetSpeed);
@@ -138,7 +295,7 @@ namespace Assets.Scripts.System
                         var origoEntity = fsmRunner.FSM.EntityTable[entityIndex];
                         var entity = origoEntity.Object;
 
-                        CarController car = entity.GetComponent<CarController>();
+                        Car car = entity.GetComponent<Car>();
                         if (car != null)
                         {
                             if (car.Arrived)
@@ -158,7 +315,7 @@ namespace Assets.Scripts.System
                         var entityIndex = args.Dequeue();
                         var entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                        CarController car = entity.Object.GetComponent<CarController>();
+                        Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
                         {
                             car.Sit();
@@ -168,24 +325,87 @@ namespace Assets.Scripts.System
                         LogUnhandledEntity(actionName, entityIndex, entity, machine);
                     }
                     break;
-                case "isEqual":
+                case "setAvoid":
                     {
-                        var first = args.Dequeue();
-                        var second = args.Dequeue();
-                        return first == second ? 1 : 0;
+                        var entityIndex = args.Dequeue();
+                        var avoidIndex = args.Dequeue();
+
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        var avoidEntity = fsmRunner.FSM.EntityTable[avoidIndex];
+
+                        Car car = entity.Object.GetComponent<Car>();
+                        WorldEntity target = avoidEntity.WorldEntity;
+                        if (car != null && target != null)
+                        {
+                            // TODO: Figure out 'avoid' logic - don't path near object?
+                            break;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
                     }
+                    break;
+                case "setMaxAttackers":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var maxAttackers = args.Dequeue();
+
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+
+                        if (entity.WorldEntity != null)
+                        {
+                            entity.WorldEntity.MaxAttackers = maxAttackers;
+                            break;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "setSkill":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        var skill1 = args.Dequeue();
+                        var skill2 = args.Dequeue();
+
+                        Car car = entity.Object.GetComponent<Car>();
+                        if (car != null)
+                        {
+                            car.Skill1 = skill1;
+                            car.Skill2 = skill2;
+                            return 0;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "setAgg":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        var aggressionValue = args.Dequeue();
+
+                        Car car = entity.Object.GetComponent<Car>();
+                        if (car != null)
+                        {
+                            car.Aggressiveness = aggressionValue;
+                            return 0;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
                 case "isAttacked":
-                {
-                    var entityIndex = args.Dequeue();
-                    var entity = fsmRunner.FSM.EntityTable[entityIndex];
-
-                    CarController car = entity.Object.GetComponent<CarController>();
-                    if (car != null)
                     {
-                        return car.Attacked ? 1 : 0;
-                    }
+                        var entityIndex = args.Dequeue();
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                    LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                        Car car = entity.Object.GetComponent<Car>();
+                        if (car != null)
+                        {
+                            return car.Attacked ? 1 : 0;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
                     }
                     break;
                 case "isDead":
@@ -193,36 +413,39 @@ namespace Assets.Scripts.System
                         var entityIndex = args.Dequeue();
                         var entity = fsmRunner.FSM.EntityTable[entityIndex];
 
-                        CarController car = entity.Object.GetComponent<CarController>();
-                        if (car != null)
+                        if (entity.WorldEntity != null)
                         {
-                            return car.Alive ? 0 : 1;
+                            return entity.WorldEntity.Alive ? 0 : 1;
                         }
 
                         LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "isWithin":
+                    {
+                        var entityIndex = args.Dequeue();
+                        var targetIndex = args.Dequeue();
+                        var distance = args.Dequeue();
+                        
+                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        var target = fsmRunner.FSM.EntityTable[targetIndex];
+
+                        bool within = Vector3.Distance(entity.Object.transform.position, target.Object.transform.position) < distance;
+                        return within ? 1 : 0;
+                    }
+                case "cbFromPrior":
+                    {
+                        int soundId = args.Dequeue();
+                        int owner = args.Dequeue();
+                        int queueFlag = args.Dequeue();
+                        QueueRadio(fsmRunner, soundId, queueFlag, owner);
                     }
                     break;
                 case "cbPrior":
                     {
                         int soundId = args.Dequeue();
                         int queueFlag = args.Dequeue();
-                        bool endOfQueue;
-                        if (queueFlag == 1)
-                        {
-                            endOfQueue = false;
-                        }
-                        else if (queueFlag == 3)
-                        {
-                            endOfQueue = true;
-                        }
-                        else
-                        {
-                            endOfQueue = true;
-                            Debug.Log("Unknown value in cbPrior: " + queueFlag);
-                        }
-                        
-                        string soundName = fsmRunner.FSM.SoundClipTable[soundId];
-                        RadioManager.Instance.QueueRadioMessage(soundName, endOfQueue);
+                        QueueRadio(fsmRunner, soundId, queueFlag, -1);
                     }
                     break;
                 case "rand":
@@ -239,9 +462,8 @@ namespace Assets.Scripts.System
                         return RadioManager.Instance.IsQueueEmpty() ? 1 : 0;
                     }
                 case "startTimer":
-                    var whichTimer = args.Dequeue();
-                    fsmRunner.Timers[whichTimer] = Time.unscaledTime;
-                    // TODO: Start the timer
+                    var timerIndex = args.Dequeue();
+                    fsmRunner.Timers[timerIndex] = Time.unscaledTime;
                     break;
                 default:
                     Debug.LogWarning("FSM action not implemented: " + actionName + " @ " + (machine.IP-1));
@@ -249,6 +471,27 @@ namespace Assets.Scripts.System
             }
 
             return 0;
+        }
+
+        private void QueueRadio(FSMRunner fsmRunner, int soundId, int queueFlag, int owner)
+        {
+            bool endOfQueue;
+            if (queueFlag == 1)
+            {
+                endOfQueue = false;
+            }
+            else if (queueFlag == 3)
+            {
+                endOfQueue = true;
+            }
+            else
+            {
+                endOfQueue = true;
+                Debug.Log("Unknown value in cbPrior: " + queueFlag);
+            }
+
+            string soundName = fsmRunner.FSM.SoundClipTable[soundId];
+            RadioManager.Instance.QueueRadioMessage(soundName, endOfQueue, owner);
         }
     }
 }
