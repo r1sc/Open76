@@ -119,8 +119,23 @@ namespace Assets.Scripts.System
                 return null;
             }
 
+            int textureWidth = mapTexture.width;
+            int itemWidth = item.Width;
             int mapYOffset = Mathf.Clamp(mapTexture.height - item.Height - item.YOffset - item.Height * yOffset + 1, 0, mapTexture.height - item.Height);
-            Color[] pixels = mapTexture.GetPixels(item.XOffset + item.Width * xOffset, mapYOffset, item.Width, item.Height, 0);
+            Color32[] texturePixels = mapTexture.GetPixels32(0);
+            Color32[] pixels = new Color32[item.Width * item.Height];
+            int xStart = item.XOffset + item.Width * xOffset;
+            int yStart = mapYOffset;
+            int xEnd = xStart + item.Width;
+            int yEnd = yStart + item.Height;
+            for (int x = xStart; x < xEnd; ++x)
+            {
+                for (int y = yStart; y < yEnd; ++y)
+                {
+
+                    pixels[(y - yStart) * itemWidth + x - xStart] = texturePixels[y * textureWidth + x];
+                }
+            }
 
             sprite = new I76Sprite
             {

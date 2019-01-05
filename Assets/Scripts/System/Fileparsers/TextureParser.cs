@@ -7,12 +7,11 @@ namespace Assets.Fileparsers
 {
     class TextureParser
     {
-        const FilterMode FilterMode = UnityEngine.FilterMode.Bilinear;
         private static readonly Color32 Transparent = new Color32(0, 0, 0, 0);
         private static readonly Dictionary<string, Texture2D> TextureCache = new Dictionary<string, Texture2D>();
         public static readonly Dictionary<string, Texture2D> MaskTextureCache = new Dictionary<string, Texture2D>();
 
-        public static Texture2D ReadMapTexture(string filename, Color32[] palette)
+        public static Texture2D ReadMapTexture(string filename, Color32[] palette, TextureFormat format = TextureFormat.RGBA32, bool makeReadOnly = false, FilterMode filterMode = FilterMode.Bilinear)
         {
             Texture2D texture;
             if (TextureCache.TryGetValue(filename, out texture))
@@ -26,9 +25,9 @@ namespace Assets.Fileparsers
                 var width = br.ReadInt32();
                 var height = br.ReadInt32();
                 int pixelSize = width * height;
-                texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
+                texture = new Texture2D(width, height, format, true)
                 {
-                    filterMode = FilterMode,
+                    filterMode = filterMode,
                     wrapMode = TextureWrapMode.Repeat
                 };
 
@@ -106,7 +105,7 @@ namespace Assets.Fileparsers
                 {
                     texture.wrapMode = TextureWrapMode.Clamp;
                 }
-                texture.Apply(true);
+                texture.Apply(true, makeReadOnly);
                 TextureCache.Add(filename, texture);
                 return texture;
             }
@@ -127,7 +126,7 @@ namespace Assets.Fileparsers
                 var pixels = width * height;
                 texture = new Texture2D(width, height, TextureFormat.ARGB32, true)
                 {
-                    filterMode = FilterMode,
+                    filterMode = FilterMode.Bilinear,
                     wrapMode = TextureWrapMode.Repeat
                 };
                 var cbkFile = br.ReadCString(12);

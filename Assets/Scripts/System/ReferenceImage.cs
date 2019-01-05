@@ -45,18 +45,18 @@ namespace Assets.Scripts.System
             int xOffset = referencePos.x;
             int yOffset = Mathf.Max(0, MainTexture.height - referencePos.y - sprite.Height - 1);
 
-            Color[] pixels = sprite.Pixels;
+            Color32[] pixels = sprite.Pixels;
             if (alphaBlend)
             {
                 Color[] existingPixels = MainTexture.GetPixels(xOffset, yOffset, sprite.Width, sprite.Height);
                 int pixelCount = existingPixels.Length;
                 for (int i = 0; i < pixelCount; ++i)
                 {
-                    pixels[i] = Color.Lerp(existingPixels[i], pixels[i], pixels[i].a);
+                    pixels[i] = Color32.Lerp(existingPixels[i], pixels[i], pixels[i].a);
                 }
             }
 
-            MainTexture.SetPixels(xOffset, yOffset, sprite.Width, sprite.Height, pixels, 0);
+            MainTexture.SetPixels32(xOffset, yOffset, sprite.Width, sprite.Height, pixels, 0);
 
             if (uploadToGpu)
             {
@@ -73,7 +73,7 @@ namespace Assets.Scripts.System
     public class I76Sprite
     {
         public string Name { get; set; }
-        public Color[] Pixels { get; set; }
+        public Color32[] Pixels { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
     }
