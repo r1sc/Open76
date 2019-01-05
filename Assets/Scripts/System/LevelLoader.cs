@@ -2,7 +2,8 @@
 using Assets.Scripts.System;
 using System.Collections.Generic;
 using Assets.Scripts.Camera;
-using Assets.Scripts.Car;
+using Assets.Scripts.CarSystems;
+using Assets.Scripts.Entities;
 using UnityEngine;
 
 namespace Assets.System
@@ -10,8 +11,16 @@ namespace Assets.System
     class LevelLoader : MonoBehaviour
     {
         public Dictionary<int, GameObject> LevelObjects;
-        public Material TerrainMaterial;
-        public GameObject SpawnPrefab, RegenPrefab;
+        private Material _terrainMaterial;
+        private GameObject _spawnPrefab;
+        private GameObject _regenPrefab;
+
+        private void Awake()
+        {
+            _terrainMaterial = Resources.Load<Material>("Materials/Terrain");
+            _spawnPrefab = Resources.Load<GameObject>("Prefabs/SpawnPrefab");
+            _regenPrefab = Resources.Load<GameObject>("Prefabs/RegenPrefab");
+        }
 
         public void LoadLevel(string msnFilename)
         {
@@ -22,8 +31,7 @@ namespace Assets.System
             var mdef = MsnMissionParser.ReadMsnMission(msnFilename);
 
             cacheManager.Palette = ActPaletteParser.ReadActPalette(mdef.PaletteFilePath);
-            var _surfaceTexture = TextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, cacheManager.Palette);
-            _surfaceTexture.filterMode = FilterMode.Point;
+            var _surfaceTexture = TextureParser.ReadMapTexture(mdef.SurfaceTextureFilePath, cacheManager.Palette, TextureFormat.RGB24, true, FilterMode.Point);
 
             FindObjectOfType<Sky>().TextureFilename = mdef.SkyTextureFilePath;
 
@@ -33,11 +41,11 @@ namespace Assets.System
             worldGameObject = new GameObject("World");
 
 
-            var splatPrototypes = new[]
+            var terrainLayers = new[]
             {
-                new SplatPrototype
+                new TerrainLayer
                 {
-                    texture = _surfaceTexture,
+                    diffuseTexture = _surfaceTexture,
                     tileSize = new Vector2(_surfaceTexture.width, _surfaceTexture.height) / 10.0f,
                     metallic = 0,
                     smoothness = 0
@@ -58,8 +66,8 @@ namespace Assets.System
 
                     var terrain = patchGameObject.AddComponent<Terrain>();
                     terrain.terrainData = mdef.TerrainPatches[x, z].TerrainData;
-                    terrain.terrainData.splatPrototypes = splatPrototypes;
-                    terrain.materialTemplate = TerrainMaterial;
+                    terrain.terrainData.terrainLayers = terrainLayers;
+                    terrain.materialTemplate = _terrainMaterial;
                     terrain.materialType = Terrain.MaterialType.Custom;
 
                     var terrainCollider = patchGameObject.AddComponent<TerrainCollider>();
@@ -82,18 +90,19 @@ namespace Assets.System
                             switch (lblUpper)
                             {
                                 case "SPAWN":
-                                    go = Instantiate(SpawnPrefab);
+                                    go = Instantiate(_spawnPrefab);
                                     go.tag = "Spawn";
                                     break;
                                 case "REGEN":
-                                    go = Instantiate(RegenPrefab);
+                                    go = Instantiate(_regenPrefab);
                                     go.tag = "Regen";
                                     break;
                                 default:
                                     Vdf vdf;
-                                    go = cacheManager.ImportVcf(vcfName + ".vcf", odef.TeamId == 1, out vdf);
-                                    CarController car = go.GetComponent<CarController>();
+                                    go = cacheManager.ImportVcf(vcfName + ".vcf", odef.IsPlayer, out vdf);
+                                    Car car = go.GetComponent<Car>();
                                     car.TeamId = odef.TeamId;
+                                    car.IsPlayer = odef.IsPlayer;
                                     break;
                             }
 
@@ -101,10 +110,10 @@ namespace Assets.System
                             go.transform.localPosition = odef.LocalPosition;
                             go.transform.localRotation = odef.LocalRotation;
 
-                            if (odef.TeamId == 1)
+                            if (odef.IsPlayer)
                             {
                                 CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = go.transform;
-                                go.AddComponent<InputCarController>();
+                                go.AddComponent<CarInput>();
                             }
                         }
                         else if (odef.ClassId != MsnMissionParser.ClassId.Special)
@@ -112,7 +121,11 @@ namespace Assets.System
                             go = cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
                             if (odef.ClassId == MsnMissionParser.ClassId.Sign)
                             {
-                                go.AddComponent<FlyOffOnImpact>();
+                                go.AddComponent<Sign>();
+                            }
+                            else if (odef.ClassId == MsnMissionParser.ClassId.Struct1)
+                            {
+                                go.AddComponent<Building>();
                             }
                         }
 
@@ -128,6 +141,13 @@ namespace Assets.System
                                 {
                                     if (entities[i].Value == odef.Label && entities[i].Id == odef.Id)
                                     {
+                                        WorldEntity worldEntity = go.GetComponent<WorldEntity>();
+                                        if (worldEntity != null)
+                                        {
+                                            entities[i].WorldEntity = worldEntity;
+                                            worldEntity.Id = i;
+                                        }
+                                        
                                         entities[i].Object = go;
                                         break;
                                     }
@@ -182,7 +202,7 @@ namespace Assets.System
             RenderSettings.fogColor = cacheManager.Palette[239];
             RenderSettings.ambientLight = cacheManager.Palette[247];
 
-            var cars = FindObjectsOfType<CarController>();
+            var cars = EntityManager.Instance.Cars;
             foreach (var car in cars)
             {
                 car.transform.parent = null;
@@ -193,7 +213,7 @@ namespace Assets.System
                 foreach (var machine in mdef.FSM.StackMachines)
                 {
                     machine.Reset();
-                    machine.Constants = new int[machine.InitialArguments.Length];
+                    machine.Constants = new IntRef[machine.InitialArguments.Length];
                     for (int i = 0; i < machine.Constants.Length; i++)
                     {
                         var stackValue = machine.InitialArguments[i];
@@ -201,7 +221,7 @@ namespace Assets.System
                     }
                 }
 
-                var fsmRunner = FindObjectOfType<FSMRunner>();
+                var fsmRunner = FSMRunner.Instance;
                 fsmRunner.FSM = mdef.FSM;
             }
         }

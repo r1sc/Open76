@@ -35,6 +35,7 @@ namespace Assets.Fileparsers
             public Vector3 LocalPosition { get; set; }
             public ClassId ClassId { get; set; }
             public ushort TeamId { get; set; }
+            public bool IsPlayer { get; set; }
             public Quaternion LocalRotation { get; set; }
         }
 
@@ -296,7 +297,7 @@ namespace Assets.Fileparsers
 
                         odef.Position += 36;
                         var classId = (ClassId)odef.ReadUInt32();
-                        odef.ReadUInt16();
+                        var flags = odef.ReadUInt16();
                         var teamId = odef.ReadUInt16();
 
                         var localPosition = new Vector3(pos.x % 640, pos.y, pos.z % 640);
@@ -309,6 +310,7 @@ namespace Assets.Fileparsers
                             LocalPosition = localPosition,
                             ClassId = classId,
                             TeamId = teamId,
+                            IsPlayer = flags == 16,
                             LocalRotation = Quaternion.LookRotation(forward, upwards)
                         });
 
@@ -438,10 +440,10 @@ namespace Assets.Fileparsers
                             mdef.FSM.StackMachines[i] = machine;
                         }
 
-                        mdef.FSM.Constants = new int[adef.ReadUInt32()];
+                        mdef.FSM.Constants = new IntRef[adef.ReadUInt32()];
                         for (int i = 0; i < mdef.FSM.Constants.Length; i++)
                         {
-                            mdef.FSM.Constants[i] = adef.ReadInt32();
+                            mdef.FSM.Constants[i] = new IntRef(adef.ReadInt32());
                         }
 
                         mdef.FSM.ByteCode = new ByteCode[adef.ReadUInt32()];
