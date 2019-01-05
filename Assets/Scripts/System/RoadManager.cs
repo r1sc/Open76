@@ -28,7 +28,7 @@ namespace Assets.Scripts.System
             }
         }
 
-        public Road[] GetRoadsAroundPoint(Vector3 worldPoint)
+        public List<Road> GetRoadsAroundPoint(Vector3 worldPoint)
         {
             Bounds pointArea = new Bounds(worldPoint, new Vector3(100f, 100f, 100f));
             _pointBuffer.Clear();
@@ -43,7 +43,7 @@ namespace Assets.Scripts.System
                 }
             }
 
-            return _pointBuffer.ToArray();
+            return _pointBuffer;
         }
 
         public void CreateRoadObject(MsnMissionParser.Road parsedRoad, Vector2 worldMiddle)
@@ -104,7 +104,6 @@ namespace Assets.Scripts.System
 
             int[] indices = new int[(vertices.Length - 2) * 3];
             var idx = 0;
-            var indexCount = 0;
             for (int i = 0; i < indices.Length; i += 6)
             {
                 indices[i] = idx + 2;

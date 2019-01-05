@@ -1,5 +1,5 @@
 ﻿using Assets.Scripts.Camera;
-using Assets.Scripts.Car;
+using Assets.Scripts.CarSystems;
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -9,7 +9,7 @@ namespace Assets
     public class CameraController : MonoBehaviour
     {
         private SmoothFollow _smoothFollow;
-        private CarController _player;
+        private Car _player;
 
         public bool FirstPerson { get; private set; }
 
@@ -39,7 +39,7 @@ namespace Assets
                 Transform target = _smoothFollow.Target;
                 if (target != null)
                 {
-                    _player = target.GetComponent<CarController>();
+                    _player = target.GetComponent<Car>();
                 }
             }
             else

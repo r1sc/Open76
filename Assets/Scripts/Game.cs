@@ -1,6 +1,6 @@
 ﻿using Assets.Fileparsers;
 using Assets.Scripts.Camera;
-using Assets.Scripts.Car;
+using Assets.Scripts.CarSystems;
 using Assets.Scripts.System;
 using Assets.System;
 using UnityEngine;
@@ -23,8 +23,8 @@ namespace Assets
                 Vdf unused;
                 var cacheManager = CacheManager.Instance;
                 var importedVcf = cacheManager.ImportVcf(VcfToLoad, true, out unused);
-                importedVcf.AddComponent<InputCarController>();
-                importedVcf.AddComponent<CarController>();
+                importedVcf.AddComponent<CarInput>();
+                importedVcf.AddComponent<Car>();
 
                 var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
                 importedVcf.transform.position = spawnPoint.transform.position;
