@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using Assets.Scripts.I76Types;
 using UnityEngine;
 
@@ -7,22 +6,22 @@ namespace Assets.Scripts.System
 {
     public class FSMRunner : MonoBehaviour
     {
+        public static FSMRunner Instance { get; private set; }
+
         public float[] Timers { get; set; }
-        public float FPSDelay = 0.5f; // Run twice every second
-        private float _nextUpdate = 0;
 
         public FSM FSM;
         private FSMActionDelegator _actionDelegator;
+
+        private void Awake()
+        {
+            Instance = this;
+        }
 
         private void Start()
         {
             Timers = new float[10];
             _actionDelegator = new FSMActionDelegator();
-        }
-
-        public void Update()
-        {
-
         }
 
         private void OnDrawGizmos()
@@ -79,7 +78,7 @@ namespace Assets.Scripts.System
                     var idx = machine.Constants.Length + (byteCode.Value + 1);
                     var bVal = machine.Constants[idx];
 
-                    machine.ArgumentQueue.Enqueue(bVal);
+                    machine.ArgumentQueue.Enqueue(bVal.Value);
                     break;
                 case OpCode.ADJUST:
                     var addToSP = byteCode.Value;
@@ -115,15 +114,23 @@ namespace Assets.Scripts.System
                     return StepResult.DoNextMachine;
                 case OpCode.RST:
                     machine.Halted = true;
+                    machine.ActionStack.Clear();
                     return StepResult.DoNextMachine;
                 case OpCode.ACTION:
                     var actionName = FSM.ActionTable[byteCode.Value];
-
-                    machine.ResultReg = _actionDelegator.DoAction(actionName, machine, this);
-                    if(machine.ArgumentQueue.Count != 0)
+                    ActionStackTrace trace = new ActionStackTrace
                     {
-                        int hej = 2;
+                        Action = actionName,
+                        IP = machine.IP,
+                        Arguments = machine.ArgumentQueue.ToArray()
+                    };
+                    machine.ResultReg = _actionDelegator.DoAction(actionName, machine, this);
+                    trace.Result = machine.ResultReg;
+                    if (machine.LastAction != byteCode.Value)
+                    {
+                        machine.ActionStack.Push(trace);
                     }
+                    machine.LastAction = byteCode.Value;
                     machine.ArgumentQueue.Clear();
                     break;
                 case OpCode.NEG:
