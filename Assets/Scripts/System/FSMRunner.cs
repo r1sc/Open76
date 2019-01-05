@@ -61,6 +61,20 @@ namespace Assets.Scripts.System
             }
         }
 
+        private void LogStack(StackMachine machine, ByteCode byteCode, string name)
+        {
+            ActionStackTrace trace = new ActionStackTrace
+            {
+                Action = name,
+                Value = byteCode.Value,
+                OpCode = byteCode.OpCode,
+                IP = machine.IP,
+                Arguments = machine.ArgumentQueue.ToArray()
+            };
+
+            machine.ActionStack.Push(trace);
+        }
+
         private StepResult Step(StackMachine machine)
         {
             var byteCode = FSM.ByteCode[machine.IP++];
@@ -72,13 +86,12 @@ namespace Assets.Scripts.System
                 case OpCode.ARGPUSH_S:
                     var sVal = machine.Stack[byteCode.Value - 1];
 
-                    machine.ArgumentQueue.Enqueue(sVal);
+                    machine.ArgumentQueue.Enqueue(new IntRef(sVal));
                     break;
                 case OpCode.ARGPUSH_B:
                     var idx = machine.Constants.Length + (byteCode.Value + 1);
                     var bVal = machine.Constants[idx];
-
-                    machine.ArgumentQueue.Enqueue(bVal.Value);
+                    machine.ArgumentQueue.Enqueue(bVal);
                     break;
                 case OpCode.ADJUST:
                     var addToSP = byteCode.Value;
@@ -111,6 +124,7 @@ namespace Assets.Scripts.System
                     break;
                 case OpCode.JMP_I:
                     machine.IP = (uint)byteCode.Value;
+                    machine.ActionStack.Clear();
                     return StepResult.DoNextMachine;
                 case OpCode.RST:
                     machine.Halted = true;
@@ -118,19 +132,8 @@ namespace Assets.Scripts.System
                     return StepResult.DoNextMachine;
                 case OpCode.ACTION:
                     var actionName = FSM.ActionTable[byteCode.Value];
-                    ActionStackTrace trace = new ActionStackTrace
-                    {
-                        Action = actionName,
-                        IP = machine.IP,
-                        Arguments = machine.ArgumentQueue.ToArray()
-                    };
+                    LogStack(machine, byteCode, actionName);
                     machine.ResultReg = _actionDelegator.DoAction(actionName, machine, this);
-                    trace.Result = machine.ResultReg;
-                    if (machine.LastAction != byteCode.Value)
-                    {
-                        machine.ActionStack.Push(trace);
-                    }
-                    machine.LastAction = byteCode.Value;
                     machine.ArgumentQueue.Clear();
                     break;
                 case OpCode.NEG:
