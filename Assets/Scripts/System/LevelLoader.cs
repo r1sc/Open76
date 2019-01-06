@@ -118,14 +118,21 @@ namespace Assets.System
                         }
                         else if (odef.ClassId != MsnMissionParser.ClassId.Special)
                         {
-                            go = cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation);
+                            Sdf sdf;
+                            GameObject wreckedPart;
+                            bool canWreck = odef.ClassId == MsnMissionParser.ClassId.Struct1 ||
+                                            odef.ClassId == MsnMissionParser.ClassId.Ramp ||
+                                            odef.ClassId == MsnMissionParser.ClassId.Struct2;
+
+                            go = cacheManager.ImportSdf(odef.Label + ".sdf", patchGameObject.transform, odef.LocalPosition, odef.LocalRotation, canWreck, out sdf, out wreckedPart);
                             if (odef.ClassId == MsnMissionParser.ClassId.Sign)
                             {
                                 go.AddComponent<Sign>();
                             }
-                            else if (odef.ClassId == MsnMissionParser.ClassId.Struct1)
+                            else if (canWreck)
                             {
-                                go.AddComponent<Building>();
+                                Building building = go.AddComponent<Building>();
+                                building.Initialise(sdf, wreckedPart);
                             }
                         }
 
@@ -168,7 +175,7 @@ namespace Assets.System
 
             foreach (var ldef in mdef.StringObjects)
             {
-                var sdfObj = cacheManager.ImportSdf(ldef.Label + ".sdf", null, Vector3.zero, Quaternion.identity);
+                var sdfObj = cacheManager.ImportSdf(ldef.Label + ".sdf", null, Vector3.zero, Quaternion.identity, false, out _, out _);
 
                 for (int i = 0; i < ldef.StringPositions.Length; i++)
                 {

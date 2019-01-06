@@ -37,7 +37,7 @@ namespace Assets.System
         public static CacheManager Instance { get; private set; }
 
         private static readonly Dictionary<string, GeoMeshCacheEntry> MeshCache = new Dictionary<string, GeoMeshCacheEntry>();
-        private readonly Dictionary<string, GameObject> _sdfCache = new Dictionary<string, GameObject>();
+        private readonly Dictionary<string, Sdf> _sdfCache = new Dictionary<string, Sdf>();
         private readonly Dictionary<string, Material> _materialCache = new Dictionary<string, Material>();
 
         private void Awake()
@@ -315,17 +315,32 @@ namespace Assets.System
             return false;
         }
 
-        public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation)
+        private GameObject LoadSdfPart(SdfPart sdfPart, Transform parent)
         {
-            if (_sdfCache.ContainsKey(filename))
+            var geoFilename = sdfPart.Name + ".geo";
+            if (!VirtualFilesystem.Instance.FileExists(geoFilename))
             {
-                var obj = Instantiate(_sdfCache[filename], parent);
-                obj.transform.localPosition = localPosition;
-                obj.transform.localRotation = rotation;
-                return obj;
+                Debug.LogWarning("File does not exist: " + geoFilename);
+                return null;
             }
 
-            var sdf = SdfObjectParser.LoadSdf(filename);
+            var partObj = ImportGeo(geoFilename, null, _3DObjectPrefab, 0);
+            partObj.transform.parent = parent;
+            partObj.transform.localPosition = sdfPart.Position;
+            partObj.transform.localRotation = Quaternion.identity;
+            return partObj;
+        }
+
+        public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation, bool canWreck, out Sdf sdf, out GameObject wreckedPart)
+        {
+            wreckedPart = null;
+            sdf = null;
+
+            if (!_sdfCache.TryGetValue(filename, out sdf))
+            {
+                sdf = SdfObjectParser.LoadSdf(filename, canWreck);
+                _sdfCache.Add(filename, sdf);
+            }
 
             var sdfObject = new GameObject(sdf.Name);
             sdfObject.transform.parent = parent;
@@ -336,22 +351,27 @@ namespace Assets.System
 
             foreach (var sdfPart in sdf.Parts)
             {
-                var geoFilename = sdfPart.Name + ".geo";
-                if (!VirtualFilesystem.Instance.FileExists(geoFilename))
+                GameObject partObj = LoadSdfPart(sdfPart, partDict[sdfPart.ParentName].transform);
+                if (partObj == null)
                 {
-                    Debug.LogWarning("File does not exist: " + geoFilename);
                     continue;
                 }
-
-                var partObj = ImportGeo(geoFilename, null, _3DObjectPrefab, 0);
-                partObj.transform.parent = partDict[sdfPart.ParentName].transform;
-                partObj.transform.localPosition = sdfPart.Position;
-                partObj.transform.localRotation = Quaternion.identity;
+                
                 partObj.SetActive(true);
                 partDict.Add(sdfPart.Name, partObj);
             }
 
-            _sdfCache.Add(filename, sdfObject);
+            if (canWreck && sdf.WreckedPart != null)
+            {
+                wreckedPart = LoadSdfPart(sdf.WreckedPart, partDict[sdf.WreckedPart.ParentName].transform);
+                if (wreckedPart != null)
+                {
+                    wreckedPart.SetActive(false);
+                    Rigidbody rigidBody = sdfObject.AddComponent<Rigidbody>();
+                    rigidBody.isKinematic = true;
+                }
+            }
+
             return sdfObject;
         }
 

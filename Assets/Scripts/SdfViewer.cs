@@ -40,18 +40,12 @@ namespace Assets
             LoadSDF(filename);
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
-
         void LoadSDF(string filename)
         {
             if (SDFContainer != null)
                 Destroy(SDFContainer);
 
-            SDFContainer = _cacheManager.ImportSdf(filename, transform, Vector3.zero, Quaternion.identity);
+            SDFContainer = _cacheManager.ImportSdf(filename, transform, Vector3.zero, Quaternion.identity, false, out _, out _);
             _cacheManager.ClearCache();
         }
     }

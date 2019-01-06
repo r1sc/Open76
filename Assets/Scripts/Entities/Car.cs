@@ -162,7 +162,7 @@ namespace Assets.Scripts.CarSystems
             return system;
         }
 
-        public void ApplyDamage(DamageType damageType, Vector3 normal, int damageAmount)
+        public override void ApplyDamage(DamageType damageType, Vector3 normal, int damageAmount)
         {
             float angle = Quaternion.FromToRotation(Vector3.up, normal).eulerAngles.z;
 

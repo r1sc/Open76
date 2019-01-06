@@ -31,16 +31,17 @@ namespace Assets.Scripts.Entities
 
         private void OnTriggerEnter(Collider other)
         {
-            Car car = other.GetComponentInParent<Car>();
-            if (car != null)
+            WorldEntity entity = other.GetComponentInParent<WorldEntity>();
+            if (entity != null)
             {
-                if (car.transform == Owner)
+                Transform entityTransform = entity.transform;
+                if (entityTransform == Owner)
                 {
                     return;
                 }
 
-                Vector3 hitNormal = (car.transform.position - transform.position).normalized;
-                car.ApplyDamage(DamageType.Projectile, hitNormal, (int)Damage);
+                Vector3 hitNormal = (entityTransform.position - transform.position).normalized;
+                entity.ApplyDamage(DamageType.Projectile, hitNormal, (int)Damage);
             }
 
             // TODO: Spawn impact sprite.
