@@ -436,10 +436,11 @@ namespace Assets.Scripts.System
                     break;
                 case "rand":
                     {
-                        int min = args.Dequeue().Value;
-                        int max = args.Dequeue().Value;
-                        return Random.Range(min, max);
+                        IntRef arg = args.Dequeue();
+                        IntRef val = args.Dequeue();
+                        arg.Value = Random.Range(0, val.Value);
                     }
+                    break;
                 case "stopCB":
                     RadioManager.Instance.Stop();
                     break;

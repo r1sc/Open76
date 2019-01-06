@@ -81,12 +81,12 @@ namespace Assets.Scripts.System
             switch (byteCode.OpCode)
             {
                 case OpCode.PUSH:
-                    machine.Stack.Push(byteCode.Value);
+                    machine.Stack.Push(new IntRef(byteCode.Value));
                     break;
                 case OpCode.ARGPUSH_S:
                     var sVal = machine.Stack[byteCode.Value - 1];
 
-                    machine.ArgumentQueue.Enqueue(new IntRef(sVal));
+                    machine.ArgumentQueue.Enqueue(sVal);
                     break;
                 case OpCode.ARGPUSH_B:
                     var idx = machine.Constants.Length + (byteCode.Value + 1);
@@ -101,7 +101,7 @@ namespace Assets.Scripts.System
 
                     for (int i = 0; i < addToSP; i++)
                     {
-                        machine.Stack.Push(0);
+                        machine.Stack.Push(new IntRef(0));
                     }
                     break;
                 case OpCode.DROP:
@@ -137,7 +137,15 @@ namespace Assets.Scripts.System
                     machine.ArgumentQueue.Clear();
                     break;
                 case OpCode.NEG:
-                    machine.ResultReg = -machine.ResultReg; // Verify
+                    if (machine.ResultReg == 1)
+                    {
+                        machine.ResultReg = 0;
+                    }
+                    else
+                    {
+                        machine.ResultReg = 1;
+                    }
+                    //machine.ResultReg = -machine.ResultReg; // Verify
                     break;
                 default:
                     throw new NotImplementedException("Unimplemented bytecode " + byteCode.OpCode);

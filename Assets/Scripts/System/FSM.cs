@@ -85,7 +85,7 @@ namespace Assets.Scripts.System
         public IntRef[] Constants { get; set; }
 
         public uint IP { get; set; }
-        public IndexableStack<int> Stack { get; set; }
+        public IndexableStack<IntRef> Stack { get; set; }
         public int ResultReg { get; set; }
         public Queue<IntRef> ArgumentQueue { get; set; }
         public bool Halted { get; set; }
@@ -94,7 +94,7 @@ namespace Assets.Scripts.System
         public void Reset()
         {
             IP = StartAddress;
-            Stack = new IndexableStack<int>();
+            Stack = new IndexableStack<IntRef>();
             ArgumentQueue = new Queue<IntRef>();
             ResultReg = 0;
             ActionStack = new Stack<ActionStackTrace>();
