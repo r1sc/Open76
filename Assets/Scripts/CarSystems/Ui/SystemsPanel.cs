@@ -2,7 +2,7 @@
 using Assets.Scripts.System;
 using UnityEngine;
 
-namespace Assets.Scripts.CarSystems.UI
+namespace Assets.Scripts.CarSystems.Ui
 {
     public enum SystemType
     {

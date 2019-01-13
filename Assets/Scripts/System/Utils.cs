@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.System
+namespace Assets.Scripts.System
 {
-    static class Utils
+    internal static class Utils
     {
         private static readonly int TerrainlayerMask = LayerMask.GetMask("Terrain");
 
@@ -67,8 +67,7 @@ namespace Assets.System
             rayPoint.y = 1000f;
             rayPoint.z = z;
 
-            RaycastHit hitInfo;
-            if (Physics.Raycast(new Ray(rayPoint, Vector3.down), out hitInfo, TerrainlayerMask))
+            if (Physics.Raycast(new Ray(rayPoint, Vector3.down), out RaycastHit hitInfo, TerrainlayerMask))
             {
                 return hitInfo.point.y;
             }

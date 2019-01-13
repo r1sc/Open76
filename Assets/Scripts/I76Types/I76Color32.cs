@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace Assets.Scripts.I76Types
+﻿namespace Assets.Scripts.I76Types
 {
     public struct I76Color32
     {

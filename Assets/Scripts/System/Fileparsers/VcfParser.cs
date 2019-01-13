@@ -1,11 +1,7 @@
-﻿using Assets.System;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public enum SpecialType
     {
@@ -62,8 +58,8 @@ namespace Assets.Fileparsers
     {
         public static Vcf ParseVcf(string filename)
         {
-            var vcf = new Vcf();
-            using (var br = new Bwd2Reader(filename))
+            Vcf vcf = new Vcf();
+            using (Bwd2Reader br = new Bwd2Reader(filename))
             {
                 br.FindNext("VCFC");
 
@@ -104,7 +100,7 @@ namespace Assets.Fileparsers
                 vcf.Weapons = new List<VcfWeapon>();
                 while (br.Current != null && br.Current.Name != "EXIT")
                 {
-                    var vcfWeapon = new VcfWeapon
+                    VcfWeapon vcfWeapon = new VcfWeapon
                     {
                         MountPoint = br.ReadInt32(),
                         GdfFilename = br.ReadCString(13)

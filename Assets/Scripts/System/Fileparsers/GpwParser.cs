@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.System;
-using Assets.System;
 using UnityEngine;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public class Gpw
     {
@@ -17,8 +15,7 @@ namespace Assets.Fileparsers
 
         public static Gpw ParseGpw(string fileName)
         {
-            Gpw gpw;
-            if (GpwCache.TryGetValue(fileName, out gpw))
+            if (GpwCache.TryGetValue(fileName, out Gpw gpw))
             {
                 return gpw;
             }

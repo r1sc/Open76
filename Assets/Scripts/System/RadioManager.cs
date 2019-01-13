@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.CarSystems;
-using Assets.System;
+using Assets.Scripts.Entities;
 using UnityEngine;
 
 namespace Assets.Scripts.System
@@ -11,7 +10,7 @@ namespace Assets.Scripts.System
         private AudioSource _radioSource;
         private Car _currentOwner;
 
-        struct RadioData
+        private struct RadioData
         {
             public string ClipName;
             public int Owner;

@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
-using Assets.System;
 using UnityEngine;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public class Sdf
     {
@@ -34,16 +33,16 @@ namespace Assets.Fileparsers
             if (SdfCache.ContainsKey(filename))
                 return SdfCache[filename];
 
-            using (var br = new Bwd2Reader(filename))
+            using (Bwd2Reader br = new Bwd2Reader(filename))
             {
-                var sdf = new Sdf();
+                Sdf sdf = new Sdf();
 
                 br.FindNext("SDFC");
                 sdf.Name = br.ReadCString(16);
-                var one = br.ReadUInt32();
-                var size = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                var unk1 = br.ReadUInt32();
-                var unk2 = br.ReadUInt32();
+                uint one = br.ReadUInt32();
+                Vector3 size = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                uint unk1 = br.ReadUInt32();
+                uint unk2 = br.ReadUInt32();
                 sdf.Health = br.ReadUInt32();
                 string xdfName = br.ReadCString(13) + ".xdf";
                 string soundName = br.ReadCString(13);
@@ -58,11 +57,11 @@ namespace Assets.Fileparsers
                 }
 
                 br.FindNext("SGEO");
-                var numParts = br.ReadUInt32();
+                uint numParts = br.ReadUInt32();
                 sdf.Parts = new SdfPart[numParts];
                 for (int i = 0; i < numParts; i++)
                 {
-                    var sdfPart = new SdfPart();
+                    SdfPart sdfPart = new SdfPart();
                     sdfPart.Name = br.ReadCString(8);
                     sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());

@@ -1,5 +1,5 @@
-﻿using Assets.Fileparsers;
-using Assets.Scripts.System;
+﻿using Assets.Scripts.System;
+using Assets.Scripts.System.Fileparsers;
 
 namespace Assets.Scripts.CarSystems.Components
 {

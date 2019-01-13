@@ -1,32 +1,43 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Assets;
-using Assets.Fileparsers;
-using Assets.Scripts.Camera;
+﻿using Assets.Scripts.Camera;
+using Assets.Scripts.System;
+using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
-using Assets.System;
 
-namespace Assets
+namespace Assets.Scripts
 {
     public class Sky : MonoBehaviour
     {
-        public string TextureFilename;
         public Vector2 Speed;
         public float Height;
         private Material _material;
 
-        // Use this for initialization
-        void Start()
+        private string _textureFileName;
+        public string TextureFilename
+        {
+            get { return _textureFileName;}
+            set
+            {
+                if (_textureFileName == value)
+                {
+                    return;
+                }
+
+                _textureFileName = value;
+                _material.mainTexture = TextureParser.ReadMapTexture(TextureFilename, CacheManager.Instance.Palette);
+            }
+        }
+
+        private void Awake()
         {
             _material = GetComponent<MeshRenderer>().material;
 
-
-            var cacheManager = CacheManager.Instance;
-            _material.mainTexture = TextureParser.ReadMapTexture(TextureFilename, cacheManager.Palette);
+            if (!string.IsNullOrEmpty(TextureFilename))
+            {
+                _material.mainTexture = TextureParser.ReadMapTexture(TextureFilename, CacheManager.Instance.Palette);
+            }
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Update()
         {
             _material.mainTextureOffset += Speed * Time.deltaTime;
             transform.position = CameraManager.Instance.ActiveCamera.transform.position + Vector3.up * Height;

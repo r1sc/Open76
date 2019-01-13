@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Assets.Fileparsers;
-using Assets.System;
+using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -11,7 +10,7 @@ namespace Assets.Scripts.System
     {
         public readonly List<Road> Roads;
         private readonly Transform _worldTransform;
-        private List<Road> _pointBuffer;
+        private readonly List<Road> _pointBuffer;
 
         private static RoadManager _instance;
 
@@ -48,11 +47,11 @@ namespace Assets.Scripts.System
 
         public void CreateRoadObject(MsnMissionParser.Road parsedRoad, Vector2 worldMiddle)
         {
-            var roadGo = new GameObject("Road");
+            GameObject roadGo = new GameObject("Road");
             roadGo.transform.parent = _worldTransform;
-            var meshCollider = roadGo.AddComponent<MeshCollider>();
-            var meshFilter = roadGo.AddComponent<MeshFilter>();
-            var meshRenderer = roadGo.AddComponent<MeshRenderer>();
+            MeshCollider meshCollider = roadGo.AddComponent<MeshCollider>();
+            MeshFilter meshFilter = roadGo.AddComponent<MeshFilter>();
+            MeshRenderer meshRenderer = roadGo.AddComponent<MeshRenderer>();
             meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
 
             string roadTextureFilename;
@@ -78,16 +77,16 @@ namespace Assets.Scripts.System
             Material roadMaterial = cacheManager.GetTextureMaterial(roadTextureFilename, false);
             meshRenderer.material = roadMaterial;
 
-            var mesh = new Mesh();
+            Mesh mesh = new Mesh();
             Vector3[] vertices = new Vector3[parsedRoad.RoadSegments.Length * 2];
             Vector2[] uvs = new Vector2[parsedRoad.RoadSegments.Length * 2];
             Road roadEntity = roadGo.AddComponent<Road>();
             Vector2[] midPoints = new Vector2[parsedRoad.RoadSegments.Length];
             roadEntity.Segments = midPoints;
 
-            var uvIdx = 0;
-            var vertexIndex = 0;
-            foreach (var roadSegment in parsedRoad.RoadSegments)
+            int uvIdx = 0;
+            int vertexIndex = 0;
+            foreach (MsnMissionParser.RoadSegment roadSegment in parsedRoad.RoadSegments)
             {
                 vertices[vertexIndex] = roadSegment.Left;
                 vertices[vertexIndex + 1] = roadSegment.Right;
@@ -103,7 +102,7 @@ namespace Assets.Scripts.System
             }
 
             int[] indices = new int[(vertices.Length - 2) * 3];
-            var idx = 0;
+            int idx = 0;
             for (int i = 0; i < indices.Length; i += 6)
             {
                 indices[i] = idx + 2;

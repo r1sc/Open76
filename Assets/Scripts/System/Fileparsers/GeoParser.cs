@@ -1,12 +1,6 @@
-﻿using Assets.System;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public class GeoMesh
     {
@@ -40,47 +34,47 @@ namespace Assets.Fileparsers
     {
         public static GeoMesh ReadGeoMesh(string fileName)
         {
-            using (var br = VirtualFilesystem.Instance.GetFileStream(fileName))
+            using (Scripts.System.FastBinaryReader br = VirtualFilesystem.Instance.GetFileStream(fileName))
             {
-                var mesh = new GeoMesh();
-                var magic = br.ReadCString(4);
-                var unk1 = br.ReadUInt32();
+                GeoMesh mesh = new GeoMesh();
+                string magic = br.ReadCString(4);
+                uint unk1 = br.ReadUInt32();
                 mesh.Name = br.ReadCString(16);
-                var vertexCount = br.ReadUInt32();
-                var faceCount = br.ReadUInt32();
-                var unk2 = br.ReadUInt32();
+                uint vertexCount = br.ReadUInt32();
+                uint faceCount = br.ReadUInt32();
+                uint unk2 = br.ReadUInt32();
 
                 mesh.Vertices = new Vector3[vertexCount];
                 for (int i = 0; i < vertexCount; i++)
                 {
-                    var vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    Vector3 vertex = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     mesh.Vertices[i] = vertex;
                 }
 
                 mesh.Normals = new Vector3[vertexCount];
                 for (int i = 0; i < vertexCount; i++)
                 {
-                    var normal = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
+                    Vector3 normal = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     mesh.Normals[i] = normal;
                 }
 
                 mesh.Faces = new GeoFace[faceCount];
                 for (int i = 0; i < faceCount; i++)
                 {
-                    var face = new GeoFace();
+                    GeoFace face = new GeoFace();
                     face.Index = br.ReadUInt32();
-                    var numVerticesInFace = br.ReadUInt32();
+                    uint numVerticesInFace = br.ReadUInt32();
                     face.Color = new Color32(br.ReadByte(), br.ReadByte(), br.ReadByte(), 255);
                     face.SurfaceNormal = new Vector4(br.ReadSingle(), br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    var unk3 = br.ReadUInt32();
+                    uint unk3 = br.ReadUInt32();
                     face.SurfaceFlags1 = br.ReadByte();
                     face.SurfaceFlags2 = br.ReadByte();
                     face.SurfaceFlags3 = br.ReadByte();
-                    var textureName = br.ReadCString(13);
+                    string textureName = br.ReadCString(13);
                     if (textureName != "")
                         face.TextureName = textureName;
-                    var unk4 = br.ReadUInt32();
-                    var unk5 = br.ReadUInt32();
+                    uint unk4 = br.ReadUInt32();
+                    uint unk5 = br.ReadUInt32();
                     //Debug.Log("Surf " + face.TextureName + " flags: " + face.SurfaceFlags1 + ", " + face.SurfaceFlags2 + ", " + face.SurfaceFlags3 + ", " + unk3 + ", " + unk4 + ", " + unk5 + ", color=" + face.Color);
 
                     face.VertexRefs = new GeoVertexRef[numVerticesInFace];

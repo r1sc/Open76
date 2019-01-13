@@ -6,19 +6,26 @@ namespace Assets.Scripts.System
 {
     public class FSMRunner : MonoBehaviour
     {
-        public static FSMRunner Instance { get; private set; }
+        private static FSMRunner _instance;
+        public static FSMRunner Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<FSMRunner>();
+                }
+
+                return _instance;
+            }
+        }
 
         public float[] Timers { get; set; }
 
         public FSM FSM;
         private FSMActionDelegator _actionDelegator;
-
+        
         private void Awake()
-        {
-            Instance = this;
-        }
-
-        private void Start()
         {
             Timers = new float[10];
             _actionDelegator = new FSMActionDelegator();
@@ -50,51 +57,37 @@ namespace Assets.Scripts.System
                 return;
             }
 
-            var currentMachineIndex = 0;
+            int currentMachineIndex = 0;
             while (currentMachineIndex < FSM.StackMachines.Length)
             {
-                var machine = FSM.StackMachines[currentMachineIndex];
+                StackMachine machine = FSM.StackMachines[currentMachineIndex];
                 if (machine.Halted || (Step(machine) == StepResult.DoNextMachine))
                 {
                     currentMachineIndex++;
                 }
             }
         }
-
-        private void LogStack(StackMachine machine, ByteCode byteCode, string name)
-        {
-            ActionStackTrace trace = new ActionStackTrace
-            {
-                Action = name,
-                Value = byteCode.Value,
-                OpCode = byteCode.OpCode,
-                IP = machine.IP,
-                Arguments = machine.ArgumentQueue.ToArray()
-            };
-
-            machine.ActionStack.Push(trace);
-        }
-
+        
         private StepResult Step(StackMachine machine)
         {
-            var byteCode = FSM.ByteCode[machine.IP++];
+            ByteCode byteCode = FSM.ByteCode[machine.IP++];
             switch (byteCode.OpCode)
             {
                 case OpCode.PUSH:
                     machine.Stack.Push(new IntRef(byteCode.Value));
                     break;
                 case OpCode.ARGPUSH_S:
-                    var sVal = machine.Stack[byteCode.Value - 1];
+                    IntRef sVal = machine.Stack[byteCode.Value - 1];
 
                     machine.ArgumentQueue.Enqueue(sVal);
                     break;
                 case OpCode.ARGPUSH_B:
-                    var idx = machine.Constants.Length + (byteCode.Value + 1);
-                    var bVal = machine.Constants[idx];
+                    int idx = machine.Constants.Length + (byteCode.Value + 1);
+                    IntRef bVal = machine.Constants[idx];
                     machine.ArgumentQueue.Enqueue(bVal);
                     break;
                 case OpCode.ADJUST:
-                    var addToSP = byteCode.Value;
+                    int addToSP = byteCode.Value;
 
                     if (addToSP < 1)
                         throw new NotImplementedException("What to do when adjusting 0 or negative values?");
@@ -105,7 +98,7 @@ namespace Assets.Scripts.System
                     }
                     break;
                 case OpCode.DROP:
-                    var subFromSP = byteCode.Value;
+                    int subFromSP = byteCode.Value;
 
                     if (subFromSP < 0)
                         throw new NotImplementedException("Expecting positive values");
@@ -124,15 +117,12 @@ namespace Assets.Scripts.System
                     break;
                 case OpCode.JMP_I:
                     machine.IP = (uint)byteCode.Value;
-                    machine.ActionStack.Clear();
                     return StepResult.DoNextMachine;
                 case OpCode.RST:
                     machine.Halted = true;
-                    machine.ActionStack.Clear();
                     return StepResult.DoNextMachine;
                 case OpCode.ACTION:
-                    var actionName = FSM.ActionTable[byteCode.Value];
-                    LogStack(machine, byteCode, actionName);
+                    string actionName = FSM.ActionTable[byteCode.Value];
                     machine.ResultReg = _actionDelegator.DoAction(actionName, machine, this);
                     machine.ArgumentQueue.Clear();
                     break;
@@ -145,7 +135,6 @@ namespace Assets.Scripts.System
                     {
                         machine.ResultReg = 1;
                     }
-                    //machine.ResultReg = -machine.ResultReg; // Verify
                     break;
                 default:
                     throw new NotImplementedException("Unimplemented bytecode " + byteCode.OpCode);
@@ -154,7 +143,7 @@ namespace Assets.Scripts.System
             return StepResult.NotDone;
         }
 
-        enum StepResult
+        private enum StepResult
         {
             NotDone,
             DoNextMachine

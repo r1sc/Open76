@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Assets.Fileparsers;
+using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
 
 namespace Assets.Scripts.System

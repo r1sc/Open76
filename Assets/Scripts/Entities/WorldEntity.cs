@@ -1,5 +1,4 @@
-﻿using Assets.Scripts.CarSystems;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Scripts.Entities
 {

@@ -1,40 +1,35 @@
-﻿using Assets.Fileparsers;
-using Assets.Scripts.Camera;
-using Assets.Scripts.CarSystems;
-using Assets.Scripts.System;
-using Assets.System;
+﻿#if !UNITY_EDITOR
+using System.IO;
 using UnityEngine;
+#endif
 
-namespace Assets
+namespace Assets.Scripts
 {
-    public class Game : MonoBehaviour
+    public class Game
     {
-        public string MissionFile;
-        public string VcfToLoad;
+        private static Game _instance;
 
-        // Use this for initialization
-        void Start()
+        public static Game Instance
         {
-            var levelLoader = GetComponent<LevelLoader>();
-            levelLoader.LoadLevel(MissionFile);
+            get { return _instance ?? (_instance = new Game()); }
+        }
 
-            if (MissionFile.ToLower().StartsWith("m"))
+        public string LevelName { get; set; }
+        public string GamePath { get; set; }
+        public bool IntroPlayed { get; set; }
+
+        private Game()
+        {
+#if !UNITY_EDITOR
+            string gameExeDir = Path.Combine(Application.dataPath, "../..");
+            if (File.Exists(Path.Combine(gameExeDir, "i76.exe")))
             {
-                Vdf unused;
-                var cacheManager = CacheManager.Instance;
-                var importedVcf = cacheManager.ImportVcf(VcfToLoad, true, out unused);
-                importedVcf.AddComponent<CarInput>();
-                importedVcf.AddComponent<Car>();
-
-                var spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
-                importedVcf.transform.position = spawnPoint.transform.position;
-                importedVcf.transform.rotation = spawnPoint.transform.rotation;
-
-                CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = importedVcf.transform;
+                GamePath = gameExeDir;
             }
-
-#if UNITY_EDITOR
-            gameObject.AddComponent<SceneViewAudioHelper>();
+            else
+            {
+                Debug.LogError("Game path not found.");
+            }
 #endif
         }
     }

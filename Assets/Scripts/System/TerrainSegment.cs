@@ -1,16 +1,14 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
-namespace Assets.System
+namespace Assets.Scripts.System
 {
     public class TerrainSegment : MonoBehaviour
     {
         public int Width = 128;
         public int Depth = 128;
 
-        void Awake()
+        private void Awake()
         {
             if (GetComponent<MeshFilter>().mesh == null)
             {
@@ -20,12 +18,12 @@ namespace Assets.System
 
         private void GenerateMesh(float[,] heights)
         {
-            var mesh = new Mesh();
-            var vertices = new List<Vector3>();
-            var indices = new List<int>();
-            var normals = new List<Vector3>();
-            var uvs = new List<Vector2>();
-            var idx = 0;
+            Mesh mesh = new Mesh();
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> indices = new List<int>();
+            List<Vector3> normals = new List<Vector3>();
+            List<Vector2> uvs = new List<Vector2>();
+            int idx = 0;
             for (int z = 0; z < Depth; z++)
             {
                 for (int x = 0; x < Width; x++)
@@ -64,8 +62,8 @@ namespace Assets.System
         {
             //if(GetComponent<MeshFilter>().mesh == null)
             //    GenerateMesh();
-            var mesh = GetComponent<MeshFilter>().mesh;
-            var vertices = mesh.vertices;
+            Mesh mesh = GetComponent<MeshFilter>().mesh;
+            Vector3[] vertices = mesh.vertices;
             for (int z = 0; z < Depth; z++)
             {
                 for (int x = 0; x < Width; x++)

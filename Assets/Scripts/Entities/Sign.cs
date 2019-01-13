@@ -1,5 +1,4 @@
-﻿using Assets.Scripts.Entities;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Scripts.Entities
 {
@@ -16,11 +15,11 @@ namespace Assets.Scripts.Entities
         }
 
         // Use this for initialization
-        void Start()
+        private void Start()
         {
             _colliders = GetComponentsInChildren<MeshCollider>();
 
-            foreach (var collider in _colliders)
+            foreach (MeshCollider collider in _colliders)
             {
                 collider.gameObject.layer = LayerMask.NameToLayer("Sign");
                 collider.convex = true;
@@ -34,8 +33,8 @@ namespace Assets.Scripts.Entities
             _rigidbody.mass = 1;
             _rigidbody.isKinematic = true;
         }
-        
-        void OnTriggerEnter(Collider collider)
+
+        private void OnTriggerEnter(Collider collider)
         {
             if (_dead)
             {
@@ -46,7 +45,7 @@ namespace Assets.Scripts.Entities
             if (rigidBody != null && rigidBody.velocity.magnitude > 2)
             {
                 _dead = true;
-                foreach (var c in _colliders)
+                foreach (MeshCollider c in _colliders)
                 {
                     c.isTrigger = false;
                     c.gameObject.layer = 0;

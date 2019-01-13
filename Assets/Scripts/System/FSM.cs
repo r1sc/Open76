@@ -69,15 +69,6 @@ namespace Assets.Scripts.System
         }
     }
 
-    public struct ActionStackTrace
-    {
-        public string Action;
-        public OpCode OpCode;
-        public int Value;
-        public IntRef[] Arguments;
-        public uint IP;
-    }
-
     public class StackMachine
     {
         public uint StartAddress { get; set; }
@@ -89,7 +80,6 @@ namespace Assets.Scripts.System
         public int ResultReg { get; set; }
         public Queue<IntRef> ArgumentQueue { get; set; }
         public bool Halted { get; set; }
-        public Stack<ActionStackTrace> ActionStack { get; set; }
 
         public void Reset()
         {
@@ -97,11 +87,11 @@ namespace Assets.Scripts.System
             Stack = new IndexableStack<IntRef>();
             ArgumentQueue = new Queue<IntRef>();
             ResultReg = 0;
-            ActionStack = new Stack<ActionStackTrace>();
         }
     }
 
-    public class FSMPath {
+    public class FSMPath
+    {
         public string Name { get; set; }
         public I76Vector3[] Nodes { get; set; }
 

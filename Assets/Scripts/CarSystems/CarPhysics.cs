@@ -1,5 +1,9 @@
-﻿using Assets.System;
+﻿using System;
+using Assets.Scripts.Entities;
+using Assets.Scripts.System;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 namespace Assets.Scripts.CarSystems
 {
@@ -120,9 +124,8 @@ namespace Assets.Scripts.CarSystems
 
         private void UpdateSurfaceSound()
         {
-            RaycastHit hitInfo;
             Ray terrainRay = new Ray(_transform.position, Vector3.down);
-            if (Physics.Raycast(terrainRay, out hitInfo))
+            if (Physics.Raycast(terrainRay, out RaycastHit hitInfo))
             {
                 string objectTag = hitInfo.collider.gameObject.tag;
                 string surfaceSoundName;
@@ -186,7 +189,7 @@ namespace Assets.Scripts.CarSystems
                 }
             }
 
-            var allWheelsGrounded = groundedWheels == FrontWheels.Length + RearWheels.Length;
+            bool allWheelsGrounded = groundedWheels == FrontWheels.Length + RearWheels.Length;
 
             if (!allWheelsGrounded)
             {
@@ -201,13 +204,13 @@ namespace Assets.Scripts.CarSystems
 
             _airTime = 0.0f;
             UpdateSurfaceSound();
-            var vel3d = _transform.InverseTransformVector(_rigidbody.velocity);
+            Vector3 vel3d = _transform.InverseTransformVector(_rigidbody.velocity);
 
             _carVelocity = new Vector2(vel3d.z, vel3d.x);
 
             _speed = _carVelocity.magnitude;
 
-            var avel = Mathf.Min(_speed, SteerSpeedBias);  // m/s
+            float avel = Mathf.Min(_speed, SteerSpeedBias);  // m/s
             Steer = Steer * (1.0f - (avel / SteerSpeedBias));
             SteerAngle = Steer * MaxSteer;
 
@@ -218,38 +221,38 @@ namespace Assets.Scripts.CarSystems
                 _speed = 0;
                 _rigidbody.angularVelocity = Vector3.zero;
             }
-            if (_speed == 0)
+            if (Math.Abs(_speed) < float.Epsilon)
                 SteerAngle = 0;
 
-            var rotAngle = 0.0f;
-            var sideslip = 0.0f;
+            float rotAngle = 0.0f;
+            float sideslip = 0.0f;
             if (Mathf.Abs(_speed) > 0.5f)
             {
                 rotAngle = Mathf.Atan2(_rigidbody.angularVelocity.y, _carVelocity.x);
                 sideslip = Mathf.Atan2(_carVelocity.y, _carVelocity.x);
             }
 
-            var slipAngleFront = sideslip + rotAngle - SteerAngle;
-            var slipAngleRear = sideslip - rotAngle;
+            float slipAngleFront = sideslip + rotAngle - SteerAngle;
+            float slipAngleRear = sideslip - rotAngle;
 
             _totalWeight = _rigidbody.mass * Mathf.Abs(Physics.gravity.y);
-            var weight = _totalWeight * 0.5f; // Weight per axle
+            float weight = _totalWeight * 0.5f; // Weight per axle
 
-            var weightDiff = _heightRatio * _rigidbody.mass * _carAcceleration.x; // --weight distribution between axles(stored to animate body)
+            float weightDiff = _heightRatio * _rigidbody.mass * _carAcceleration.x; // --weight distribution between axles(stored to animate body)
             _weightFront = weight - weightDiff;
             _weightRear = weight + weightDiff;
 
-            var slipFront = Mathf.Clamp(CorneringStiffnessFront * slipAngleFront, -MaxGrip, MaxGrip);
-            var slipRear = Mathf.Clamp(CorneringStiffnessRear * slipAngleRear, -MaxGrip, MaxGrip);
+            float slipFront = Mathf.Clamp(CorneringStiffnessFront * slipAngleFront, -MaxGrip, MaxGrip);
+            float slipRear = Mathf.Clamp(CorneringStiffnessRear * slipAngleRear, -MaxGrip, MaxGrip);
 
-            var fLateralFront = new Vector2(0, slipFront) * weight;
-            var fLateralRear = new Vector2(0, slipRear) * weight;
+            Vector2 fLateralFront = new Vector2(0, slipFront) * weight;
+            Vector2 fLateralRear = new Vector2(0, slipRear) * weight;
             if (EBrake)
                 fLateralRear *= 0.5f;
 
             _percentFront = _weightFront / weight - 1.0f;
-            var weightShiftAngle = Mathf.Clamp(_percentFront * 50, -50, 50);
-            var euler = Chassis.localRotation.eulerAngles;
+            float weightShiftAngle = Mathf.Clamp(_percentFront * 50, -50, 50);
+            Vector3 euler = Chassis.localRotation.eulerAngles;
             euler.x = weightShiftAngle;
             euler.z = Mathf.Clamp(((slipFront + slipRear) / (MaxGrip * 2)) * 5, -5, 5);
             Chassis.localRotation = Quaternion.Slerp(Chassis.localRotation, Quaternion.Euler(euler), Time.deltaTime * 5);
@@ -261,19 +264,19 @@ namespace Assets.Scripts.CarSystems
                 _fTraction = -Vector2.right * BrakeConstant * Brake * Mathf.Sign(_carVelocity.x);
             }
 
-            var fDrag = -DragConstant * _carVelocity * Mathf.Abs(_carVelocity.x);
-            var fRollingResistance = -RollingResistanceConstant * _carVelocity;
-            var fLong = _fTraction + fDrag + fRollingResistance;
+            Vector2 fDrag = -DragConstant * _carVelocity * Mathf.Abs(_carVelocity.x);
+            Vector2 fRollingResistance = -RollingResistanceConstant * _carVelocity;
+            Vector2 fLong = _fTraction + fDrag + fRollingResistance;
 
-            var forces = fLong + fLateralFront + fLateralRear;
+            Vector2 forces = fLong + fLateralFront + fLateralRear;
 
-            var torque = _b * fLateralFront.y - _c * fLateralRear.y;
-            var angularAcceleration = torque / _rigidbody.mass; // Really inertia but...
+            float torque = _b * fLateralFront.y - _c * fLateralRear.y;
+            float angularAcceleration = torque / _rigidbody.mass; // Really inertia but...
             _rigidbody.angularVelocity += Vector3.up * angularAcceleration * Time.deltaTime;
 
             _carAcceleration = Time.deltaTime * forces / _rigidbody.mass;
 
-            var worldAcceleration = _transform.TransformVector(new Vector3(_carAcceleration.y, 0, _carAcceleration.x));
+            Vector3 worldAcceleration = _transform.TransformVector(new Vector3(_carAcceleration.y, 0, _carAcceleration.x));
             _rigidbody.velocity += worldAcceleration;
         }
 

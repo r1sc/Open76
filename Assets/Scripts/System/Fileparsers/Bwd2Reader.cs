@@ -1,13 +1,6 @@
-﻿using Assets.System;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Assets.Scripts.System;
+﻿using System;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public sealed class Bwd2Reader : FastBinaryReader
     {
@@ -19,7 +12,7 @@ namespace Assets.Fileparsers
             public Tag Next { get; set; }
         }
 
-        private bool _isChildReader = false;
+        private readonly bool _isChildReader = false;
         private readonly Tag _root;
         public Tag Current;
         
@@ -27,9 +20,9 @@ namespace Assets.Fileparsers
         {
             while (Position < Length)
             {
-                var tagName = ReadCString(4);
-                var dataLength = ReadUInt32() - 8;
-                var tag = new Tag { Name = tagName, DataPosition = Position, DataLength = dataLength };
+                string tagName = ReadCString(4);
+                uint dataLength = ReadUInt32() - 8;
+                Tag tag = new Tag { Name = tagName, DataPosition = Position, DataLength = dataLength };
                 if (_root == null)
                 {
                     Current = _root = tag;

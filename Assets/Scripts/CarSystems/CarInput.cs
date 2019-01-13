@@ -1,21 +1,21 @@
 ﻿using Assets.Scripts.Camera;
-using Assets.Scripts.CarSystems;
+using Assets.Scripts.Entities;
 using UnityEngine;
 
-namespace Assets
+namespace Assets.Scripts.CarSystems
 {
-    class CarInput : MonoBehaviour
+    internal class CarInput : MonoBehaviour
     {
         private Car _car;
         private CarPhysics _movement;
 
-        void Start()
+        private void Start()
         {
             _car = GetComponent<Car>();
             _movement = _car.Movement;
         }
 
-        void Update()
+        private void Update()
         {
             if (!CameraManager.Instance.IsMainCameraActive || !_car.Alive)
             {
@@ -124,8 +124,8 @@ namespace Assets
                 _car.ToggleEngine();
             }
 
-            var throttle = Input.GetAxis("Vertical");
-            var brake = -Mathf.Min(0, throttle);
+            float throttle = Input.GetAxis("Vertical");
+            float brake = -Mathf.Min(0, throttle);
             throttle = Mathf.Max(0, throttle);
 
             if (!_car.EngineRunning)
@@ -136,7 +136,7 @@ namespace Assets
             _movement.Throttle = throttle;
             _movement.Brake = brake;
 
-            var steering = Input.GetAxis("Horizontal");
+            float steering = Input.GetAxis("Horizontal");
             _movement.Steer = steering;
 
             _movement.EBrake = Input.GetButton("E-brake");

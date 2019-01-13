@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Assets.Scripts.Entities;
 using Assets.Scripts.System;
-using Assets.System;
 using UnityEngine;
 
-namespace Assets.Scripts.CarSystems.UI
+namespace Assets.Scripts.CarSystems.Ui
 {
     public class RadarPanel : Panel
     {
@@ -21,9 +21,9 @@ namespace Assets.Scripts.CarSystems.UI
         private bool _longRange;
         private Car _target;
         private int _targetIndex;
-        private AudioSource _radarAudio;
-        private AudioClip _newContact;
-        private AudioClip _sweepContact;
+        private readonly AudioSource _radarAudio;
+        private readonly AudioClip _newContact;
+        private readonly AudioClip _sweepContact;
 
         private readonly Car _car;
         private readonly Dictionary<Car, RadarContact> _radarContacts;
@@ -171,8 +171,7 @@ namespace Assets.Scripts.CarSystems.UI
                     normal.y = pos.z - carPos.z;
                     normal.Normalize();
 
-                    RadarContact contact;
-                    if (!_radarContacts.TryGetValue(car, out contact))
+                    if (!_radarContacts.TryGetValue(car, out RadarContact contact))
                     {
                         if (!_radarAudio.isPlaying || _radarAudio.clip != _newContact)
                         {

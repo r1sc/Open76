@@ -142,7 +142,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 831432015}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 718f7ff65e72e99408f9f0f419372aff, type: 3}
+  m_Script: {fileID: 11500000, guid: 701167b535fa5334eb7514fa1e0671f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   TextureFilename: 
@@ -784,10 +784,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1712330285}
-  - component: {fileID: 1712330283}
-  - component: {fileID: 1712330284}
-  - component: {fileID: 1712330286}
   - component: {fileID: 1712330287}
+  - component: {fileID: 1712330284}
   m_Layer: 0
   m_Name: Game
   m_TagString: Untagged
@@ -795,19 +793,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1712330283
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1712330282}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0008be089dc6eb6428b105d939845780, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  GamePath: C:\Users\admin\Desktop\interstate 76
 --- !u!114 &1712330284
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -817,9 +802,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1712330282}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be5365c7038689940b9efa85fdd55bd3, type: 3}
+  m_Script: {fileID: 11500000, guid: 76f779bb12e4ae04b95b0c2c559468b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  GamePath: C:\Users\admin\Desktop\interstate 76
   MissionFile: t01.msn
   VcfToLoad: vppirna1.vcf
 --- !u!4 &1712330285
@@ -836,18 +822,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1712330286
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1712330282}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 52f9f8a751546e649adf1675a8fd5d15, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1712330287
 MonoBehaviour:
   m_ObjectHideFlags: 0

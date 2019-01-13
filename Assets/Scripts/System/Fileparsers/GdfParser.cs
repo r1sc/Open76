@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public class Gdf
     {
@@ -29,9 +29,9 @@ namespace Assets.Fileparsers
     {
         public static Gdf ParseGdf(string filename)
         {
-            using (var br = new Bwd2Reader(filename))
+            using (Bwd2Reader br = new Bwd2Reader(filename))
             {
-                var gdf = new Gdf();
+                Gdf gdf = new Gdf();
 
                 br.FindNext("REV");
                 int rev = br.ReadInt32();

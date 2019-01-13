@@ -1,8 +1,7 @@
 ﻿using Assets.Scripts.System;
-using Assets.System;
 using UnityEngine;
 
-namespace Assets.Scripts.CarSystems.UI
+namespace Assets.Scripts.CarSystems.Ui
 {
     public class CompassPanel : Panel
     {

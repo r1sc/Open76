@@ -1,16 +1,19 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.CarSystems;
+using Assets.Scripts.Entities;
 
 namespace Assets.Scripts.System
 {
     public class EntityManager
     {
         private static EntityManager _instance;
-        public static EntityManager Instance => _instance ?? (_instance = new EntityManager());
+        public static EntityManager Instance
+        {
+            get { return _instance ?? (_instance = new EntityManager()); }
+        }
 
         public List<Car> Cars { get; }
 
-        private Dictionary<int, Car> _carLookup;
+        private readonly Dictionary<int, Car> _carLookup;
 
         private EntityManager()
         {
@@ -18,30 +21,29 @@ namespace Assets.Scripts.System
             _carLookup = new Dictionary<int, Car>();
         }
         
-        public void RegisterCar(Car Car)
+        public void RegisterCar(Car car)
         {
-            if (!_carLookup.ContainsKey(Car.Id))
+            if (!_carLookup.ContainsKey(car.Id))
             {
-                _carLookup.Add(Car.Id, Car);
+                _carLookup.Add(car.Id, car);
             }
 
-            Cars.Add(Car);
+            Cars.Add(car);
         }
 
-        public void UnregisterCar(Car Car)
+        public void UnregisterCar(Car car)
         {
-            if (_carLookup.ContainsKey(Car.Id))
+            if (_carLookup.ContainsKey(car.Id))
             {
-                _carLookup.Remove(Car.Id);
+                _carLookup.Remove(car.Id);
             }
 
-            Cars.Remove(Car);
+            Cars.Remove(car);
         }
 
         public Car GetCar(int id)
         {
-            Car car;
-            if (!_carLookup.TryGetValue(id, out car))
+            if (!_carLookup.TryGetValue(id, out Car car))
             {
                 return null;
             }

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Assets.Scripts.Entities;
 using Assets.Scripts.I76Types;
 using Assets.Scripts.System;
-using Assets.System;
 using UnityEngine;
 
 namespace Assets.Scripts.CarSystems

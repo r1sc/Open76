@@ -1,15 +1,13 @@
 ﻿using System;
-using Assets.Fileparsers;
 using Assets.Scripts.Camera;
-using Assets.Scripts.CarSystems.Components;
-using Assets.Scripts.CarSystems.UI;
-using Assets.Scripts.Entities;
+using Assets.Scripts.CarSystems;
+using Assets.Scripts.CarSystems.Ui;
 using Assets.Scripts.System;
-using Assets.System;
+using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Assets.Scripts.CarSystems
+namespace Assets.Scripts.Entities
 {
     public enum DamageType
     {

@@ -16,18 +16,18 @@ namespace Assets.Scripts.CarSystems
         public float TargetAngle;
 
         // Use this for initialization
-        void Start()
+        private void Start()
         {
             _rigidbody = GetComponentInParent<Rigidbody>();
             _wheelGraphic = transform.Find("Mesh");
         }
 
         // Update is called once per frame
-        void FixedUpdate()
+        private void FixedUpdate()
         {
             SpringPhysics();
 
-            var euler = _wheelGraphic.localRotation.eulerAngles;
+            Vector3 euler = _wheelGraphic.localRotation.eulerAngles;
             euler.y = TargetAngle; // Mathf.Lerp(euler.y, TargetAngle, Time.deltaTime * 2);
             _wheelGraphic.localRotation = Quaternion.Euler(euler);
         }
@@ -35,9 +35,8 @@ namespace Assets.Scripts.CarSystems
 
         private void SpringPhysics()
         {
-            RaycastHit rayHit;
-            var springNow = SpringLength;
-            if (Physics.Raycast(transform.position, -transform.up, out rayHit, SpringLength))
+            float springNow = SpringLength;
+            if (Physics.Raycast(transform.position, -transform.up, out RaycastHit rayHit, SpringLength))
             {
                 springNow = rayHit.distance; // * Random.Range(0.7f, 1.0f);  //for rough terrain
                 Grounded = true;
@@ -49,20 +48,20 @@ namespace Assets.Scripts.CarSystems
 
             // Mathf.Max(0, springNow * (1.0f - Pressure));
 
-            var displacement = SpringLength - springNow;
-            var force = transform.up * SpringConstant * displacement;
+            float displacement = SpringLength - springNow;
+            Vector3 force = transform.up * SpringConstant * displacement;
 
-            var springVel = springNow - _lastSpringLength;
-            var wheelVel = springVel * transform.up;
+            float springVel = springNow - _lastSpringLength;
+            Vector3 wheelVel = springVel * transform.up;
             //Debug.DrawLine(transform.position, transform.position + wheelVel * 10, Color.yellow);
-            var damper = -Damping * wheelVel;
+            Vector3 damper = -Damping * wheelVel;
             force += damper;
 
             _rigidbody.AddForceAtPosition(force, transform.position, ForceMode.Force);
             //Debug.DrawLine(transform.position, transform.position + force, Color.red);
             _lastSpringLength = springNow;
 
-            var pos = _wheelGraphic.localPosition;
+            Vector3 pos = _wheelGraphic.localPosition;
             pos.y = -_lastSpringLength + WheelRadius;
             _wheelGraphic.localPosition = pos;
         }

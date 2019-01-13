@@ -1,7 +1,5 @@
 ﻿using Assets.Scripts.Camera;
-using Assets.Scripts.CarSystems;
 using Assets.Scripts.Entities;
-using Assets.System;
 using UnityEngine;
 
 namespace Assets.Scripts.System
@@ -15,7 +13,7 @@ namespace Assets.Scripts.System
 
         public int DoAction(string actionName, StackMachine machine, FSMRunner fsmRunner)
         {
-            var args = machine.ArgumentQueue;
+            global::System.Collections.Generic.Queue<IntRef> args = machine.ArgumentQueue;
             switch (actionName)
             {
                 case "null":
@@ -25,43 +23,43 @@ namespace Assets.Scripts.System
                     return 1;
                 case "inc":
                     {
-                        var arg = args.Dequeue();
+                        IntRef arg = args.Dequeue();
                         ++arg.Value;
                     }
                     break;
                 case "dec":
                     {
-                        var arg = args.Dequeue();
+                        IntRef arg = args.Dequeue();
                         --arg.Value;
                     }
                     break;
                 case "set":
                     {
-                        var arg = args.Dequeue();
-                        var val = args.Dequeue();
+                        IntRef arg = args.Dequeue();
+                        IntRef val = args.Dequeue();
                         arg.Value = val.Value;
                     }
                     break;
                 case "isGreater":
                 {
-                    var val = args.Dequeue();
-                    var number = args.Dequeue();
+                        IntRef val = args.Dequeue();
+                        IntRef number = args.Dequeue();
 
                     bool greater = val.Value > number.Value;
                     return greater ? 1 : 0;
                 }
                 case "isLesser":
                 {
-                    var val = args.Dequeue();
-                    var number = args.Dequeue();
+                        IntRef val = args.Dequeue();
+                        IntRef number = args.Dequeue();
 
                     bool lesser = val.Value < number.Value;
                     return lesser ? 1 : 0;
                 }
                 case "isEqual":
                 {
-                    var val = args.Dequeue();
-                    var number = args.Dequeue();
+                        IntRef val = args.Dequeue();
+                        IntRef number = args.Dequeue();
 
                     bool equal = val.Value == number.Value;
                     return equal ? 1 : 0;
@@ -73,10 +71,10 @@ namespace Assets.Scripts.System
                     CameraManager.Instance.PopCamera();
                     break;
                 case "timeGreater":
-                    var timerNo = args.Dequeue();
-                    var seconds = args.Dequeue();
+                    IntRef timerNo = args.Dequeue();
+                    IntRef seconds = args.Dequeue();
 
-                    var secondsElapsed = Time.unscaledTime - fsmRunner.Timers[timerNo.Value];
+                    float secondsElapsed = Time.unscaledTime - fsmRunner.Timers[timerNo.Value];
                     return secondsElapsed >= seconds.Value ? 1 : 0;
                 case "isKeypress":
                     return Input.GetKeyDown(KeyCode.Space) ? 1 : 0;
@@ -87,20 +85,20 @@ namespace Assets.Scripts.System
                             break;
                         }
 
-                        var camera = CameraManager.Instance.ActiveCamera;
-                        var whichEntity = args.Dequeue();
-                        var origoEntity = fsmRunner.FSM.EntityTable[whichEntity.Value];
-                        var entity = origoEntity.Object;
+                        UnityEngine.Camera camera = CameraManager.Instance.ActiveCamera;
+                        IntRef whichEntity = args.Dequeue();
+                        FSMEntity origoEntity = fsmRunner.FSM.EntityTable[whichEntity.Value];
+                        GameObject entity = origoEntity.Object;
 
-                        var relativePos = new Vector3(args.Dequeue().Value, args.Dequeue().Value, args.Dequeue().Value) / 100.0f;
+                        Vector3 relativePos = new Vector3(args.Dequeue().Value, args.Dequeue().Value, args.Dequeue().Value) / 100.0f;
 
-                        var yaw = args.Dequeue().Value;
-                        var roll = args.Dequeue().Value;
-                        var pitch = args.Dequeue().Value;
+                        int yaw = args.Dequeue().Value;
+                        int roll = args.Dequeue().Value;
+                        int pitch = args.Dequeue().Value;
 
-                        var rotation = new Vector3(yaw, pitch, roll) / 100.0f;
+                        Vector3 rotation = new Vector3(yaw, pitch, roll) / 100.0f;
 
-                        var newPos = entity.transform.position + (entity.transform.rotation * relativePos);
+                        Vector3 newPos = entity.transform.position + (entity.transform.rotation * relativePos);
 
                         if (newPos.y < entity.transform.position.y + 1)
                             newPos.y = entity.transform.position.y + 1;
@@ -116,18 +114,18 @@ namespace Assets.Scripts.System
                             break;
                         }
 
-                        var camera = CameraManager.Instance.ActiveCamera;
-                        var pathIndex = args.Dequeue().Value;
-                        var height = args.Dequeue().Value;
-                        var watchTarget = args.Dequeue().Value;
-                        
-                        var path = fsmRunner.FSM.Paths[pathIndex];
+                        UnityEngine.Camera camera = CameraManager.Instance.ActiveCamera;
+                        int pathIndex = args.Dequeue().Value;
+                        int height = args.Dequeue().Value;
+                        int watchTarget = args.Dequeue().Value;
+
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
 
                         Vector3 nodePos = path.GetWorldPosition(0);
                         nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
                         camera.transform.position = nodePos;
 
-                        var entity = fsmRunner.FSM.EntityTable[watchTarget].Object;
+                        GameObject entity = fsmRunner.FSM.EntityTable[watchTarget].Object;
                         camera.transform.LookAt(entity.transform, Vector3.up);
                     }
                     break;
@@ -155,12 +153,12 @@ namespace Assets.Scripts.System
                     break;
                 case "goto":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var pathIndex = args.Dequeue().Value;
-                        var targetSpeed = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
+                        int pathIndex = args.Dequeue().Value;
+                        int targetSpeed = args.Dequeue().Value;
 
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
-                        var path = fsmRunner.FSM.Paths[pathIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
 
                         Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
@@ -174,17 +172,16 @@ namespace Assets.Scripts.System
                     break;
                 case "isWithinNav":
                     {
-                        var pathIndex = args.Dequeue().Value;
-                        var entityIndex = args.Dequeue().Value;
-                        var distance = args.Dequeue().Value;
+                        int pathIndex = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
+                        int distance = args.Dequeue().Value;
 
-                        var path = fsmRunner.FSM.Paths[pathIndex];
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                             
                         Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
                         {
-                            // NOTE: Despite the action name 'IsWithinNav', it looks like it should return 0 when true, on comparing results with the original game.
                             bool within = car.IsWithinNav(path, distance);
                             return within ? 1 : 0;
                         }
@@ -194,12 +191,12 @@ namespace Assets.Scripts.System
                     break;
                 case "isWithinSqNav":
                     {
-                        var pathIndex = args.Dequeue().Value;
-                        var entityIndex = args.Dequeue().Value;
-                        var distance = args.Dequeue().Value;
+                        int pathIndex = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
+                        int distance = args.Dequeue().Value;
 
-                        var path = fsmRunner.FSM.Paths[pathIndex];
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
                         Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
@@ -213,15 +210,15 @@ namespace Assets.Scripts.System
                     break;
                 case "follow":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var targetIndex = args.Dequeue().Value;
-                        var unk1 = args.Dequeue().Value;
-                        var unk2 = args.Dequeue().Value;
-                        var xOffset = args.Dequeue().Value;
-                        var targetSpeed = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
+                        int targetIndex = args.Dequeue().Value;
+                        int unk1 = args.Dequeue().Value;
+                        int unk2 = args.Dequeue().Value;
+                        int xOffset = args.Dequeue().Value;
+                        int targetSpeed = args.Dequeue().Value;
 
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
-                        var targetEntity = fsmRunner.FSM.EntityTable[targetIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMEntity targetEntity = fsmRunner.FSM.EntityTable[targetIndex];
 
                         Car car = entity.Object.GetComponent<Car>();
                         Car targetCar = targetEntity.Object.GetComponent<Car>();
@@ -236,8 +233,8 @@ namespace Assets.Scripts.System
                     break;
                 case "isAtFollow":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        int entityIndex = args.Dequeue().Value;
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
                         Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
@@ -251,14 +248,14 @@ namespace Assets.Scripts.System
                     break;
                 case "teleport":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var pathIndex = args.Dequeue().Value;
-                        var targetSpeed = args.Dequeue().Value;
-                        var height = args.Dequeue().Value;
-                        
-                        var path = fsmRunner.FSM.Paths[pathIndex];
-                       
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        int entityIndex = args.Dequeue().Value;
+                        int pathIndex = args.Dequeue().Value;
+                        int targetSpeed = args.Dequeue().Value;
+                        int height = args.Dequeue().Value;
+
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
+
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
                         Vector3 nodePos = path.GetWorldPosition(0);
                         nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
@@ -277,9 +274,9 @@ namespace Assets.Scripts.System
                     break;
                 case "isArrived":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var origoEntity = fsmRunner.FSM.EntityTable[entityIndex];
-                        var entity = origoEntity.Object;
+                        int entityIndex = args.Dequeue().Value;
+                        FSMEntity origoEntity = fsmRunner.FSM.EntityTable[entityIndex];
+                        GameObject entity = origoEntity.Object;
 
                         Car car = entity.GetComponent<Car>();
                         if (car != null)
@@ -298,8 +295,8 @@ namespace Assets.Scripts.System
                     break;
                 case "sit":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        int entityIndex = args.Dequeue().Value;
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
                         Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
@@ -313,11 +310,11 @@ namespace Assets.Scripts.System
                     break;
                 case "setAvoid":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var avoidIndex = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
+                        int avoidIndex = args.Dequeue().Value;
 
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
-                        var avoidEntity = fsmRunner.FSM.EntityTable[avoidIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMEntity avoidEntity = fsmRunner.FSM.EntityTable[avoidIndex];
 
                         Car car = entity.Object.GetComponent<Car>();
                         WorldEntity target = avoidEntity.WorldEntity;
@@ -332,10 +329,10 @@ namespace Assets.Scripts.System
                     break;
                 case "setMaxAttackers":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var maxAttackers = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
+                        int maxAttackers = args.Dequeue().Value;
 
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
                         if (entity.WorldEntity != null)
                         {
@@ -348,11 +345,11 @@ namespace Assets.Scripts.System
                     break;
                 case "setSkill":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var skill1 = args.Dequeue().Value;
-                        var skill2 = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
+                        int skill1 = args.Dequeue().Value;
+                        int skill2 = args.Dequeue().Value;
 
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                         Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
                         {
@@ -366,10 +363,10 @@ namespace Assets.Scripts.System
                     break;
                 case "setAgg":
                     {
-                        var entityIndex = args.Dequeue().Value;
-                        var aggressionValue = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
+                        int aggressionValue = args.Dequeue().Value;
 
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                         Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
                         {
@@ -382,9 +379,9 @@ namespace Assets.Scripts.System
                     break;
                 case "isAttacked":
                     {
-                        var entityIndex = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
 
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                         Car car = entity.Object.GetComponent<Car>();
                         if (car != null)
                         {
@@ -396,9 +393,9 @@ namespace Assets.Scripts.System
                     break;
                 case "isDead":
                     {
-                        var entityIndex = args.Dequeue().Value;
+                        int entityIndex = args.Dequeue().Value;
 
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
                         if (entity.WorldEntity != null)
                         {
                             return entity.WorldEntity.Alive ? 0 : 1;
@@ -408,13 +405,13 @@ namespace Assets.Scripts.System
                     }
                     break;
                 case "isWithin":
-                    { 
-                        var entityIndex = args.Dequeue().Value;
-                        var targetIndex = args.Dequeue().Value;
-                        var distance = args.Dequeue().Value;
-                        
-                        var entity = fsmRunner.FSM.EntityTable[entityIndex];
-                        var target = fsmRunner.FSM.EntityTable[targetIndex];
+                    {
+                        int entityIndex = args.Dequeue().Value;
+                        int targetIndex = args.Dequeue().Value;
+                        int distance = args.Dequeue().Value;
+
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
+                        FSMEntity target = fsmRunner.FSM.EntityTable[targetIndex];
 
                         bool within = Vector3.Distance(entity.Object.transform.position, target.Object.transform.position) < distance;
                         return within ? 1 : 0;
@@ -449,7 +446,7 @@ namespace Assets.Scripts.System
                         return RadioManager.Instance.IsQueueEmpty() ? 1 : 0;
                     }
                 case "startTimer":
-                    var timerIndex = args.Dequeue().Value;
+                    int timerIndex = args.Dequeue().Value;
                     fsmRunner.Timers[timerIndex] = Time.unscaledTime;
                     break;
                 default:

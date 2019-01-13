@@ -1,7 +1,7 @@
-﻿using Assets.Scripts.CarSystems;
+﻿using Assets.Scripts.Entities;
 using UnityEngine;
 
-namespace Assets.Scripts.Entities
+namespace Assets.Scripts
 {
     public class Projectile : MonoBehaviour
     {

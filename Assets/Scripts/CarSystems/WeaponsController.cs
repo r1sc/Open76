@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Assets.Fileparsers;
-using Assets.Scripts.CarSystems.UI;
+using Assets.Scripts.CarSystems.Components;
+using Assets.Scripts.CarSystems.Ui;
 using Assets.Scripts.Entities;
-using Assets.System;
+using Assets.Scripts.System;
+using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
 
-namespace Assets.Scripts.CarSystems.Components
+namespace Assets.Scripts.CarSystems
 {
     public class WeaponsController
     {

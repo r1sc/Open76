@@ -1,6 +1,5 @@
-﻿using Assets.Fileparsers;
-using Assets.Scripts.System;
-using Assets.System;
+﻿using Assets.Scripts.System;
+using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
 
 namespace Assets.Scripts.CarSystems.Components
