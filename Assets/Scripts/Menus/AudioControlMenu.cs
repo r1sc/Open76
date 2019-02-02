@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.XR;
 
-namespace Assets.Menus
+namespace Assets.Scripts.Menus
 {
-    class AudioControlMenu : IMenu
+    internal class AudioControlMenu : IMenu
     {
         private MenuController _menuController;
 

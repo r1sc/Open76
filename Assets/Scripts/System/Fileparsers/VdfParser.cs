@@ -1,10 +1,7 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.System;
-using Assets.Scripts.System.Fileparsers;
-using Assets.System;
 using UnityEngine;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public class WheelLoc
     {
@@ -32,7 +29,7 @@ namespace Assets.Fileparsers
         public Vector3 Position { get; set; }
         public float Unk { get; set; }
         public uint HardpointIndex { get; set; }
-        public uint Num1 { get; set; }
+        public uint FacingDirection { get; set; }
         public HardpointMeshType MeshType { get; set; }
     }
 
@@ -94,11 +91,9 @@ namespace Assets.Fileparsers
     {
         public static Vdf ParseVdf(string filename)
         {
-            using (var br = new Bwd2Reader(filename))
+            using (Bwd2Reader br = new Bwd2Reader(filename))
             {
-                var vdf = new Vdf();
-                br.FindNext("REV");
-
+                Vdf vdf = new Vdf();
                 br.FindNext("VDFC");
                 
                 vdf.Name = br.ReadCString(20);
@@ -125,7 +120,7 @@ namespace Assets.Fileparsers
                 br.FindNext("VLOC");
                 while (br.Current != null && br.Current.Name != "EXIT")
                 {
-                    var vloc = new VLoc
+                    VLoc vloc = new VLoc
                     {
                         Number = br.ReadUInt32(),
                         Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
@@ -139,14 +134,14 @@ namespace Assets.Fileparsers
                 }
                 
                 br.FindNext("VGEO");
-                var numParts = br.ReadUInt32();
+                uint numParts = br.ReadUInt32();
                 vdf.PartsThirdPerson = new List<SdfPart[]>(4);
                 for (int damageState = 0; damageState < 4; damageState++)
                 {
-                    var parts = new SdfPart[numParts];
+                    SdfPart[] parts = new SdfPart[numParts];
                     for (int i = 0; i < numParts; i++)
                     {
-                        var sdfPart = new SdfPart();
+                        SdfPart sdfPart = new SdfPart();
                         sdfPart.Name = br.ReadCString(8);
                         sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                         sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
@@ -164,7 +159,7 @@ namespace Assets.Fileparsers
                 vdf.PartsFirstPerson = new SdfPart[numParts];
                 for (int i = 0; i < numParts; i++)
                 {
-                    var sdfPart = new SdfPart();
+                    SdfPart sdfPart = new SdfPart();
                     sdfPart.Name = br.ReadCString(8);
                     sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
@@ -178,26 +173,26 @@ namespace Assets.Fileparsers
 
                 br.FindNext("COLP");
 
-                var zMaxOuter = br.ReadSingle();
-                var zMaxInner = br.ReadSingle();
-                var zMinInner = br.ReadSingle();
-                var zMinOuter = br.ReadSingle();
+                float zMaxOuter = br.ReadSingle();
+                float zMaxInner = br.ReadSingle();
+                float zMinInner = br.ReadSingle();
+                float zMinOuter = br.ReadSingle();
 
-                var xMaxOuter = br.ReadSingle();
-                var xMaxInner = br.ReadSingle();
-                var xMinInner = br.ReadSingle();
-                var xMinOuter = br.ReadSingle();
+                float xMaxOuter = br.ReadSingle();
+                float xMaxInner = br.ReadSingle();
+                float xMinInner = br.ReadSingle();
+                float xMinOuter = br.ReadSingle();
 
-                var yMaxOuter = br.ReadSingle();
-                var yMaxInner = br.ReadSingle();
-                var yMinInner = br.ReadSingle();
-                var yMinOuter = br.ReadSingle();
-                
-                var innerBounds = new Bounds();
+                float yMaxOuter = br.ReadSingle();
+                float yMaxInner = br.ReadSingle();
+                float yMinInner = br.ReadSingle();
+                float yMinOuter = br.ReadSingle();
+
+                Bounds innerBounds = new Bounds();
                 innerBounds.SetMinMax(new Vector3(xMinInner, yMinInner, zMinInner), new Vector3(xMaxInner, yMaxInner, zMaxInner));
                 vdf.BoundsInner = innerBounds;
 
-                var outerBounds = new Bounds();
+                Bounds outerBounds = new Bounds();
                 outerBounds.SetMinMax(new Vector3(xMinOuter, yMinOuter, zMinOuter), new Vector3(xMaxOuter, yMaxOuter, zMaxOuter));
                 vdf.BoundsOuter = outerBounds;
 
@@ -205,24 +200,24 @@ namespace Assets.Fileparsers
                 vdf.WheelLoc = new WheelLoc[6];
                 for (int i = 0; i < 6; i++)
                 {
-                    var wheelLoc = vdf.WheelLoc[i] = new WheelLoc();
-                    var unk1 = br.ReadUInt32();
+                    WheelLoc wheelLoc = vdf.WheelLoc[i] = new WheelLoc();
+                    uint unk1 = br.ReadUInt32();
                     wheelLoc.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     wheelLoc.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     wheelLoc.Forward = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     wheelLoc.Position = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
-                    var unk2 = br.ReadSingle();
+                    float unk2 = br.ReadSingle();
                 }
 
                 vdf.HLocs = new List<HLoc>();
                 br.FindNext("HLOC");
                 while (br.Current != null && br.Current.Name != "EXIT")
                 {
-                    var hloc = new HLoc
+                    HLoc hloc = new HLoc
                     {
                         Label = br.ReadCString(16),
                         HardpointIndex = br.ReadUInt32(),
-                        Num1 = br.ReadUInt32(),
+                        FacingDirection = br.ReadUInt32(),
                         MeshType = (HardpointMeshType)br.ReadUInt32(),
                         Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),
                         Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle()),

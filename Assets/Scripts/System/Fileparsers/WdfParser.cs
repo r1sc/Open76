@@ -1,12 +1,6 @@
-﻿using Assets.System;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public class Wdf
     {
@@ -25,13 +19,13 @@ namespace Assets.Fileparsers
         public SdfPart[] Parts { get; set; }
     }
 
-    class WdfParser
+    internal class WdfParser
     {
         public static Wdf ParseWdf(string filename)
         {
-            using (var br = new Bwd2Reader(filename))
+            using (Bwd2Reader br = new Bwd2Reader(filename))
             {
-                var wdf = new Wdf();
+                Wdf wdf = new Wdf();
 
                 br.FindNext("WDFC");
                 wdf.Name = br.ReadCString(20);
@@ -49,11 +43,11 @@ namespace Assets.Fileparsers
                 wdf.Radius = br.ReadSingle();
 
                 br.FindNext("WGEO");
-                var numParts = br.ReadUInt32();
+                uint numParts = br.ReadUInt32();
                 wdf.Parts = new SdfPart[numParts];
                 for (int i = 0; i < numParts; i++)
                 {
-                    var sdfPart = new SdfPart();
+                    SdfPart sdfPart = new SdfPart();
                     sdfPart.Name = br.ReadCString(8);
                     sdfPart.Right = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());
                     sdfPart.Up = new Vector3(br.ReadSingle(), br.ReadSingle(), br.ReadSingle());

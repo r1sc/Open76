@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using Assets.Scripts.I76Types;
 using UnityEngine;
 
@@ -7,22 +6,29 @@ namespace Assets.Scripts.System
 {
     public class FSMRunner : MonoBehaviour
     {
+        private static FSMRunner _instance;
+        public static FSMRunner Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<FSMRunner>();
+                }
+
+                return _instance;
+            }
+        }
+
         public float[] Timers { get; set; }
-        public float FPSDelay = 0.5f; // Run twice every second
-        private float _nextUpdate = 0;
 
         public FSM FSM;
         private FSMActionDelegator _actionDelegator;
-
-        private void Start()
+        
+        private void Awake()
         {
             Timers = new float[10];
             _actionDelegator = new FSMActionDelegator();
-        }
-
-        public void Update()
-        {
-
         }
 
         private void OnDrawGizmos()
@@ -51,49 +57,48 @@ namespace Assets.Scripts.System
                 return;
             }
 
-            var currentMachineIndex = 0;
+            int currentMachineIndex = 0;
             while (currentMachineIndex < FSM.StackMachines.Length)
             {
-                var machine = FSM.StackMachines[currentMachineIndex];
+                StackMachine machine = FSM.StackMachines[currentMachineIndex];
                 if (machine.Halted || (Step(machine) == StepResult.DoNextMachine))
                 {
                     currentMachineIndex++;
                 }
             }
         }
-
+        
         private StepResult Step(StackMachine machine)
         {
-            var byteCode = FSM.ByteCode[machine.IP++];
+            ByteCode byteCode = FSM.ByteCode[machine.IP++];
             switch (byteCode.OpCode)
             {
                 case OpCode.PUSH:
-                    machine.Stack.Push(byteCode.Value);
+                    machine.Stack.Push(new IntRef(byteCode.Value));
                     break;
                 case OpCode.ARGPUSH_S:
-                    var sVal = machine.Stack[byteCode.Value - 1];
+                    IntRef sVal = machine.Stack[byteCode.Value - 1];
 
                     machine.ArgumentQueue.Enqueue(sVal);
                     break;
                 case OpCode.ARGPUSH_B:
-                    var idx = machine.Constants.Length + (byteCode.Value + 1);
-                    var bVal = machine.Constants[idx];
-
+                    int idx = machine.Constants.Length + (byteCode.Value + 1);
+                    IntRef bVal = machine.Constants[idx];
                     machine.ArgumentQueue.Enqueue(bVal);
                     break;
                 case OpCode.ADJUST:
-                    var addToSP = byteCode.Value;
+                    int addToSP = byteCode.Value;
 
                     if (addToSP < 1)
                         throw new NotImplementedException("What to do when adjusting 0 or negative values?");
 
                     for (int i = 0; i < addToSP; i++)
                     {
-                        machine.Stack.Push(0);
+                        machine.Stack.Push(new IntRef(0));
                     }
                     break;
                 case OpCode.DROP:
-                    var subFromSP = byteCode.Value;
+                    int subFromSP = byteCode.Value;
 
                     if (subFromSP < 0)
                         throw new NotImplementedException("Expecting positive values");
@@ -117,17 +122,19 @@ namespace Assets.Scripts.System
                     machine.Halted = true;
                     return StepResult.DoNextMachine;
                 case OpCode.ACTION:
-                    var actionName = FSM.ActionTable[byteCode.Value];
-
+                    string actionName = FSM.ActionTable[byteCode.Value];
                     machine.ResultReg = _actionDelegator.DoAction(actionName, machine, this);
-                    if(machine.ArgumentQueue.Count != 0)
-                    {
-                        int hej = 2;
-                    }
                     machine.ArgumentQueue.Clear();
                     break;
                 case OpCode.NEG:
-                    machine.ResultReg = -machine.ResultReg; // Verify
+                    if (machine.ResultReg == 1)
+                    {
+                        machine.ResultReg = 0;
+                    }
+                    else
+                    {
+                        machine.ResultReg = 1;
+                    }
                     break;
                 default:
                     throw new NotImplementedException("Unimplemented bytecode " + byteCode.OpCode);
@@ -136,7 +143,7 @@ namespace Assets.Scripts.System
             return StepResult.NotDone;
         }
 
-        enum StepResult
+        private enum StepResult
         {
             NotDone,
             DoNextMachine

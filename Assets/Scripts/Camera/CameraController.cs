@@ -1,15 +1,15 @@
-﻿using Assets.Scripts.Camera;
-using Assets.Scripts.Car;
+﻿using Assets.Scripts.CarSystems;
+using Assets.Scripts.Entities;
 using UnityEngine;
 using UnityEngine.XR;
 
-namespace Assets
+namespace Assets.Scripts.Camera
 {
     [RequireComponent(typeof(SmoothFollow))]
     public class CameraController : MonoBehaviour
     {
         private SmoothFollow _smoothFollow;
-        private CarController _player;
+        private Car _player;
 
         public bool FirstPerson { get; private set; }
 
@@ -21,13 +21,13 @@ namespace Assets
         }
 
         // Use this for initialization
-        void Start()
+        private void Start()
         {
             _smoothFollow = GetComponent<SmoothFollow>();
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
             if (!CameraManager.Instance.IsMainCameraActive)
             {
@@ -39,7 +39,7 @@ namespace Assets
                 Transform target = _smoothFollow.Target;
                 if (target != null)
                 {
-                    _player = target.GetComponent<CarController>();
+                    _player = target.GetComponent<Car>();
                 }
             }
             else
@@ -101,7 +101,7 @@ namespace Assets
 
             if (FirstPerson)
             {
-                var targetRotation = Quaternion.Euler(-14, 0, 0);
+                Quaternion targetRotation = Quaternion.Euler(-14, 0, 0);
                 if (Input.GetKey(KeyCode.Keypad6))
                     targetRotation = Quaternion.Euler(-14, 90, 0);
                 else if (Input.GetKey(KeyCode.Keypad2))

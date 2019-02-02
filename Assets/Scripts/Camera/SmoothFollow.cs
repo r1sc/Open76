@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Assets
+namespace Assets.Scripts.Camera
 {
-    class SmoothFollow : MonoBehaviour
+    internal class SmoothFollow : MonoBehaviour
     {
         /*
         This camera smoothes out rotation around the y-axis and height.
@@ -28,31 +24,30 @@ namespace Assets
         // How much we 
         public float HeightDamping = 2.0f;
         public float RotationDamping = 3.0f;
-
-
-        void LateUpdate()
+        
+        private void LateUpdate()
         {
             // Early out if we don't have a target
             if (!Target)
                 return;
 
             // Calculate the current rotation angles
-            var wantedRotationAngle = Target.eulerAngles.y;
-            var wantedHeight = Target.position.y + Height;
-            var currentRotationAngle = transform.eulerAngles.y;
-            var currentHeight = transform.position.y;
+            float wantedRotationAngle = Target.eulerAngles.y;
+            float wantedHeight = Target.position.y + Height;
+            float currentRotationAngle = transform.eulerAngles.y;
+            float currentHeight = transform.position.y;
             // Damp the rotation around the y-axis
             currentRotationAngle = Mathf.LerpAngle(currentRotationAngle, wantedRotationAngle, RotationDamping * Time.deltaTime);
             // Damp the height
             currentHeight = Mathf.Lerp(currentHeight, wantedHeight, HeightDamping * Time.deltaTime);
             // Convert the angle into a rotation
-            var currentRotation = Quaternion.Euler(0, currentRotationAngle, 0);
+            Quaternion currentRotation = Quaternion.Euler(0, currentRotationAngle, 0);
             // Set the position of the camera on the x-z plane to:
             // distance meters behind the target
             transform.position = Target.position;
             transform.position -= currentRotation * Vector3.forward * Distance;
             // Set the height of the camera
-            var pos = transform.position;
+            Vector3 pos = transform.position;
 
             pos.y = currentHeight;
             transform.position = pos;

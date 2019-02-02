@@ -1,27 +1,29 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using Assets.Fileparsers;
-using UnityEngine;
 using System.IO;
-using Assets.Scripts.Car;
+using System.Linq;
+using Assets.Scripts.CarSystems;
+using Assets.Scripts.Entities;
+using Assets.Scripts.System.Fileparsers;
+using UnityEngine;
 
-namespace Assets.System
+namespace Assets.Scripts.System
 {
-    class CacheManager : MonoBehaviour
+    internal class CacheManager
     {
-        public string GamePath;
-        public GameObject _3DObjectPrefab;
-        public GameObject NoColliderPrefab;
-        public RaySusp SteerWheelPrefab;
-        public RaySusp DriveWheelPrefab;
-        public GameObject CarBodyPrefab;
-        public CarController CarPrefab;
-        public Color32[] Palette;
+        public GameObject ProjectilePrefab { get; private set; }
+        public Color32[] Palette { get; set; }
+
+        private readonly GameObject _3DObjectPrefab;
+        private readonly GameObject _noColliderPrefab;
+        private readonly RaySusp _steerWheelPrefab;
+        private readonly RaySusp _driveWheelPrefab;
+        private readonly GameObject _carBodyPrefab;
+        private readonly Car _carPrefab;
         
-        private Material _colorMaterialPrefab;
-        private Material _textureMaterialPrefab;
-        private Material _transparentMaterialPrefab;
-        private Material _carMirrorMaterialPrefab;
+        private readonly Material _colorMaterialPrefab;
+        private readonly Material _textureMaterialPrefab;
+        private readonly Material _transparentMaterialPrefab;
+        private readonly Material _carMirrorMaterialPrefab;
 
         private readonly string[] _bannedNames =
         {
@@ -32,19 +34,34 @@ namespace Assets.System
             "51RTC1"
         };
 
-        private static readonly Dictionary<string, GeoMeshCacheEntry> _meshCache = new Dictionary<string, GeoMeshCacheEntry>();
-        private readonly Dictionary<string, GameObject> _sdfCache = new Dictionary<string, GameObject>();
+        private static CacheManager _instance;
+        public static CacheManager Instance
+        {
+            get { return _instance ?? (_instance = new CacheManager()); }
+        }
+
+        private static readonly Dictionary<string, GeoMeshCacheEntry> MeshCache = new Dictionary<string, GeoMeshCacheEntry>();
+        private readonly Dictionary<string, Sdf> _sdfCache = new Dictionary<string, Sdf>();
         private readonly Dictionary<string, Material> _materialCache = new Dictionary<string, Material>();
 
-        void Start()
+
+        private CacheManager()
         {
             _colorMaterialPrefab = Resources.Load<Material>("Materials/AlphaMaterial");
             _textureMaterialPrefab = Resources.Load<Material>("Materials/TextureMaterial");
             _transparentMaterialPrefab = Resources.Load<Material>("Materials/AlphaMaterial");
             _carMirrorMaterialPrefab = Resources.Load<Material>("Materials/CarMirror");
 
-            VirtualFilesystem.Instance.Init(GamePath);
-            _materialCache["default"] = Instantiate(_textureMaterialPrefab);
+            ProjectilePrefab = Resources.Load<GameObject>("Prefabs/ProjectilePrefab");
+            _3DObjectPrefab = Resources.Load<GameObject>("Prefabs/ObjectPrefab");
+            _noColliderPrefab = Resources.Load<GameObject>("Prefabs/NoColliderPrefab");
+            _steerWheelPrefab = Resources.Load<RaySusp>("Prefabs/SteerWheelPrefab");
+            _driveWheelPrefab = Resources.Load<RaySusp>("Prefabs/DriveWheelPrefab");
+            _carBodyPrefab = Resources.Load<GameObject>("Prefabs/CarBodyPrefab");
+            _carPrefab = Resources.Load<Car>("Prefabs/CarPrefab");
+
+            VirtualFilesystem.Instance.Init();
+            _materialCache["default"] = Object.Instantiate(_textureMaterialPrefab);
             Palette = ActPaletteParser.ReadActPalette("p02.act");
         }
 
@@ -98,7 +115,7 @@ namespace Assets.System
 
         public Texture2D GetTexture(string textureName)
         {
-            var filename = Path.GetFileNameWithoutExtension(textureName);
+            string filename = Path.GetFileNameWithoutExtension(textureName);
             Texture2D texture = null;
             if (VirtualFilesystem.Instance.FileExists(filename + ".vqm"))
             {
@@ -119,8 +136,8 @@ namespace Assets.System
         {
             if (!_materialCache.ContainsKey(textureName))
             {
-                var texture = GetTexture(textureName);
-                var material = Instantiate(transparent ? _transparentMaterialPrefab : _textureMaterialPrefab);
+                Texture2D texture = GetTexture(textureName);
+                Material material = Object.Instantiate(transparent ? _transparentMaterialPrefab : _textureMaterialPrefab);
                 material.mainTexture = texture ?? Texture2D.blackTexture;
                 material.name = textureName;
                 _materialCache[textureName] = material;
@@ -134,7 +151,7 @@ namespace Assets.System
             if (_materialCache.ContainsKey(materialName))
                 return _materialCache[materialName];
 
-            var material = Instantiate(_colorMaterialPrefab);
+            Material material = Object.Instantiate(_colorMaterialPrefab);
             material.color = color;
             _materialCache[materialName] = material;
 
@@ -146,7 +163,7 @@ namespace Assets.System
 
             if (geoFace.TextureName != null)
             {
-                var textureName = Path.GetFileNameWithoutExtension(geoFace.TextureName);
+                string textureName = Path.GetFileNameWithoutExtension(geoFace.TextureName);
                 if (vtf != null && textureName[0] == 'V')
                 {
                     if (textureName.EndsWithFast("BO DY"))
@@ -155,42 +172,39 @@ namespace Assets.System
                     }
                     else
                     {
-                        var key = textureName.Substring(1).Replace(" ", "").Replace("LF", "LT") + ".TMT";
+                        string key = textureName.Substring(1).Replace(" ", "").Replace("LF", "LT") + ".TMT";
 
-                        Tmt tmt;
-                        if (vtf.Tmts.TryGetValue(key, out tmt))
+                        if (vtf.Tmts.TryGetValue(key, out Tmt tmt))
                         {
                             textureName = tmt.TextureNames[textureGroup];
                         }
                     }
                 }
                 return GetTextureMaterial(textureName, geoFace.SurfaceFlags2 == 5 || geoFace.SurfaceFlags2 == 7);
-                //Debug.Log(geoFace.TextureName + "color=" + geoFace.Color + " flag1=" + geoFace.SurfaceFlags1 + " flag2=" + geoFace.SurfaceFlags2, mat);
             }
             return GetColorMaterial("color" + geoFace.Color, geoFace.Color);
         }
 
-        class GeoMeshCacheEntry
+        public class GeoMeshCacheEntry
         {
             public GeoMesh GeoMesh { get; set; }
             public Mesh Mesh { get; set; }
             public Material[] Materials { get; set; }
         }
 
-        private GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf, int textureGroup)
+        public GeoMeshCacheEntry ImportMesh(string filename, Vtf vtf, int textureGroup)
         {
-            GeoMeshCacheEntry cacheEntry;
-            if (_meshCache.TryGetValue(filename, out cacheEntry))
+            if (MeshCache.TryGetValue(filename, out GeoMeshCacheEntry cacheEntry))
             {
                 return cacheEntry;
             }
 
-            var geoMesh = GeoParser.ReadGeoMesh(filename);
+            GeoMesh geoMesh = GeoParser.ReadGeoMesh(filename);
 
-            var mesh = new Mesh();
-            var vertices = new List<Vector3>();
-            var uvs = new List<Vector2>();
-            var normals = new List<Vector3>();
+            Mesh mesh = new Mesh();
+            List<Vector3> vertices = new List<Vector3>();
+            List<Vector2> uvs = new List<Vector2>();
+            List<Vector3> normals = new List<Vector3>();
             
             Dictionary<Material, List<GeoFace>> facesGroupedByMaterial = new Dictionary<Material, List<GeoFace>>();
             GeoFace[] faces = geoMesh.Faces;
@@ -198,8 +212,7 @@ namespace Assets.System
             {
                 Material material = GetMaterial(faces[i], vtf, textureGroup);
 
-                List<GeoFace> faceGroup;
-                if (facesGroupedByMaterial.TryGetValue(material, out faceGroup))
+                if (facesGroupedByMaterial.TryGetValue(material, out List<GeoFace> faceGroup))
                 {
                     faceGroup.Add(faces[i]);
                 }
@@ -213,22 +226,22 @@ namespace Assets.System
             }
 
             mesh.subMeshCount = facesGroupedByMaterial.Count;
-            var submeshTriangles = new Dictionary<Material, List<int>>();
-            foreach (var faceGroup in facesGroupedByMaterial)
+            Dictionary<Material, List<int>> submeshTriangles = new Dictionary<Material, List<int>>();
+            foreach (KeyValuePair<Material, List<GeoFace>> faceGroup in facesGroupedByMaterial)
             {
                 submeshTriangles[faceGroup.Key] = new List<int>();
                 List<GeoFace> faceGroupValues = faceGroup.Value;
-                foreach (var face in faceGroupValues)
+                foreach (GeoFace face in faceGroupValues)
                 {
-                    var numTriangles = face.VertexRefs.Length - 3 + 1;
-                    var viStart = vertices.Count;
-                    foreach (var vertexRef in face.VertexRefs)
+                    int numTriangles = face.VertexRefs.Length - 3 + 1;
+                    int viStart = vertices.Count;
+                    foreach (GeoVertexRef vertexRef in face.VertexRefs)
                     {
                         vertices.Add(geoMesh.Vertices[vertexRef.VertexIndex]);
                         normals.Add(geoMesh.Normals[vertexRef.VertexIndex] * -1);
                         uvs.Add(vertexRef.Uv);
                     }
-                    for (var t = 1; t <= numTriangles; t++)
+                    for (int t = 1; t <= numTriangles; t++)
                     {
                         submeshTriangles[faceGroup.Key].Add(viStart + t);
                         submeshTriangles[faceGroup.Key].Add(viStart);
@@ -240,8 +253,8 @@ namespace Assets.System
             mesh.SetVertices(vertices);
             mesh.SetUVs(0, uvs);
             mesh.SetNormals(normals);
-            var subMeshIndex = 0;
-            foreach (var submeshTriangle in submeshTriangles)
+            int subMeshIndex = 0;
+            foreach (KeyValuePair<Material, List<int>> submeshTriangle in submeshTriangles)
             {
                 mesh.SetTriangles(submeshTriangles[submeshTriangle.Key], subMeshIndex++);
             }
@@ -253,26 +266,26 @@ namespace Assets.System
                 Mesh = mesh,
                 Materials = facesGroupedByMaterial.Select(x => x.Key).ToArray()
             };
-            _meshCache.Add(filename, cacheEntry);
+            MeshCache.Add(filename, cacheEntry);
 
             return cacheEntry;
         }
 
         public GameObject ImportGeo(string filename, Vtf vtf, GameObject prefab, int textureGroup)
         {
-            var meshCacheEntry = ImportMesh(filename, vtf, textureGroup);
+            GeoMeshCacheEntry meshCacheEntry = ImportMesh(filename, vtf, textureGroup);
 
-            var obj = Instantiate(prefab);
+            GameObject obj = Object.Instantiate(prefab);
             obj.SetActive(false);
             obj.gameObject.name = meshCacheEntry.GeoMesh.Name;
 
-            var meshFilter = obj.GetComponent<MeshFilter>();
+            MeshFilter meshFilter = obj.GetComponent<MeshFilter>();
             if (meshFilter != null)
             {
                 meshFilter.sharedMesh = meshCacheEntry.Mesh;
                 obj.GetComponent<MeshRenderer>().materials = meshCacheEntry.Materials;
             }
-            var collider = obj.GetComponent<MeshCollider>();
+            MeshCollider collider = obj.GetComponent<MeshCollider>();
             if (collider != null)
                 collider.sharedMesh = meshCacheEntry.Mesh;
 
@@ -281,8 +294,7 @@ namespace Assets.System
 
         private bool TryGetMaskTexture(string filename, out Texture2D maskTexture)
         {
-            GeoMeshCacheEntry cacheEntry;
-            if (_meshCache.TryGetValue(filename, out cacheEntry))
+            if (MeshCache.TryGetValue(filename, out GeoMeshCacheEntry cacheEntry))
             {
                 foreach (GeoFace face in cacheEntry.GeoMesh.Faces)
                 {
@@ -298,67 +310,88 @@ namespace Assets.System
             return false;
         }
 
-        public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation)
+        private GameObject LoadSdfPart(SdfPart sdfPart, Transform parent)
         {
-            if (_sdfCache.ContainsKey(filename))
+            string geoFilename = sdfPart.Name + ".geo";
+            if (!VirtualFilesystem.Instance.FileExists(geoFilename))
             {
-                var obj = Instantiate(_sdfCache[filename], parent);
-                obj.transform.localPosition = localPosition;
-                obj.transform.localRotation = rotation;
-                return obj;
+                Debug.LogWarning("File does not exist: " + geoFilename);
+                return null;
             }
 
-            var sdf = SdfObjectParser.LoadSdf(filename);
+            GameObject partObj = ImportGeo(geoFilename, null, _3DObjectPrefab, 0);
+            partObj.transform.parent = parent;
+            partObj.transform.localPosition = sdfPart.Position;
+            partObj.transform.localRotation = Quaternion.identity;
+            return partObj;
+        }
 
-            var sdfObject = new GameObject(sdf.Name);
+        public GameObject ImportSdf(string filename, Transform parent, Vector3 localPosition, Quaternion rotation, bool canWreck, out Sdf sdf, out GameObject wreckedPart)
+        {
+            wreckedPart = null;
+            sdf = null;
+
+            if (!_sdfCache.TryGetValue(filename, out sdf))
+            {
+                sdf = SdfObjectParser.LoadSdf(filename, canWreck);
+                _sdfCache.Add(filename, sdf);
+            }
+
+            GameObject sdfObject = new GameObject(sdf.Name);
             sdfObject.transform.parent = parent;
             sdfObject.transform.localPosition = localPosition;
             sdfObject.transform.rotation = rotation;
 
-            var partDict = new Dictionary<string, GameObject> { { "WORLD", sdfObject } };
+            Dictionary<string, GameObject> partDict = new Dictionary<string, GameObject> { { "WORLD", sdfObject } };
 
-            foreach (var sdfPart in sdf.Parts)
+            foreach (SdfPart sdfPart in sdf.Parts)
             {
-                var geoFilename = sdfPart.Name + ".geo";
-                if (!VirtualFilesystem.Instance.FileExists(geoFilename))
+                GameObject partObj = LoadSdfPart(sdfPart, partDict[sdfPart.ParentName].transform);
+                if (partObj == null)
                 {
-                    Debug.LogWarning("File does not exist: " + geoFilename);
                     continue;
                 }
-
-                var partObj = ImportGeo(geoFilename, null, _3DObjectPrefab, 0);
-                partObj.transform.parent = partDict[sdfPart.ParentName].transform;
-                partObj.transform.localPosition = sdfPart.Position;
-                partObj.transform.localRotation = Quaternion.identity;
+                
                 partObj.SetActive(true);
                 partDict.Add(sdfPart.Name, partObj);
             }
 
-            _sdfCache.Add(filename, sdfObject);
+            if (canWreck && sdf.WreckedPart != null)
+            {
+                wreckedPart = LoadSdfPart(sdf.WreckedPart, partDict[sdf.WreckedPart.ParentName].transform);
+                if (wreckedPart != null)
+                {
+                    wreckedPart.SetActive(false);
+                    Rigidbody rigidBody = sdfObject.AddComponent<Rigidbody>();
+                    rigidBody.isKinematic = true;
+                }
+            }
+
             return sdfObject;
         }
 
         public GameObject ImportVcf(string filename, bool importFirstPerson, out Vdf vdf)
         {
-            var vcf = VcfParser.ParseVcf(filename);
+            Vcf vcf = VcfParser.ParseVcf(filename);
             vdf = VdfParser.ParseVdf(vcf.VdfFilename);
-            var vtf = VtfParser.ParseVtf(vcf.VtfFilename);
+            Vtf vtf = VtfParser.ParseVtf(vcf.VtfFilename);
 
-            var carObject = Instantiate(CarPrefab); //ImportGeo(vdf.SOBJGeoName + ".geo", vtf, CarPrefab.gameObject).GetComponent<ArcadeCar>();
+            Car carObject = Object.Instantiate(_carPrefab);
+            carObject.Configure(vdf, vcf);
             carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
 
-            foreach (var vLoc in vdf.VLocs)
+            foreach (VLoc vLoc in vdf.VLocs)
             {
-                var vlocGo = new GameObject("VLOC");
+                GameObject vlocGo = new GameObject("VLOC");
                 vlocGo.transform.parent = carObject.transform;
                 vlocGo.transform.localRotation = Quaternion.LookRotation(vLoc.Forward, vLoc.Up);
                 vlocGo.transform.localPosition = vLoc.Position;
             }
 
-            var chassis = new GameObject("Chassis");
+            GameObject chassis = new GameObject("Chassis");
             chassis.transform.parent = carObject.transform;
 
-            var thirdPerson = new GameObject("ThirdPerson");
+            GameObject thirdPerson = new GameObject("ThirdPerson");
             thirdPerson.transform.parent = chassis.transform;
 
             Transform[] weaponMountTransforms = new Transform[vdf.HLocs.Count];
@@ -372,47 +405,39 @@ namespace Assets.System
                 weaponMountTransforms[i] = mountPoint;
             }
 
-            
+            Dictionary<string, GameObject> partDict = new Dictionary<string, GameObject>();
+
             for (int i = 0; i < vdf.PartsThirdPerson.Count; ++i)
             {
                 GameObject healthObject = new GameObject("Health " + i);
                 healthObject.transform.SetParent(thirdPerson.transform);
-                ImportCarParts(healthObject, vtf, vdf.PartsThirdPerson[i], NoColliderPrefab, false, false, i);
+                ImportCarParts(partDict, healthObject, vtf, vdf.PartsThirdPerson[i], _noColliderPrefab, false, false, i);
                 if (i != 0)
                 {
                     healthObject.SetActive(false);
                 }
             }
 
-            if (importFirstPerson)
-            {
-                var firstPerson = new GameObject("FirstPerson");
-                firstPerson.transform.parent = chassis.transform;
-                ImportCarParts(firstPerson, vtf, vdf.PartsFirstPerson, NoColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
-
-                carObject.InitPanels(vcf);
-                firstPerson.SetActive(false);
-            }
-
-            var meshFilters = thirdPerson.GetComponentsInChildren<MeshFilter>();
-            var bounds = new Bounds();
+            MeshFilter[] meshFilters = thirdPerson.GetComponentsInChildren<MeshFilter>();
+            Bounds bounds = new Bounds();
             bounds.SetMinMax(Vector3.one * float.MaxValue, Vector3.one * float.MinValue);
-            foreach (var meshFilter in meshFilters)
+            foreach (MeshFilter meshFilter in meshFilters)
             {
-                var min = Vector3.Min(bounds.min, meshFilter.transform.position + meshFilter.sharedMesh.bounds.min) - thirdPerson.transform.position;
-                var max = Vector3.Max(bounds.max, meshFilter.transform.position + meshFilter.sharedMesh.bounds.max) - thirdPerson.transform.position;
+                Vector3 min = Vector3.Min(bounds.min, meshFilter.transform.position + meshFilter.sharedMesh.bounds.min) - thirdPerson.transform.position;
+                Vector3 max = Vector3.Max(bounds.max, meshFilter.transform.position + meshFilter.sharedMesh.bounds.max) - thirdPerson.transform.position;
                 bounds.SetMinMax(min, max);
             }
 
-            var chassisCollider = new GameObject("ChassisColliders");
+            GameObject chassisCollider = new GameObject("ChassisColliders");
             chassisCollider.transform.parent = carObject.transform;
-            ImportCarParts(chassisCollider, vtf, vdf.PartsThirdPerson[0], CarBodyPrefab, true);
+            ImportCarParts(partDict, chassisCollider, vtf, vdf.PartsThirdPerson[0], _carBodyPrefab, true);
             
             for (int i = 0; i < vcf.Weapons.Count; ++i)
             {
-                VcfParser.VcfWeapon weapon = vcf.Weapons[i];
+                VcfWeapon weapon = vcf.Weapons[i];
                 int mountPoint = weapon.MountPoint;
                 HLoc hloc = vdf.HLocs[mountPoint];
+                weapon.RearFacing = hloc.FacingDirection == 2;
 
                 SdfPart[] partsArray;
                 switch (hloc.MeshType)
@@ -440,7 +465,8 @@ namespace Assets.System
                     weaponTransform.SetParent(weaponMountTransforms[i]);
                     weaponTransform.localPosition = Vector3.zero;
                     weaponTransform.localRotation = Quaternion.identity;
-                    ImportCarParts(weaponTransform.gameObject, vtf, partsArray, NoColliderPrefab, false);
+                    ImportCarParts(partDict, weaponTransform.gameObject, vtf, partsArray, _noColliderPrefab, false);
+                    weapon.Transform = weaponTransform;
 
                     // Disable depth test for 'inside' weapons, otherwise they are obscured.
                     if (hloc.MeshType == HardpointMeshType.Inside)
@@ -451,6 +477,10 @@ namespace Assets.System
                             weaponRenderer.sharedMaterial.shader = Shader.Find("Custom/CutOutWithoutZ");
                         }
                     }
+                }
+                else
+                {
+                    weapon.Transform = chassis.transform;
                 }
             }
 
@@ -467,19 +497,29 @@ namespace Assets.System
             RaySusp[] frontWheels = null;
             if (vcf.FrontWheelDef != null)
             {
-                frontWheels = CreateWheelPair("Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
+                frontWheels = CreateWheelPair(partDict, "Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
                 carObject.Movement.FrontWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
-                CreateWheelPair("Mid", 2, carObject.gameObject, vdf, vtf, vcf.MidWheelDef);
+                CreateWheelPair(partDict, "Mid", 2, carObject.gameObject, vdf, vtf, vcf.MidWheelDef);
             }
 
             RaySusp[] rearWheels = null;
             if (vcf.BackWheelDef != null)
             {
-                rearWheels = CreateWheelPair("Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
+                rearWheels = CreateWheelPair(partDict, "Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
                 carObject.Movement.RearWheels = rearWheels;
+            }
+            
+            if (importFirstPerson)
+            {
+                GameObject firstPerson = new GameObject("FirstPerson");
+                firstPerson.transform.parent = chassis.transform;
+                ImportCarParts(partDict, firstPerson, vtf, vdf.PartsFirstPerson, _noColliderPrefab, false, true, 0, LayerMask.NameToLayer("FirstPerson"));
+
+                carObject.InitPanels();
+                firstPerson.SetActive(false);
             }
 
             carObject.Movement.Initialise(chassis.transform, frontWheels, rearWheels);
@@ -487,18 +527,18 @@ namespace Assets.System
             return carObject.gameObject;
         }
 
-        private RaySusp[] CreateWheelPair(string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, Wdf wheelDef)
+        private RaySusp[] CreateWheelPair(Dictionary<string, GameObject> partDict, string placement, int wheelIndex, GameObject car, Vdf vdf, Vtf vtf, Wdf wheelDef)
         {
-            var wheel1Name = placement + "Right";
-            var wheel = Instantiate(placement == "Front" ? SteerWheelPrefab : DriveWheelPrefab, car.transform);
+            string wheel1Name = placement + "Right";
+            RaySusp wheel = Object.Instantiate(placement == "Front" ? _steerWheelPrefab : _driveWheelPrefab, car.transform);
             wheel.gameObject.name = wheel1Name;
             wheel.WheelRadius = wheelDef.Radius;  // This is not correct - find out where the radius is really stored
             wheel.SpringLength = wheelDef.Radius;
 
-            ImportCarParts(wheel.transform.Find("Mesh").gameObject, vtf, wheelDef.Parts, NoColliderPrefab, false);
+            ImportCarParts(partDict, wheel.transform.Find("Mesh").gameObject, vtf, wheelDef.Parts, _noColliderPrefab, false);
             wheel.transform.localPosition = vdf.WheelLoc[wheelIndex].Position;
 
-            var wheel2 = Instantiate(wheel, car.transform);
+            RaySusp wheel2 = Object.Instantiate(wheel, car.transform);
             wheel2.name = placement + "Left";
             wheel2.transform.localPosition = vdf.WheelLoc[wheelIndex + 1].Position;
             wheel2.transform.Find("Mesh").localScale = new Vector3(-1, 1, 1);
@@ -506,89 +546,117 @@ namespace Assets.System
             return new[] { wheel, wheel2 };
         }
 
-        private void ImportCarParts(GameObject parent, Vtf vtf, SdfPart[] sdfParts, GameObject prefab, bool justChassis, bool forgetParentPosition = false, int textureGroup = 0, int layerMask = 0)
+        private void LoadCarPart(SdfPart sdfPart, GameObject parent, Dictionary<string, GameObject> partDict, List<SdfPart> deferredParts, Vtf vtf, GameObject prefab, bool justChassis, bool forgetParentPosition, int textureGroup, int layerMask)
         {
-            var partDict = new Dictionary<string, GameObject> { { "WORLD", parent } };
+            if (sdfPart == null || sdfPart.Name == "NULL")
+                return;
 
-            foreach (var sdfPart in sdfParts)
+            if (_bannedNames.Any(b => sdfPart.Name.EndsWithFast(b)))
+                return;
+
+            GameObject parentObj;
+            if (sdfPart.ParentName == "WORLD")
             {
-                if (sdfPart == null || sdfPart.Name == "NULL")
-                    continue;
-
-                if (_bannedNames.Any(b => sdfPart.Name.EndsWithFast(b)))
-                    continue;
-
-
-                if (justChassis && !(sdfPart.Name.Contains("BDY") || sdfPart.Name.EndsWithFast("CHAS")))
-                    continue;
-
-                var geoFilename = sdfPart.Name + ".geo";
-                if(!VirtualFilesystem.Instance.FileExists(geoFilename))
+                parentObj = parent;
+            }
+            else if (!partDict.TryGetValue(sdfPart.ParentName, out parentObj))
+            {
+                if (deferredParts != null)
                 {
-                    Debug.LogWarning("File does not exist: " + geoFilename);
-                    continue;
+                    deferredParts.Add(sdfPart);
+                    return;
                 }
 
-                var partObj = ImportGeo(geoFilename, vtf, prefab, textureGroup);
+                Debug.Log("Cant find parent '" + sdfPart.ParentName + "' for '" + sdfPart.Name + "'");
+                parentObj = parent;
+            }
 
-                var parentName = sdfPart.ParentName;
-                if (!partDict.ContainsKey(parentName))
-                {
-                    Debug.Log("Cant find parent '" + sdfPart.ParentName + "' for '" + sdfPart.Name + "'");
-                    parentName = "WORLD";
-                }
+            if (justChassis && !(sdfPart.Name.Contains("BDY") || sdfPart.Name.EndsWithFast("CHAS")))
+                return;
 
-                Transform partTransform = partObj.transform;
-                if (!forgetParentPosition)
-                    partTransform.SetParent(partDict[parentName].transform);
-                partTransform.right = sdfPart.Right;
-                partTransform.up = sdfPart.Up;
-                partTransform.forward = sdfPart.Forward;
-                partTransform.localPosition = sdfPart.Position;
-                partTransform.localRotation = Quaternion.identity;
-                if (forgetParentPosition)
-                    partTransform.parent = partDict[parentName].transform;
-                partObj.SetActive(true);
+            string geoFilename = sdfPart.Name + ".geo";
+            if (!VirtualFilesystem.Instance.FileExists(geoFilename))
+            {
+                Debug.LogWarning("File does not exist: " + geoFilename);
+                return;
+            }
+
+            GameObject partObj = ImportGeo(geoFilename, vtf, prefab, textureGroup);
+            
+            Transform partTransform = partObj.transform;
+            if (!forgetParentPosition)
+                partTransform.SetParent(parentObj.transform);
+            partTransform.right = sdfPart.Right;
+            partTransform.up = sdfPart.Up;
+            partTransform.forward = sdfPart.Forward;
+            partTransform.localPosition = sdfPart.Position;
+            partTransform.localRotation = Quaternion.identity;
+            if (forgetParentPosition)
+                partTransform.parent = parentObj.transform;
+            partObj.SetActive(true);
+
+            if (partDict.ContainsKey(sdfPart.Name))
+            {
+                partDict[sdfPart.Name] = partObj;
+            }
+            else
+            {
                 partDict.Add(sdfPart.Name, partObj);
+            }
+            
 
-                if (layerMask != 0)
-                {
-                    partObj.layer = layerMask;
-                }
+            if (layerMask != 0)
+            {
+                partObj.layer = layerMask;
+            }
 
-                // Special case for mirrors.
-                Texture2D maskTexture;
-                if (sdfPart.Name.Contains("MIRI") && TryGetMaskTexture(geoFilename, out maskTexture))
-                {
-                    RenderTexture renderTexture = new RenderTexture(256, 128, 24);
+            // Special case for mirrors.
+            if (sdfPart.Name.Contains("MIRI") && TryGetMaskTexture(geoFilename, out Texture2D maskTexture))
+            {
+                RenderTexture renderTexture = new RenderTexture(256, 128, 24);
 
-                    GameObject mirrorCameraObj = Instantiate(partObj);
-                    Transform mirrorObjTransform = mirrorCameraObj.transform;
-                    mirrorObjTransform.SetParent(partObj.transform);
-                    mirrorObjTransform.localPosition = Vector3.zero;
-                    mirrorObjTransform.localRotation = Quaternion.identity;
+                GameObject mirrorCameraObj = Object.Instantiate(partObj);
+                Transform mirrorObjTransform = mirrorCameraObj.transform;
+                mirrorObjTransform.SetParent(partObj.transform);
+                mirrorObjTransform.localPosition = Vector3.zero;
+                mirrorObjTransform.localRotation = Quaternion.identity;
 
-                    Material mirrorMaterial = Instantiate(_carMirrorMaterialPrefab);
-                    MeshRenderer meshRenderer = partObj.transform.GetComponent<MeshRenderer>();
-                    mirrorMaterial.mainTexture = meshRenderer.material.mainTexture;
-                    mirrorMaterial.SetTexture("_MaskTex", maskTexture);
-                    meshRenderer.material = mirrorMaterial;
+                Material mirrorMaterial = Object.Instantiate(_carMirrorMaterialPrefab);
+                MeshRenderer meshRenderer = partObj.transform.GetComponent<MeshRenderer>();
+                mirrorMaterial.mainTexture = meshRenderer.material.mainTexture;
+                mirrorMaterial.SetTexture("_MaskTex", maskTexture);
+                meshRenderer.material = mirrorMaterial;
 
-                    GameObject cameraPivotObj = new GameObject("Camera Pivot");
-                    Camera mirrorCamera = cameraPivotObj.AddComponent<Camera>();
-                    mirrorCamera.cullingMask = ~LayerMask.GetMask("FirstPerson");
-                    mirrorCamera.targetTexture = renderTexture;
-                    Transform pivotTransform = cameraPivotObj.transform;
-                    pivotTransform.SetParent(mirrorObjTransform);
-                    pivotTransform.localPosition = Vector3.zero;
-                    pivotTransform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                GameObject cameraPivotObj = new GameObject("Camera Pivot");
+                UnityEngine.Camera mirrorCamera = cameraPivotObj.AddComponent<UnityEngine.Camera>();
+                mirrorCamera.cullingMask = ~LayerMask.GetMask("FirstPerson");
+                mirrorCamera.targetTexture = renderTexture;
+                Transform pivotTransform = cameraPivotObj.transform;
+                pivotTransform.SetParent(mirrorObjTransform);
+                pivotTransform.localPosition = Vector3.zero;
+                pivotTransform.localRotation = Quaternion.Euler(0f, 180f, 0f);
 
-                    Material cameraMaterial = Instantiate(_carMirrorMaterialPrefab);
-                    cameraMaterial.mainTexture = renderTexture;
-                    MeshRenderer mirrorRenderer = mirrorCameraObj.GetComponent<MeshRenderer>();
-                    cameraMaterial.SetTexture("_MaskTex", maskTexture);
-                    mirrorRenderer.material = cameraMaterial;
-                }
+                Material cameraMaterial = Object.Instantiate(_carMirrorMaterialPrefab);
+                cameraMaterial.mainTexture = renderTexture;
+                MeshRenderer mirrorRenderer = mirrorCameraObj.GetComponent<MeshRenderer>();
+                cameraMaterial.SetTexture("_MaskTex", maskTexture);
+                mirrorRenderer.material = cameraMaterial;
+            }
+        }
+
+        private void ImportCarParts(Dictionary<string, GameObject> partDict, GameObject parent, Vtf vtf, SdfPart[] sdfParts, GameObject prefab, bool justChassis, bool forgetParentPosition = false, int textureGroup = 0, int layerMask = 0)
+        {
+            List<SdfPart> deferredParts = new List<SdfPart>();
+
+            foreach (SdfPart sdfPart in sdfParts)
+            {
+                LoadCarPart(sdfPart, parent, partDict, deferredParts, vtf, prefab, justChassis, forgetParentPosition, textureGroup, layerMask);
+            }
+
+            int deferredPartCount = deferredParts.Count;
+            for (int i = 0; i < deferredPartCount; ++i)
+            {
+                LoadCarPart(deferredParts[i], parent, partDict, null, vtf, prefab, justChassis, forgetParentPosition, textureGroup, layerMask);
             }
         }
 
@@ -596,7 +664,7 @@ namespace Assets.System
         {
             _materialCache.Clear();
             _sdfCache.Clear();
-            _meshCache.Clear();
+            MeshCache.Clear();
         }
     }
 }

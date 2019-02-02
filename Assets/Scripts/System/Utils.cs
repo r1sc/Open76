@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.System
+namespace Assets.Scripts.System
 {
-    static class Utils
+    internal static class Utils
     {
+        private static readonly int TerrainlayerMask = LayerMask.GetMask("Terrain");
+
         public static Vector3 GetPlaneNormal(Vector3 a, Vector3 b, Vector3 c)
         {
             Vector3 AB = b - a;
@@ -12,6 +14,15 @@ namespace Assets.System
 
             //Calculate the normal
             return Vector3.Normalize(Vector3.Cross(AB, AC));
+        }
+
+        public static void PlayIfNotAlreadyPlaying(this AudioSource audioSource, AudioClip clip)
+        {
+            if (!audioSource.isPlaying)
+            {
+                audioSource.clip = clip;
+                audioSource.Play();
+            }
         }
 
         public static bool EndsWithFast(this string text, string subText)
@@ -56,14 +67,37 @@ namespace Assets.System
             rayPoint.y = 1000f;
             rayPoint.z = z;
 
-            RaycastHit hitInfo;
-            if (Physics.Raycast(new Ray(rayPoint, Vector3.down), out hitInfo, LayerMask.GetMask("Terrain")))
+            if (Physics.Raycast(new Ray(rayPoint, Vector3.down), out RaycastHit hitInfo, TerrainlayerMask))
             {
                 return hitInfo.point.y;
             }
 
             Debug.Log("Failed to raycast against terrain.");
             return 0.0f;
+        }
+
+        public static float DistanceFromPointToLine(Vector2 lineStart, Vector2 lineEnd, Vector2 point)
+        {
+            Vector2 pointVector = point - lineStart;
+            Vector2 lineVector = lineEnd - lineStart;
+
+            float lineSqrDistance = lineVector.sqrMagnitude;
+            float product = Vector2.Dot(pointVector, lineVector);
+            float distance = product / lineSqrDistance;
+
+            if (distance < 0)
+            {
+                return Vector2.Distance(lineStart, point);
+
+            }
+
+            if (distance > 1)
+            {
+                return Vector2.Distance(lineEnd, point);
+            }
+
+            Vector2 linePoint = lineStart + lineVector * distance;
+            return Vector2.Distance(linePoint, point);
         }
     }
 }

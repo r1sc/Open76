@@ -1,35 +1,30 @@
-﻿using Assets.System;
-using System;
+﻿using Assets.Scripts.System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace Assets.Menus
+namespace Assets.Scripts.Menus
 {
     public class MenuController : MonoBehaviour
     {
-
         public Button MenuButtonPrefab;
         public Transform BlankSeparatorPrefab;
 
         public VerticalLayoutGroup Items;
         public RawImage Background;
-        private CacheManager _cacheManager;
         private CanvasGroup _canvasGroup;
 
         private IMenu _currentMenu;
 
         // Use this for initialization
-        void Start()
+        private void Awake()
         {
-            _cacheManager = FindObjectOfType<CacheManager>();
-
             _canvasGroup = GetComponent<CanvasGroup>();
             _canvasGroup.alpha = 0;
         }
 
         // Update is called once per frame
-        void Update()
+        private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape))
             {
@@ -62,13 +57,13 @@ namespace Assets.Menus
 
         public void Redraw()
         {
-            var menuDefinition = _currentMenu.BuildMenu(this);
+            MenuDefinition menuDefinition = _currentMenu.BuildMenu(this);
 
-            var texture = _cacheManager.GetTexture(menuDefinition.BackgroundFilename);
+            Texture2D texture = CacheManager.Instance.GetTexture(menuDefinition.BackgroundFilename);
             Background.texture = texture;
             Background.rectTransform.sizeDelta = new Vector2(texture.width, texture.height);
 
-            var selectedIndex = EventSystem.current.currentSelectedGameObject == null ? 0 : EventSystem.current.currentSelectedGameObject.transform.GetSiblingIndex();
+            int selectedIndex = EventSystem.current.currentSelectedGameObject == null ? 0 : EventSystem.current.currentSelectedGameObject.transform.GetSiblingIndex();
 
             foreach (Transform child in Items.transform)
             {
@@ -77,11 +72,11 @@ namespace Assets.Menus
 
             for (int i = 0; i < menuDefinition.MenuItems.Length; i++)
             {
-                var menuItem = menuDefinition.MenuItems[i];
+                MenuItem menuItem = menuDefinition.MenuItems[i];
                 if (menuItem is MenuButton)
                 {
-                    var menuButton = menuItem as MenuButton;
-                    var button = Instantiate(MenuButtonPrefab, Items.transform);
+                    MenuButton menuButton = menuItem as MenuButton;
+                    Button button = Instantiate(MenuButtonPrefab, Items.transform);
                     button.transform.Find("TextContainer").GetComponentInChildren<Text>().text = menuButton.Text;
                     button.transform.Find("Value").GetComponent<Text>().text = menuButton.Value;
                     button.onClick.AddListener(new UnityEngine.Events.UnityAction(menuButton.OnClick));

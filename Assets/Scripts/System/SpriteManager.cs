@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using Assets.Fileparsers;
-using Assets.System;
+using Assets.Scripts.System.Fileparsers;
 using UnityEngine;
 
 namespace Assets.Scripts.System
@@ -81,9 +80,7 @@ namespace Assets.Scripts.System
 
         public ReferenceImage LoadReferenceImage(string mapName)
         {
-            ETbl etbl;
-            Texture2D mapTexture;
-            if (!TryGetMapTexture(mapName, out mapTexture, out etbl))
+            if (!TryGetMapTexture(mapName, out Texture2D mapTexture, out ETbl etbl))
             {
                 return null;
             }
@@ -93,15 +90,12 @@ namespace Assets.Scripts.System
 
         public I76Sprite GetSprite(string mapName, string spriteName, int xOffset = 0, int yOffset = 0, bool addToCache = true)
         {
-            I76Sprite sprite;
-            if (addToCache && _sprites.TryGetValue(spriteName, out sprite))
+            if (addToCache && _sprites.TryGetValue(spriteName, out I76Sprite sprite))
             {
                 return sprite;
             }
-            
-            ETbl etbl;
-            Texture2D mapTexture;
-            if (!TryGetMapTexture(mapName, out mapTexture, out etbl))
+
+            if (!TryGetMapTexture(mapName, out Texture2D mapTexture, out ETbl etbl))
             {
                 return null;
             }
@@ -112,15 +106,29 @@ namespace Assets.Scripts.System
                 return null;
             }
 
-            ETbl.ETblItem item;
-            if (!etbl.Items.TryGetValue(spriteName, out item))
+            if (!etbl.Items.TryGetValue(spriteName, out ETbl.ETblItem item))
             {
                 Debug.LogErrorFormat("Sprite '{0}' does not exist in map '{1}'.", spriteName, mapName);
                 return null;
             }
 
+            int textureWidth = mapTexture.width;
+            int itemWidth = item.Width;
             int mapYOffset = Mathf.Clamp(mapTexture.height - item.Height - item.YOffset - item.Height * yOffset + 1, 0, mapTexture.height - item.Height);
-            Color[] pixels = mapTexture.GetPixels(item.XOffset + item.Width * xOffset, mapYOffset, item.Width, item.Height, 0);
+            Color32[] texturePixels = mapTexture.GetPixels32(0);
+            Color32[] pixels = new Color32[item.Width * item.Height];
+            int xStart = item.XOffset + item.Width * xOffset;
+            int yStart = mapYOffset;
+            int xEnd = xStart + item.Width;
+            int yEnd = yStart + item.Height;
+            for (int x = xStart; x < xEnd; ++x)
+            {
+                for (int y = yStart; y < yEnd; ++y)
+                {
+
+                    pixels[(y - yStart) * itemWidth + x - xStart] = texturePixels[y * textureWidth + x];
+                }
+            }
 
             sprite = new I76Sprite
             {
@@ -146,7 +154,7 @@ namespace Assets.Scripts.System
             }
 
             _vdf = vdf;
-            _cacheManager = Object.FindObjectOfType<CacheManager>();
+            _cacheManager = CacheManager.Instance;
 
             // Initialise with common sprites using more convenient names.
             _sprites = new Dictionary<string, I76Sprite>

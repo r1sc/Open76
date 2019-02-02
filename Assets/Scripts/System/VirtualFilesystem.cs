@@ -1,37 +1,35 @@
-﻿using Assets.System.Compression;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Assets.Scripts.System;
+using Assets.Scripts.System.Compression;
 using UnityEngine;
 
-namespace Assets.System
+namespace Assets.Scripts.System
 {
     public class VirtualFilesystem
     {
         private byte[] _zfsMemory;
 
         private static VirtualFilesystem _instance;
+        private readonly Game _game;
 
         public static VirtualFilesystem Instance
         {
             get { return _instance ?? (_instance = new VirtualFilesystem()); }
         }
-
-        public string Gamepath { get; private set; }
+        
         public string ZFSFilepath
         {
             get
             {
-                return Path.Combine(Gamepath, "I76.ZFS");
+                return Path.Combine(_game.GamePath, "I76.ZFS");
             }
         }
         private readonly Dictionary<string, ZFSFileInfo> _files = new Dictionary<string, ZFSFileInfo>();
 
         // ReSharper disable once InconsistentNaming
-        class ZFSFileInfo
+        private class ZFSFileInfo
         {
             public string Filename { get; set; }
             public uint Offset { get; set; }
@@ -42,34 +40,38 @@ namespace Assets.System
             public string ContainingPakFilename { get; set; }
         }
 
-        public void Init(string gamepath)
+        private VirtualFilesystem()
         {
-            Gamepath = gamepath;
+            _game = Game.Instance;
+        }
+
+        public void Init()
+        {
             _zfsMemory = File.ReadAllBytes(ZFSFilepath);
 
-            var pixFiles = new List<ZFSFileInfo>();
-            var br = new FastBinaryReader(_zfsMemory);
+            List<ZFSFileInfo> pixFiles = new List<ZFSFileInfo>();
+            FastBinaryReader br = new FastBinaryReader(_zfsMemory);
 
-            var magic = br.ReadCString(4);
+            string magic = br.ReadCString(4);
             if (magic != "ZFSF")
                 throw new Exception("Not an ZFS file");
-            var version = br.ReadUInt32();
+            uint version = br.ReadUInt32();
             if (version != 1)
                 throw new Exception("Only version 1 ZFS files supported");
-            var unk1 = br.ReadUInt32();
-            var numFilesInEachDirectory = br.ReadUInt32();
-            var numFilesTotal = br.ReadUInt32();
-            var unk2 = br.ReadUInt32();
-            var unk3 = br.ReadUInt32();
+            uint unk1 = br.ReadUInt32();
+            uint numFilesInEachDirectory = br.ReadUInt32();
+            uint numFilesTotal = br.ReadUInt32();
+            uint unk2 = br.ReadUInt32();
+            uint unk3 = br.ReadUInt32();
 
             while (true)
             {
-                var nextDirOffset = br.ReadUInt32();
+                uint nextDirOffset = br.ReadUInt32();
                 for (int fileIdx = 0; fileIdx < numFilesInEachDirectory; fileIdx++)
                 {
                     if (_files.Count == numFilesTotal)
                         break;
-                    var zfsFileInfo = new ZFSFileInfo();
+                    ZFSFileInfo zfsFileInfo = new ZFSFileInfo();
                     zfsFileInfo.Filename = br.ReadCString(16).ToLower();
                     zfsFileInfo.Offset = br.ReadUInt32();
                     zfsFileInfo.Id = br.ReadUInt32();
@@ -95,19 +97,19 @@ namespace Assets.System
 
             // Parse all .pix-files
             //var pakContents = new Dictionary<string, ZFSFileInfo>();
-            foreach (var pixFile in pixFiles)
+            foreach (ZFSFileInfo pixFile in pixFiles)
             {
-                using (var sr = GetDataStream(pixFile))
+                using (FastBinaryReader sr = GetDataStream(pixFile))
                 {
-                    var l = sr.ReadLine();
-                    var numFiles = int.Parse(l);
-                    for (var i = 0; i < numFiles; i++)
+                    string l = sr.ReadLine();
+                    int numFiles = int.Parse(l);
+                    for (int i = 0; i < numFiles; i++)
                     {
-                        var line = sr.ReadLine();
-                        var splitted = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        var filename = splitted[0].ToLower();
-                        var offset = uint.Parse(splitted[1]);
-                        var length = uint.Parse(splitted[2]);
+                        string line = sr.ReadLine();
+                        string[] splitted = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        string filename = splitted[0].ToLower();
+                        uint offset = uint.Parse(splitted[1]);
+                        uint length = uint.Parse(splitted[2]);
 
                         if (_files.ContainsKey(filename))
                             continue;
@@ -125,11 +127,11 @@ namespace Assets.System
 
         public void ExtractAllMW2(string path)
         {
-            var filename = Path.Combine(Gamepath, "DATABASE.MW2");
-            using (var br = new BinaryReader(new FileStream(filename, FileMode.Open)))
+            string filename = Path.Combine(_game.GamePath, "DATABASE.MW2");
+            using (BinaryReader br = new BinaryReader(new FileStream(filename, FileMode.Open)))
             {
-                var numFiles = br.ReadUInt32();
-                var offsets = new UInt32[numFiles];
+                uint numFiles = br.ReadUInt32();
+                uint[] offsets = new UInt32[numFiles];
 
                 for (int i = 0; i < numFiles; i++)
                 {
@@ -138,57 +140,29 @@ namespace Assets.System
 
                 for (int i = 0; i < offsets.Length; i++)
                 {
-                    var length = (i == (offsets.Length - 1)) ? br.BaseStream.Length - offsets[i] : offsets[i + 1] - offsets[i];
+                    long length = (i == (offsets.Length - 1)) ? br.BaseStream.Length - offsets[i] : offsets[i + 1] - offsets[i];
                     br.BaseStream.Seek(offsets[i], SeekOrigin.Begin);
-                    var buffer = new byte[length];
-                    var bytesRead = br.Read(buffer, 0, buffer.Length);
+                    byte[] buffer = new byte[length];
+                    int bytesRead = br.Read(buffer, 0, buffer.Length);
                     if (bytesRead != length)
                         throw new Exception("Wtf");
                     File.WriteAllBytes(Path.Combine(path, i.ToString()), buffer);
                 }
             }
         }
-        
-        public void FindStringReferencesInAllFiles(string searchString)
-        {
-            HashSet<string> fileMatches = new HashSet<string>();
-
-            searchString = searchString.ToUpper();
-            foreach (var zfsFileInfo in _files)
-            {
-                using (var stream = GetDataStream(zfsFileInfo.Value))
-                {
-                    var buf = stream.ReadBytes((int)zfsFileInfo.Value.Length);
-                    string dataAsText = Encoding.UTF8.GetString(buf);
-                    dataAsText = dataAsText.ToUpper();
-
-                    if (dataAsText.Contains(searchString))
-                    {
-                        fileMatches.Add(zfsFileInfo.Key);
-                    }
-                }
-            }
-
-            int matches = fileMatches.Count;
-            Debug.Log("string '" + searchString + "' found " + matches + " times.");
-            foreach (string filename in fileMatches)
-            {
-                Debug.Log(filename);
-            }
-        }
 
         public void ExtractAll(string path)
         {
-            foreach (var zfsFileInfo in _files)
+            foreach (KeyValuePair<string, ZFSFileInfo> zfsFileInfo in _files)
             {
-                using (var stream = GetDataStream(zfsFileInfo.Value))
+                using (FastBinaryReader stream = GetDataStream(zfsFileInfo.Value))
                 {
-                    var buf = stream.ReadBytes((int)zfsFileInfo.Value.Length);
+                    byte[] buf = stream.ReadBytes((int)zfsFileInfo.Value.Length);
                     File.WriteAllBytes(Path.Combine(path, zfsFileInfo.Value.Filename), buf);
                 }
             }
         }
-
+        
         public bool FileExists(string filename)
         {
             return _files.ContainsKey(filename.ToLower());
@@ -196,8 +170,7 @@ namespace Assets.System
 
         public AudioClip GetAudioClip(string filename)
         {
-            ZFSFileInfo fileInfo;
-            if (!_files.TryGetValue(filename.ToLower(), out fileInfo))
+            if (!_files.TryGetValue(filename.ToLower(), out ZFSFileInfo fileInfo))
             {
                 Debug.Log("File '" + filename + "' does not exist.");
                 return null;
@@ -215,16 +188,16 @@ namespace Assets.System
             string replacementFilePath;
             if (filename.EndsWithFast(".msn") || filename.EndsWithFast(".ter"))
             {
-                string missionDir = Path.Combine(Gamepath, "MISSIONS");
+                string missionDir = Path.Combine(_game.GamePath, "MISSIONS");
                 if (!Directory.Exists(missionDir))
                 {
-                    missionDir = Path.Combine(Gamepath, "miss8");
+                    missionDir = Path.Combine(_game.GamePath, "miss8");
                 }
                 replacementFilePath = Path.Combine(missionDir, filename);
             }
             else
             {
-                replacementFilePath = Path.Combine(Path.Combine(Gamepath, "ADDON"), filename);
+                replacementFilePath = Path.Combine(Path.Combine(_game.GamePath, "ADDON"), filename);
             }
 
             if (File.Exists(replacementFilePath))
@@ -233,8 +206,7 @@ namespace Assets.System
                 return new FastBinaryReader(data);
             }
 
-            ZFSFileInfo fileInfo;
-            if (_files.TryGetValue(filename.ToLower(), out fileInfo))
+            if (_files.TryGetValue(filename.ToLower(), out ZFSFileInfo fileInfo))
             {
                 return GetDataStream(fileInfo);
             }
@@ -276,7 +248,7 @@ namespace Assets.System
             else
                 throw new Exception("Unknown compression " + fileInfo.Compression);
 
-            var fileData = new byte[fileInfo.Length];
+            byte[] fileData = new byte[fileInfo.Length];
             Buffer.BlockCopy(_zfsMemory, (int)fileInfo.Offset, fileData, 0, fileData.Length);
 
             byte[] decompressedData = new byte[fileInfo.DecompressedLength];
@@ -285,14 +257,7 @@ namespace Assets.System
             {
                 throw new Exception("Decompressed length does not match expected decompressed length");
             }
-
-            /*byte[] testCompress = new byte[fileInfo.Length];
-            uint compLength = LZO.Compress(decompressedData, testCompress, fileInfo.Length, compressionAlgorithm);
-            if (compLength > 0 && compLength != fileInfo.Length)
-            {
-                throw new Exception("Compressed length does not match expected compressed length");
-            }*/
-
+            
             FastBinaryReader reader = new FastBinaryReader(decompressedData)
             {
                 Position = 0,

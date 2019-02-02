@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.XR;
 
-namespace Assets.Menus
+namespace Assets.Scripts.Menus
 {
-    class GraphicsMenu : IMenu
+    internal class GraphicsMenu : IMenu
     {
         private MenuController _menuController;
 
@@ -36,20 +33,20 @@ namespace Assets.Menus
 
         private string GetCurrentResolution()
         {
-            var current = Screen.currentResolution;
+            Resolution current = Screen.currentResolution;
             return current.width + "x" + current.height + "@" + current.refreshRate;
         }
 
         private string GetCurrentQuality()
         {
-            var level = QualitySettings.GetQualityLevel();
+            int level = QualitySettings.GetQualityLevel();
             return QualitySettings.names[level];
         }
 
         private void NextResolution()
         {
-            var nextIndex = (Array.IndexOf(Screen.resolutions, Screen.currentResolution) + 1) % Screen.resolutions.Length;
-            var newResolution = Screen.resolutions[nextIndex];
+            int nextIndex = (Array.IndexOf(Screen.resolutions, Screen.currentResolution) + 1) % Screen.resolutions.Length;
+            Resolution newResolution = Screen.resolutions[nextIndex];
             Screen.SetResolution(newResolution.width, newResolution.height, false, newResolution.refreshRate);
 
             _menuController.Redraw();
@@ -57,7 +54,7 @@ namespace Assets.Menus
 
         private void NextQuality()
         {
-            var nextLevel = (QualitySettings.GetQualityLevel() + 1) % QualitySettings.names.Length;
+            int nextLevel = (QualitySettings.GetQualityLevel() + 1) % QualitySettings.names.Length;
             QualitySettings.SetQualityLevel(nextLevel);
 
             _menuController.Redraw();

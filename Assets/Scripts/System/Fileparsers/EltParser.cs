@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Assets.Fileparsers;
-using Assets.System;
 using UnityEngine;
 
 namespace Assets.Scripts.System.Fileparsers
@@ -13,7 +11,7 @@ namespace Assets.Scripts.System.Fileparsers
         {
             List<ETbl> etblList = new List<ETbl>();
 
-            using (var br = VirtualFilesystem.Instance.GetFileStream(fileName))
+            using (FastBinaryReader br = VirtualFilesystem.Instance.GetFileStream(fileName))
             {
                 string eltText = Encoding.ASCII.GetString(br.Data, (int)br.Position, br.Length - (int)br.Position);
                 string[] lines = eltText.Split('\n');

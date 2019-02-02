@@ -1,11 +1,6 @@
-﻿using Assets.System;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace Assets.Fileparsers
+namespace Assets.Scripts.System.Fileparsers
 {
     public class Vtf
     {
@@ -21,7 +16,7 @@ namespace Assets.Fileparsers
         public List<string> TextureNames { get; set; }
     }
 
-    class VtfParser
+    internal class VtfParser
     {
 
         /*
@@ -76,8 +71,8 @@ namespace Assets.Fileparsers
 
         public static Vtf ParseVtf(string filename)
         {
-            var vtf = new Vtf();
-            using (var br = new Bwd2Reader(filename))
+            Vtf vtf = new Vtf();
+            using (Bwd2Reader br = new Bwd2Reader(filename))
             {
                 br.FindNext("VTFC");
 
@@ -99,38 +94,38 @@ namespace Assets.Fileparsers
             }
 
             vtf.Tmts = new Dictionary<string, Tmt>();
-            for (var tmtIdx = 0; tmtIdx < vtf.TmtFilenames.Length; tmtIdx++)
+            for (int tmtIdx = 0; tmtIdx < vtf.TmtFilenames.Length; tmtIdx++)
             {
-                var tmtFilename = vtf.TmtFilenames[tmtIdx];
+                string tmtFilename = vtf.TmtFilenames[tmtIdx];
                 if (tmtFilename != "NULL")
                 {
-                    using (var br = VirtualFilesystem.Instance.GetFileStream(tmtFilename))
+                    using (Scripts.System.FastBinaryReader br = VirtualFilesystem.Instance.GetFileStream(tmtFilename))
                     {
-                        var one = br.ReadUInt32();
-                        var zero1 = br.ReadUInt32();
-                        var zero2 = br.ReadUInt32();
-                        var zero3 = br.ReadUInt32();
-                        var zero4 = br.ReadUInt32();
-                        var two = br.ReadUInt32();
-                        var two2 = br.ReadUInt32();
-                        var four = br.ReadUInt32();
-                        var zero5 = br.ReadUInt32();
-                        var zero6 = br.ReadUInt32();
-                        var tenFloat = br.ReadSingle();
-                        var zero7 = br.ReadSingle();
-                        var zero8 = br.ReadSingle();
-                        var zero9 = br.ReadSingle();
-                        var zero10 = br.ReadSingle();
-                        var zero11 = br.ReadSingle();
+                        uint one = br.ReadUInt32();
+                        uint zero1 = br.ReadUInt32();
+                        uint zero2 = br.ReadUInt32();
+                        uint zero3 = br.ReadUInt32();
+                        uint zero4 = br.ReadUInt32();
+                        uint two = br.ReadUInt32();
+                        uint two2 = br.ReadUInt32();
+                        uint four = br.ReadUInt32();
+                        uint zero5 = br.ReadUInt32();
+                        uint zero6 = br.ReadUInt32();
+                        float tenFloat = br.ReadSingle();
+                        float zero7 = br.ReadSingle();
+                        float zero8 = br.ReadSingle();
+                        float zero9 = br.ReadSingle();
+                        float zero10 = br.ReadSingle();
+                        float zero11 = br.ReadSingle();
 
-                        var tmt = new Tmt
+                        Tmt tmt = new Tmt
                         {
                             TextureNames = new List<string>()
                         };
 
                         while(br.Position < br.Length)
                         {
-                            var textureName = br.ReadCString(8);
+                            string textureName = br.ReadCString(8);
                             tmt.TextureNames.Add(textureName);
                         }
                         vtf.Tmts.Add(tmtFilename.Substring(3), tmt);

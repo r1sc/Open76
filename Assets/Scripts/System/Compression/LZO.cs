@@ -1,8 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Assets.System.Compression
+namespace Assets.Scripts.System.Compression
 {
     public static class LZO
     {

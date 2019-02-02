@@ -1,13 +1,21 @@
 ﻿using Assets.Scripts.I76Types;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Assets.Scripts.Entities;
 using UnityEngine;
-using UnityEngine.VR;
 
 namespace Assets.Scripts.System
 {
+    public class IntRef
+    {
+        public int Value { get; set; }
+
+        public IntRef(int value)
+        {
+            Value = value;
+        }
+    }
+
     public class FSM
     {
         public string[] ActionTable { get; set; }
@@ -17,7 +25,7 @@ namespace Assets.Scripts.System
         public FSMPath[] Paths { get; set; }
 
         public StackMachine[] StackMachines { get; set; }
-        public int[] Constants { get; set; }
+        public IntRef[] Constants { get; set; }
         public ByteCode[] ByteCode { get; set; }
     }
 
@@ -27,6 +35,7 @@ namespace Assets.Scripts.System
         public string Value { get; set; }
         public int Id { get; set; }
         public GameObject Object { get; set; }
+        public WorldEntity WorldEntity { get; set; }
     }
     
     public enum OpCode : uint
@@ -64,24 +73,25 @@ namespace Assets.Scripts.System
     {
         public uint StartAddress { get; set; }
         public int[] InitialArguments { get; set; }
-        public int[] Constants { get; set; }
+        public IntRef[] Constants { get; set; }
 
         public uint IP { get; set; }
-        public IndexableStack<int> Stack { get; set; }
+        public IndexableStack<IntRef> Stack { get; set; }
         public int ResultReg { get; set; }
-        public Queue<int> ArgumentQueue { get; set; }
+        public Queue<IntRef> ArgumentQueue { get; set; }
         public bool Halted { get; set; }
 
         public void Reset()
         {
             IP = StartAddress;
-            Stack = new IndexableStack<int>();
-            ArgumentQueue = new Queue<int>();
+            Stack = new IndexableStack<IntRef>();
+            ArgumentQueue = new Queue<IntRef>();
             ResultReg = 0;
         }
     }
 
-    public class FSMPath {
+    public class FSMPath
+    {
         public string Name { get; set; }
         public I76Vector3[] Nodes { get; set; }
 
