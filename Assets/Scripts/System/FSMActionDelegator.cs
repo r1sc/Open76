@@ -85,7 +85,7 @@ namespace Assets.Scripts.System
                             break;
                         }
 
-                        UnityEngine.Camera camera = CameraManager.Instance.ActiveCamera;
+                        var camera = CameraManager.Instance.ActiveCamera;
                         IntRef whichEntity = args.Dequeue();
                         FSMEntity origoEntity = fsmRunner.FSM.EntityTable[whichEntity.Value];
                         GameObject entity = origoEntity.Object;
@@ -114,7 +114,7 @@ namespace Assets.Scripts.System
                             break;
                         }
 
-                        UnityEngine.Camera camera = CameraManager.Instance.ActiveCamera;
+                        var camera = CameraManager.Instance.ActiveCamera;
                         int pathIndex = args.Dequeue().Value;
                         int height = args.Dequeue().Value;
                         int watchTarget = args.Dequeue().Value;
@@ -145,12 +145,57 @@ namespace Assets.Scripts.System
                         FSMEntity anchorEntity = fsmRunner.FSM.EntityTable[objectIndex];
                         FSMEntity targetEntity = fsmRunner.FSM.EntityTable[watchTarget];
 
-                        UnityEngine.Camera camera = CameraManager.Instance.ActiveCamera;
+                        var camera = CameraManager.Instance.ActiveCamera;
                         camera.transform.SetParent(anchorEntity.Object.transform);
                         camera.transform.localPosition = new Vector3(xPos * 0.01f, zPos * 0.01f, yPos * 0.01f);
                         camera.transform.LookAt(targetEntity.Object.transform, Vector3.up);
                     }
                     break;
+                case "camTransObj":
+                    {
+                        if (CameraManager.Instance.IsMainCameraActive)
+                        {
+                            break;
+                        }
+                        
+                        var camera = CameraManager.Instance.ActiveCamera;
+                        int pathIndex = args.Dequeue().Value;
+                        int targetSpeed = args.Dequeue().Value;
+                        float height = args.Dequeue().Value * 0.01f;
+
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
+                        
+                        if (args.Count == 0)
+                        {
+                            Vector3 nodePos = path.GetWorldPosition(0);
+                            nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height;
+                            camera.transform.position = nodePos;
+                            break;
+                        }
+
+                        int watchTarget = args.Dequeue().Value;
+                        GameObject entity = fsmRunner.FSM.EntityTable[watchTarget].Object;
+                        camera.transform.LookAt(entity.transform, Vector3.up);
+                        camera.SetTargetPath(path, targetSpeed, height);
+                        
+                        
+                    }
+                    break;
+                case "camIsArrived":
+                    {
+                        if (CameraManager.Instance.IsMainCameraActive)
+                        {
+                            break;
+                        }
+
+                        var camera = CameraManager.Instance.ActiveCamera;
+                        if (camera.Arrived)
+                        {
+                            camera.Arrived = false;
+                            return 1;
+                        }
+                        return 0;
+                    }
                 case "goto":
                     {
                         int entityIndex = args.Dequeue().Value;
@@ -258,6 +303,34 @@ namespace Assets.Scripts.System
                         FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
 
                         Vector3 nodePos = path.GetWorldPosition(0);
+                        nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
+                        entity.Object.transform.position = nodePos;
+
+                        Car car = entity.Object.GetComponent<Car>();
+                        if (car != null)
+                        {
+                            car.SetSpeed(targetSpeed);
+                            car.SetTargetPath(path, targetSpeed);
+                            break;
+                        }
+
+                        LogUnhandledEntity(actionName, entityIndex, entity, machine);
+                    }
+                    break;
+                case "teleportOffset":
+                    {
+                        int entityIndex = args.Dequeue().Value;
+                        int pathIndex = args.Dequeue().Value;
+                        int targetSpeed = args.Dequeue().Value;
+                        int height = args.Dequeue().Value;
+                        var offsetX = args.Dequeue().Value;
+                        var offsetZ = args.Dequeue().Value;
+
+                        FSMPath path = fsmRunner.FSM.Paths[pathIndex];
+
+                        FSMEntity entity = fsmRunner.FSM.EntityTable[entityIndex];
+
+                        Vector3 nodePos = path.GetWorldPosition(0) + new Vector3(offsetX, 0, offsetZ);
                         nodePos.y = Utils.GroundHeightAtPoint(nodePos.x, nodePos.z) + height * 0.01f;
                         entity.Object.transform.position = nodePos;
 

@@ -5,7 +5,7 @@ namespace Assets.Scripts.Camera
 {
     public class CameraManager
     {
-        private readonly Stack<UnityEngine.Camera> _cameraStack;
+        private readonly Stack<FSMCamera> _cameraStack;
         private readonly GameObject _mainCameraObject;
         private bool _audioEnabled;
 
@@ -14,7 +14,7 @@ namespace Assets.Scripts.Camera
             get { return _mainCameraObject != null ? _mainCameraObject.GetComponent<UnityEngine.Camera>() : null; }
         }
 
-        public UnityEngine.Camera ActiveCamera
+        public FSMCamera ActiveCamera
         {
             get
             {
@@ -47,7 +47,7 @@ namespace Assets.Scripts.Camera
                 _audioEnabled = value;
                 if (_cameraStack.Count > 0)
                 {
-                    UnityEngine.Camera camera = _cameraStack.Peek();
+                    var camera = _cameraStack.Peek();
                     camera.GetComponent<AudioListener>().enabled = value;
                 }
                 else
@@ -64,8 +64,8 @@ namespace Assets.Scripts.Camera
 
         private CameraManager()
         {
-            _cameraStack = new Stack<UnityEngine.Camera>();
-            UnityEngine.Camera mainCamera = Object.FindObjectOfType<UnityEngine.Camera>();
+            _cameraStack = new Stack<FSMCamera>();
+            var mainCamera = Object.FindObjectOfType<FSMCamera>();
             _mainCameraObject = mainCamera.gameObject;
             _cameraStack.Push(mainCamera);
             _audioEnabled = true;
@@ -75,13 +75,13 @@ namespace Assets.Scripts.Camera
         {
             if (_cameraStack.Count > 0)
             {
-                UnityEngine.Camera camera = _cameraStack.Peek();
-                camera.enabled = false;
-                camera.GetComponent<AudioListener>().enabled = false;
+                var camera = _cameraStack.Peek();
+                camera.gameObject.SetActive(false);
             }
 
             GameObject newCameraObject = new GameObject("Stack Camera " + _cameraStack.Count);
-            UnityEngine.Camera newCamera = newCameraObject.AddComponent<UnityEngine.Camera>();
+            newCameraObject.AddComponent<UnityEngine.Camera>();
+            var newCamera = newCameraObject.AddComponent<FSMCamera>();
             newCameraObject.AddComponent<AudioListener>();
             _cameraStack.Push(newCamera);
         }
@@ -93,14 +93,13 @@ namespace Assets.Scripts.Camera
                 return;
             }
 
-            UnityEngine.Camera stackCamera = _cameraStack.Pop();
+            var stackCamera = _cameraStack.Pop();
             Object.Destroy(stackCamera.gameObject);
 
             if (_cameraStack.Count > 0)
             {
-                UnityEngine.Camera camera = _cameraStack.Peek();
-                camera.enabled = true;
-                camera.GetComponent<AudioListener>().enabled = _audioEnabled;
+                var camera = _cameraStack.Peek();
+                camera.gameObject.SetActive(false);
             }
         }
 
@@ -108,7 +107,7 @@ namespace Assets.Scripts.Camera
         {
             while (_cameraStack.Count > 0)
             {
-                UnityEngine.Camera stackCamera = _cameraStack.Pop();
+                var stackCamera = _cameraStack.Pop();
                 Object.Destroy(stackCamera.gameObject);
             }
 

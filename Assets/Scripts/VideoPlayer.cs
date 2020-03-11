@@ -100,7 +100,7 @@ namespace Assets.Scripts
             _outputTexture = new Texture2D(_width, _height, TextureFormat.RGB24, false)
             {
                 wrapMode = TextureWrapMode.Clamp,
-                filterMode = FilterMode.Point
+                filterMode = FilterMode.Bilinear
             };
 
             Debug.Log("Playing video '" + _fileName + "' - " + _width + "x" + _height + ", duration: " + (_frameCount * _secondsPerFrame) + " seconds.");

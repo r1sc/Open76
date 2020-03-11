@@ -129,6 +129,9 @@ namespace Assets.Scripts.System
         internal AudioClip GetMusicClip(int trackNo)
         {
             string filePath = Path.Combine(_game.GamePath, "music", trackNo + ".mp3");
+            if (!File.Exists(filePath))
+                return null;
+
             var reader = new AudioFileReader(filePath);
             var data = new float[reader.Length];
             reader.Read(data, 0, data.Length);
