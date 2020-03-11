@@ -14,7 +14,7 @@ namespace Assets.Scripts.CarSystems
         private const float RoadOffsetDistance = 2f;
 
         private readonly Car _controller;
-        private readonly CarPhysics _movement;
+        private readonly CarPhysics _carPhysics;
         private readonly Transform _transform;
         private readonly Rigidbody _rigidBody;
         private FSMPath _currentPath;
@@ -36,7 +36,7 @@ namespace Assets.Scripts.CarSystems
         {
             _controller = controller;
             _transform = _controller.transform;
-            _movement = controller.Movement;
+            _carPhysics = controller.GetComponent<CarPhysics>();
             _rigidBody = _controller.GetComponent<Rigidbody>();
             _worldTransform = GameObject.Find("World").transform;
         }
@@ -185,10 +185,10 @@ namespace Assets.Scripts.CarSystems
             }
 
             // Accelerate if we're going below the target speed.
-            _movement.Throttle = velocity < adjustedTargetSpeed ? 1.0f : 0.0f;
+            _carPhysics.Throttle = velocity < adjustedTargetSpeed ? 1.0f : 0.0f;
 
             // Brake if we're going too fast.
-            _movement.Brake = (velocity > adjustedTargetSpeed + 5.0f) ? 1.0f : 0.0f;
+            _carPhysics.Brake = (velocity > adjustedTargetSpeed + 5.0f) ? 1.0f : 0.0f;
 
             // Offset to right side of road.
             if (_followTarget == null)
@@ -214,7 +214,7 @@ namespace Assets.Scripts.CarSystems
             Vector3 segmentVector3D = new Vector3(segmentVector.x, 0.0f, segmentVector.y);
             float dot = Vector3.Dot(_transform.right, segmentVector3D) * SteeringSensitivity;
             _steerAngle = Mathf.SmoothDampAngle(_steerAngle, dot, ref _angleVelocity, 0.1f);
-            _movement.Steer = _steerAngle;
+            _carPhysics.Steer = _steerAngle;
 
             // Check if we've reached the next node in path.
             if (_followTarget == null)
@@ -306,7 +306,7 @@ namespace Assets.Scripts.CarSystems
                 _controller.Arrived = true;
                 _currentPath = null;
                 _currentRoad = null;
-                _movement.Throttle = 0.0f;
+                _carPhysics.Throttle = 0.0f;
             }
             else
             {

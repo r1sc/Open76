@@ -379,6 +379,7 @@ namespace Assets.Scripts.System
             Car carObject = Object.Instantiate(_carPrefab);
             carObject.Configure(vdf, vcf);
             carObject.gameObject.name = vdf.Name + " (" + vcf.VariantName + ")";
+            
 
             foreach (VLoc vLoc in vdf.VLocs)
             {
@@ -494,11 +495,12 @@ namespace Assets.Scripts.System
             //outerBox.center = vdf.BoundsOuter.center;
             //outerBox.size = vdf.BoundsOuter.size;
 
+            var carPhysics = carObject.GetComponent<CarPhysics>();
             RaySusp[] frontWheels = null;
             if (vcf.FrontWheelDef != null)
             {
                 frontWheels = CreateWheelPair(partDict, "Front", 0, carObject.gameObject, vdf, vtf, vcf.FrontWheelDef);
-                carObject.Movement.FrontWheels = frontWheels;
+                carPhysics.FrontWheels = frontWheels;
             }
             if (vcf.MidWheelDef != null)
             {
@@ -509,7 +511,7 @@ namespace Assets.Scripts.System
             if (vcf.BackWheelDef != null)
             {
                 rearWheels = CreateWheelPair(partDict, "Back", 4, carObject.gameObject, vdf, vtf, vcf.BackWheelDef);
-                carObject.Movement.RearWheels = rearWheels;
+                carPhysics.RearWheels = rearWheels;
             }
             
             if (importFirstPerson)
@@ -522,7 +524,7 @@ namespace Assets.Scripts.System
                 firstPerson.SetActive(false);
             }
 
-            carObject.Movement.Initialise(chassis.transform, frontWheels, rearWheels);
+            carPhysics.Initialise(chassis.transform, frontWheels, rearWheels);
             
             return carObject.gameObject;
         }

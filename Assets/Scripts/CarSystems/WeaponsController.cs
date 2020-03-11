@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts.CarSystems.Components;
 using Assets.Scripts.CarSystems.Ui;
@@ -96,6 +97,11 @@ namespace Assets.Scripts.CarSystems
             }
         }
 
+        internal void StopFiring()
+        {
+            _weaponAudio.Stop();
+        }
+
         public void CycleWeapon()
         {
             if (_weaponGroups.Count < 2)
@@ -172,7 +178,7 @@ namespace Assets.Scripts.CarSystems
 
         private void FireWeapon(Weapon weapon)
         {
-            GameObject projObj = Object.Instantiate(weapon.ProjectilePrefab, weapon.Transform.position, weapon.Transform.rotation);
+            GameObject projObj = UnityEngine.Object.Instantiate(weapon.ProjectilePrefab, weapon.Transform.position, weapon.Transform.rotation);
             Projectile projectile = projObj.GetComponent<Projectile>();
             projectile.Velocity = weapon.Gdf.BulletVelocity;
             projectile.Damage = weapon.Gdf.Damage;

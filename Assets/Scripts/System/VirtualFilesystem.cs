@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Assets.Scripts.System.Compression;
+using NAudio.Wave;
 using UnityEngine;
 
 namespace Assets.Scripts.System
@@ -123,6 +124,18 @@ namespace Assets.Scripts.System
                     }
                 }
             }
+        }
+
+        internal AudioClip GetMusicClip(int trackNo)
+        {
+            string filePath = Path.Combine(_game.GamePath, "music", trackNo + ".mp3");
+            var reader = new AudioFileReader(filePath);
+            var data = new float[reader.Length];
+            reader.Read(data, 0, data.Length);
+
+            var audioClip = AudioClip.Create(filePath, data.Length, reader.WaveFormat.Channels, reader.WaveFormat.SampleRate, false);
+            audioClip.SetData(data, 0);
+            return audioClip;
         }
 
         public void ExtractAllMW2(string path)

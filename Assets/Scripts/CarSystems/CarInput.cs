@@ -7,12 +7,12 @@ namespace Assets.Scripts.CarSystems
     internal class CarInput : MonoBehaviour
     {
         private Car _car;
-        private CarPhysics _movement;
+        private CarPhysics _carPhysics;
 
         private void Start()
         {
             _car = GetComponent<Car>();
-            _movement = _car.Movement;
+            _carPhysics = GetComponent<CarPhysics>();
         }
 
         private void Update()
@@ -69,41 +69,33 @@ namespace Assets.Scripts.CarSystems
             {
                 _car.WeaponsController.Fire(-1);
             }
-
-            // Fire weapon 1.
-            if (Input.GetKey(KeyCode.Alpha1))
+            else if (Input.GetKey(KeyCode.Alpha1)) // Fire weapon 1.
             {
                 _car.WeaponsController.Fire(0);
             }
-
-            // Fire weapon 2.
-            if (Input.GetKey(KeyCode.Alpha2))
+            else if (Input.GetKey(KeyCode.Alpha2)) // Fire weapon 2.
             {
                 _car.WeaponsController.Fire(1);
             }
-
-            // Fire weapon 3.
-            if (Input.GetKey(KeyCode.Alpha3))
+            else if (Input.GetKey(KeyCode.Alpha3)) // Fire weapon 3.
             {
                 _car.WeaponsController.Fire(2);
             }
-
-            // Fire weapon 4.
-            if (Input.GetKey(KeyCode.Alpha4))
+            else if (Input.GetKey(KeyCode.Alpha4)) // Fire weapon 4.
             {
                 _car.WeaponsController.Fire(3);
             }
-
-            // Fire weapon 5.
-            if (Input.GetKey(KeyCode.Alpha5))
+            else if (Input.GetKey(KeyCode.Alpha5)) // Fire weapon 5.
             {
                 _car.WeaponsController.Fire(4);
             }
-
-            // Fire special 1.
-            if (Input.GetKey(KeyCode.Alpha6))
+            else if (Input.GetKey(KeyCode.Alpha6)) // Fire special 1.
             {
                 _car.SpecialsController.Fire(0);
+            }
+            else
+            {
+                _car.WeaponsController.StopFiring();
             }
 
             // Fire special 2.
@@ -133,13 +125,13 @@ namespace Assets.Scripts.CarSystems
                 throttle = 0f;
             }
 
-            _movement.Throttle = throttle;
-            _movement.Brake = brake;
+            _carPhysics.Throttle = throttle;
+            _carPhysics.Brake = brake;
 
             float steering = Input.GetAxis("Horizontal");
-            _movement.Steer = steering;
+            _carPhysics.Steer = steering;
 
-            _movement.EBrake = Input.GetButton("E-brake");
+            _carPhysics.EBrake = Input.GetButton("E-brake");
             // _car.RearSlip = ebrake;
 
         }

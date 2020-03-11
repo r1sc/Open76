@@ -7,10 +7,10 @@ using Random = UnityEngine.Random;
 
 namespace Assets.Scripts.CarSystems
 {
-    public class CarPhysics
+    public class CarPhysics : MonoBehaviour
     {
         private const float AirTimeLandingTreshold = 0.75f;
-        private readonly Rigidbody _rigidbody;
+        private Rigidbody _rigidbody;
 
         public float Throttle;
         public float Brake;
@@ -29,7 +29,7 @@ namespace Assets.Scripts.CarSystems
         public float SteerAngle;
         public float CorneringStiffnessFront = -5f;
         public float CorneringStiffnessRear = -5.2f;
-        public float MaxGrip = 4f;
+        public float MaxGrip = 8f;
 
         public float EngineMaxTorque;
         public float RPM;
@@ -58,16 +58,12 @@ namespace Assets.Scripts.CarSystems
         private AudioClip _landingAudioClip1;
         private AudioClip _landingAudioClip2;
         private CacheManager _cacheManager;
-        private readonly GameObject _gameObject;
 
-        private readonly Transform _transform;
         private bool _ready;
 
-        public CarPhysics(Car controller)
+        private void Start()
         {
-            _transform = controller.transform;
-            _rigidbody = controller.GetComponent<Rigidbody>();
-            _gameObject = controller.gameObject;
+            _rigidbody = GetComponent<Rigidbody>();
         }
 
         public void Initialise(Transform chassisTransform, RaySusp[] frontWheels, RaySusp[] rearWheels)
@@ -81,7 +77,7 @@ namespace Assets.Scripts.CarSystems
             _heightRatio = 2.0f / (_b + _c);
 
             _cacheManager = CacheManager.Instance;
-            _landingAudioSource = _gameObject.AddComponent<AudioSource>();
+            _landingAudioSource = gameObject.AddComponent<AudioSource>();
             _landingAudioSource.playOnAwake = false;
             _landingAudioSource.volume = 0.8f;
             _landingAudioSource.spatialBlend = 1.0f;
@@ -124,7 +120,7 @@ namespace Assets.Scripts.CarSystems
 
         private void UpdateSurfaceSound()
         {
-            Ray terrainRay = new Ray(_transform.position, Vector3.down);
+            Ray terrainRay = new Ray(transform.position, Vector3.down);
             if (Physics.Raycast(terrainRay, out RaycastHit hitInfo))
             {
                 string objectTag = hitInfo.collider.gameObject.tag;
@@ -146,7 +142,7 @@ namespace Assets.Scripts.CarSystems
                         Object.Destroy(_surfaceAudioSource);
                     }
                     
-                    _surfaceAudioSource = _cacheManager.GetAudioSource(_gameObject, surfaceSoundName);
+                    _surfaceAudioSource = _cacheManager.GetAudioSource(gameObject, surfaceSoundName);
                     _surfaceAudioSource.loop = true;
                     _surfaceAudioSource.volume = 0.6f;
                     _surfaceAudioSource.Play();
@@ -204,7 +200,7 @@ namespace Assets.Scripts.CarSystems
 
             _airTime = 0.0f;
             UpdateSurfaceSound();
-            Vector3 vel3d = _transform.InverseTransformVector(_rigidbody.velocity);
+            Vector3 vel3d = transform.InverseTransformVector(_rigidbody.velocity);
 
             _carVelocity = new Vector2(vel3d.z, vel3d.x);
 
@@ -276,7 +272,7 @@ namespace Assets.Scripts.CarSystems
 
             _carAcceleration = Time.deltaTime * forces / _rigidbody.mass;
 
-            Vector3 worldAcceleration = _transform.TransformVector(new Vector3(_carAcceleration.y, 0, _carAcceleration.x));
+            Vector3 worldAcceleration = transform.TransformVector(new Vector3(_carAcceleration.y, 0, _carAcceleration.x));
             _rigidbody.velocity += worldAcceleration;
         }
 

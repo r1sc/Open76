@@ -1,26 +1,17 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &100100000
-Prefab:
-  m_ObjectHideFlags: 1
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications: []
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 0}
-  m_RootGameObject: {fileID: 1973179770006884}
-  m_IsPrefabAsset: 1
 --- !u!1 &1973179770006884
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4695272046564820}
   - component: {fileID: 54506343518000814}
   - component: {fileID: 114131967653846888}
+  - component: {fileID: -6823801905224472447}
   m_Layer: 0
   m_Name: CarPrefab
   m_TagString: Untagged
@@ -30,9 +21,10 @@ GameObject:
   m_IsActive: 1
 --- !u!4 &4695272046564820
 Transform:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1973179770006884}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -43,9 +35,10 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &54506343518000814
 Rigidbody:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1973179770006884}
   serializedVersion: 2
   m_Mass: 100
@@ -58,12 +51,48 @@ Rigidbody:
   m_CollisionDetection: 0
 --- !u!114 &114131967653846888
 MonoBehaviour:
-  m_ObjectHideFlags: 1
+  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1973179770006884}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 96d48900858b31e49b19ff0b84c44d5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-6823801905224472447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1973179770006884}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51dd92fcc65b6eb48b85df03bc337937, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Throttle: 0
+  Brake: 0
+  EBrake: 0
+  Steer: 0
+  MaxSteer: 0.5
+  SteerSpeedBias: 55
+  EngineForce: 1000
+  BrakeConstant: 1000
+  DragConstant: 0
+  RollingResistanceConstant: 15
+  WheelRadius: 0.33
+  FrontWheels: []
+  RearWheels: []
+  Chassis: {fileID: 0}
+  SteerAngle: 0
+  CorneringStiffnessFront: -5
+  CorneringStiffnessRear: -5.2
+  MaxGrip: 8
+  EngineMaxTorque: 0
+  RPM: 0
+  GearRatios: []
+  ReverseGearRatio: 0
+  DifferentialRatio: 0

@@ -37,7 +37,6 @@ namespace Assets.Scripts
                 CacheManager cacheManager = CacheManager.Instance;
                 GameObject importedVcf = cacheManager.ImportVcf(VcfToLoad, true, out Vdf unused);
                 importedVcf.AddComponent<CarInput>();
-                importedVcf.AddComponent<Car>();
 
                 GameObject spawnPoint = GameObject.FindGameObjectsWithTag("Spawn")[0];
                 importedVcf.transform.position = spawnPoint.transform.position;
@@ -45,6 +44,10 @@ namespace Assets.Scripts
 
                 CameraManager.Instance.MainCamera.GetComponent<SmoothFollow>().Target = importedVcf.transform;
             }
+
+            var musicAudioSource = GetComponent<AudioSource>();
+            musicAudioSource.clip = VirtualFilesystem.Instance.GetMusicClip(Random.Range(2, 18));
+            musicAudioSource.Play();
         }
     }
 }

@@ -60,8 +60,10 @@ namespace Assets.Scripts.Entities
         public int Skill1 { get; set; }
         public int Skill2 { get; set; }
         public int Aggressiveness { get; set; }
-        public CarPhysics Movement { get; private set; }
+        
         public CarAI AI { get; private set; }
+
+        private CarPhysics _carPhysics;
 
         private int GetComponentHealth(SystemType healthType)
         {
@@ -238,7 +240,7 @@ namespace Assets.Scripts.Entities
             _transform = transform;
             _gameObject = gameObject;
             _cacheManager = CacheManager.Instance;
-            Movement = new CarPhysics(this);
+            _carPhysics = GetComponent<CarPhysics>();
             AI = new CarAI(this);
             _camera = CameraManager.Instance.MainCamera.GetComponent<CameraController>();
             _rigidBody = GetComponent<Rigidbody>();
@@ -340,8 +342,6 @@ namespace Assets.Scripts.Entities
                     _engineStartTimer = 0f;
                 }
             }
-            
-            Movement.Update();
 
             if (_camera.FirstPerson)
             {
@@ -370,15 +370,7 @@ namespace Assets.Scripts.Entities
                 }
             }
         }
-
-        private void FixedUpdate()
-        {
-            if (Movement != null)
-            {
-                Movement.FixedUpdate();
-            }
-        }
-
+        
         private void SetHealthGroup(int healthGroupIndex)
         {
             _currentVehicleHealthGroup = healthGroupIndex;
@@ -411,8 +403,8 @@ namespace Assets.Scripts.Entities
             Destroy(_engineLoopSound);
             Destroy(_engineStartSound);
 
-            Movement.Destroy();
-            Movement = null;
+            Destroy(_carPhysics);
+            _carPhysics = null;
             AI = null;
 
             WeaponsController = null;
@@ -435,7 +427,7 @@ namespace Assets.Scripts.Entities
 
         public void Sit()
         {
-            Movement.Brake = 1.0f;
+            _carPhysics.Brake = 1.0f;
             AI.Sit();
         }
 
